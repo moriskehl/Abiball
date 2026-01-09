@@ -1,0 +1,17 @@
+{
+  "name": "abiball/portal",
+  "description": "Abi Ball 2026 Portal",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "php": ">=8.1",
+    "dompdf/dompdf": "^2.0",
+    "endroid/qr-code": "^5.0"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

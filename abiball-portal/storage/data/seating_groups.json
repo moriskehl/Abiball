@@ -1,0 +1,77 @@
+{
+    "WGI16S": {
+        "groups": {
+            "groups": {
+                "SG1": {
+                    "name": "Sitzgruppe 1",
+                    "members": [
+                        "WGI16S",
+                        "WGI16B1",
+                        "WGI16B2",
+                        "WGI16B3",
+                        "WGI16B4",
+                        "WGI16B5",
+                        "WGI16B6",
+                        "WGI16B7"
+                    ]
+                }
+            },
+            "group_notes": {
+                "SG1": "Nah an Rand (Rollstuhl)",
+                "SG2": "",
+                "SG3": ""
+            },
+            "person_notes": []
+        }
+    },
+    "ABI01S": {
+        "groups": {
+            "groups": {
+                "SG1": {
+                    "name": "Sitzgruppe 1",
+                    "members": [
+                        "ABI01S",
+                        "ABI01B1",
+                        "ABI01B2",
+                        "ABI01B3",
+                        "ABI01B4",
+                        "ABI01B5",
+                        "ABI01B6",
+                        "ABI01B7"
+                    ]
+                }
+            },
+            "group_notes": {
+                "SG1": "",
+                "SG2": "",
+                "SG3": ""
+            },
+            "person_notes": []
+        }
+    },
+    "ABI00S": {
+        "groups": {
+            "groups": {
+                "SG1": {
+                    "name": "Sitzgruppe 1",
+                    "members": [
+                        "ABI00B1"
+                    ]
+                },
+                "SG2": {
+                    "name": "Sitzgruppe 2",
+                    "members": [
+                        "ABI00S",
+                        "ABI00B2"
+                    ]
+                }
+            },
+            "group_notes": {
+                "SG1": "",
+                "SG2": "",
+                "SG3": ""
+            },
+            "person_notes": []
+        }
+    }
+}
