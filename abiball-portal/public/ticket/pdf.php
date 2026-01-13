@@ -2,9 +2,15 @@
 declare(strict_types=1);
 
 // public/ticket/pdf.php
+// WICHTIG: verhindert "headers already sent" (z.B. durch Deprecation/Whitespace/BOM)
+ob_start();
 
 require_once __DIR__ . '/../../vendor/autoload.php';
-require_once __DIR__ . '/../../src/Security/SessionGuard.php';
+
+require_once __DIR__ . '/../../src/Bootstrap.php';
+require_once __DIR__ . '/../../src/Config.php';
+require_once __DIR__ . '/../../src/Auth/AuthContext.php';
+require_once __DIR__ . '/../../src/Security/TicketToken.php';
 require_once __DIR__ . '/../../src/Repository/ParticipantsRepository.php';
 require_once __DIR__ . '/../../src/Repository/PricingOverridesRepository.php';
 
@@ -13,7 +19,8 @@ use Dompdf\Options;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\PngWriter;
 
-requireLogin();
+Bootstrap::init();
+AuthContext::requireLogin('/login.php');
 
 $pid = isset($_GET['pid']) ? trim((string)$_GET['pid']) : '';
 if ($pid === '') { http_response_code(400); exit('Missing pid'); }
@@ -24,8 +31,12 @@ if (!$person) { http_response_code(404); exit('Person not found'); }
 $mainId = (string)($person['main_id'] ?? '');
 if ($mainId === '') { http_response_code(500); exit('Invalid main_id'); }
 
-$sessionMainId = (string)($_SESSION['main_id'] ?? '');
-if ($sessionMainId === '' || $sessionMainId !== $mainId) { http_response_code(403); exit('Forbidden'); }
+// Ownership: eingeloggter Hauptgast muss zur Gruppe gehören
+$sessionMainId = AuthContext::mainId();
+if ($sessionMainId === '' || $sessionMainId !== $mainId) {
+    http_response_code(403);
+    exit('Forbidden');
+}
 
 $main = ParticipantsRepository::findById($mainId);
 if (!$main) { http_response_code(500); exit('Main user not found'); }
@@ -57,21 +68,26 @@ if ($logoPngPath && is_file($logoPngPath)) {
         $logoDataUri = 'data:image/png;base64,' . base64_encode($bin);
     }
 }
+
 $logoHtml = ($logoDataUri !== '')
     ? '<img class="logo" src="' . $logoDataUri . '" alt="Logo">'
     : '';
 
 // --------------------
-// Verify URL + QR
+// Verify URL + QR (signiert)
 // --------------------
-$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-$host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$verifyUrl = $scheme . '://' . $host . '/ticket/verify.php?pid=' . rawurlencode($pid);
+$verifyBase = Config::baseUrl() . '/ticket/verify.php';
+
+$sig = TicketToken::sign($pid);
+
+$verifyUrl = $verifyBase
+    . '?pid=' . rawurlencode($pid)
+    . '&sig=' . rawurlencode($sig);
 
 $qr = Builder::create()
     ->writer(new PngWriter())
     ->data($verifyUrl)
-    ->size(340)     // echte Pixelgröße; Anzeige steuern wir im CSS
+    ->size(340)
     ->margin(10)
     ->build();
 
@@ -93,10 +109,8 @@ if ($hasOverride && $overrideReason !== '') {
 }
 
 // --------------------
-// Skalierung (WICHTIG)
+// Skalierung
 // --------------------
-// Ziel: Ticket IMMER kleiner als A5, mittig, ohne CSS-transform.
-// Werte zwischen 0.86 und 0.94 sind realistisch.
 $SCALE = 0.90;
 
 // A5 in mm
@@ -152,7 +166,6 @@ $html = '
 
     body { font-family: DejaVu Sans, Arial, sans-serif; color: #111; }
 
-    /* Eine Seite, exakt A5 */
     table.page {
       width: ' . $mm($PAGE_W) . ';
       height: ' . $mm($PAGE_H) . ';
@@ -166,7 +179,6 @@ $html = '
       padding: 0;
     }
 
-    /* Ticket ist bereits "physisch skaliert" (keine transform) */
     .ticket {
       display: inline-block;
       width: ' . $mm($TICKET_W) . ';
@@ -177,10 +189,8 @@ $html = '
       overflow: hidden;
     }
 
-    /* Reset für dompdf */
     h1, p { margin: 0; padding: 0; }
 
-    /* Header als Tabelle (stabil) */
     table.head { width: 100%; border-collapse: collapse; }
     table.head td { vertical-align: top; padding: 0; }
     td.left { width: 100%; }
@@ -235,11 +245,19 @@ $html = '
     }
 
     .verify {
-      margin-top: ' . $mm(3.0*$SCALE) . ';
-      font-size: ' . $pt(8.0*$SCALE) . ';
+      margin-top: <?= $mm(3.0*$SCALE) ?>;
+      font-size: <?= $pt(4.8*$SCALE) ?>;
       color: #555;
+      line-height: 1;
+
+      /* entscheidend für Umbruch */
       word-break: break-all;
+      overflow-wrap: anywhere;
+
+      /* optisch sauber */
+      font-family: DejaVu Sans Mono, monospace;
     }
+
 
     .foot {
       margin-top: ' . $mm(6.0*$SCALE) . ';
@@ -313,14 +331,22 @@ $html = '
 $options = new Options();
 $options->set('isRemoteEnabled', false);
 $options->set('defaultFont', 'DejaVu Sans');
-// optional stabiler in vielen Setups:
-// $options->set('isHtml5ParserEnabled', true);
 
 $dompdf = new Dompdf($options);
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A5', 'portrait');
 $dompdf->render();
 
+// WICHTIG: alles entfernen, was vor dem PDF evtl. ausgegeben wurde
+if (ob_get_length()) {
+    ob_end_clean();
+}
+
 $filename = 'ticket_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $personId) . '.pdf';
-$dompdf->stream($filename, ['Attachment' => true]);
+
+// Header
+header('Content-Type: application/pdf');
+header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+echo $dompdf->output();
 exit;

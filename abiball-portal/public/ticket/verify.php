@@ -3,9 +3,13 @@ declare(strict_types=1);
 
 // public/ticket/verify.php
 
+require_once __DIR__ . '/../../src/Bootstrap.php';
+require_once __DIR__ . '/../../src/Security/TicketToken.php';
 require_once __DIR__ . '/../../src/Repository/ParticipantsRepository.php';
 require_once __DIR__ . '/../../src/Service/PricingService.php';
 require_once __DIR__ . '/../../src/View/Helpers.php';
+
+Bootstrap::init();
 
 function badge(string $text, string $variant = 'ok'): string
 {
@@ -224,16 +228,6 @@ function renderPage(string $state, array $data): void
                 word-break: break-word;
             }
 
-            .note{
-                margin-top: 12px;
-                padding: 12px;
-                border-radius: 14px;
-                border: 1px dashed var(--border);
-                color: var(--muted);
-                font-size: .9rem;
-                line-height: 1.55;
-            }
-
             .statusline{
                 margin-top: 12px;
                 display:flex;
@@ -352,9 +346,18 @@ function renderPage(string $state, array $data): void
 
 // --- Input ---
 $pid = isset($_GET['pid']) ? trim((string)$_GET['pid']) : '';
+$sig = (string)($_GET['sig'] ?? '');
+
 if ($pid === '') {
     renderPage('bad', [
         'reason' => 'Ticket-ID fehlt oder QR-Code ist beschädigt.',
+    ]);
+}
+
+// --- QR-Signatur prüfen ---
+if (!TicketToken::verify($pid, $sig)) {
+    renderPage('bad', [
+        'reason' => 'QR-Code ist ungültig oder wurde manipuliert.',
     ]);
 }
 
@@ -388,9 +391,6 @@ $paid = (int)ParticipantsRepository::amountPaidForMainId($mainId);
 $dueInfo = PricingService::amountDueForMainId($mainId);
 $due = (int)($dueInfo['amount_due'] ?? 0);
 
-// NEUE LOGIK: due kann 0 sein (z.B. Lehrer/Ehemalige/Behinderung/Kleinkind via Override)
-// - due == 0  => gültig (nichts zu zahlen)
-// - due  > 0  => nur gültig wenn paid >= due
 if ($due < 0) {
     renderPage('bad', [
         'person_name' => (string)($person['name'] ?? ''),

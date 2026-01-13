@@ -29,7 +29,7 @@ final class Bootstrap
     {
         $secure = Config::isHttps();
 
-        // Empfohlene Session-Härtungen
+        // Session-Härtungen
         ini_set('session.use_strict_mode', '1');
         ini_set('session.use_only_cookies', '1');
         ini_set('session.use_trans_sid', '0');
@@ -37,25 +37,32 @@ final class Bootstrap
         session_name('abiball_session');
 
         $params = session_get_cookie_params();
+        $path   = ($params['path'] ?? '') !== '' ? (string)$params['path'] : '/';
+        $domain = ($params['domain'] ?? '') !== '' ? (string)$params['domain'] : null;
 
-        // In der Praxis besser als Strict (sonst kommen "Cookie fehlt" bei externen Links)
+        // Lax ist in der Praxis sinnvoll (z.B. Links aus Mails/QR)
         $sameSite = 'Lax';
 
         if (PHP_VERSION_ID >= 70300) {
-            session_set_cookie_params([
+            $cookie = [
                 'lifetime' => 0,
-                'path' => $params['path'] ?: '/',
-                'domain' => $params['domain'] ?: '',
-                'secure' => $secure,
+                'path'     => $path,
+                'secure'   => $secure,
                 'httponly' => true,
                 'samesite' => $sameSite,
-            ]);
+            ];
+            if ($domain !== null) {
+                $cookie['domain'] = $domain;
+            }
+
+            session_set_cookie_params($cookie);
         } else {
             // PHP <7.3: SameSite über path-String
+            $pathWithSameSite = $path . '; samesite=' . $sameSite;
             session_set_cookie_params(
                 0,
-                ($params['path'] ?: '/') . '; samesite=' . $sameSite,
-                $params['domain'] ?: '',
+                $pathWithSameSite,
+                $domain ?? '',
                 $secure,
                 true
             );
@@ -63,6 +70,7 @@ final class Bootstrap
 
         session_start();
 
+        // Erstinitialisierung (reduziert Fixation-Risiko)
         if (empty($_SESSION['_inited'])) {
             session_regenerate_id(true);
             $_SESSION['_inited'] = 1;

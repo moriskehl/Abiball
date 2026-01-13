@@ -3,50 +3,92 @@ declare(strict_types=1);
 
 // src/Controller/DashboardController.php
 
-require_once __DIR__ . '/../Security/SessionGuard.php';
+require_once __DIR__ . '/../Bootstrap.php';
 require_once __DIR__ . '/../Security/Csrf.php';
+require_once __DIR__ . '/../Http/Request.php';
+require_once __DIR__ . '/../Http/Response.php';
 require_once __DIR__ . '/../Service/ParticipantService.php';
 require_once __DIR__ . '/../Service/PricingService.php';
 require_once __DIR__ . '/../Service/SeatingService.php';
 require_once __DIR__ . '/../Repository/ParticipantsRepository.php';
 require_once __DIR__ . '/../View/Layout.php';
 require_once __DIR__ . '/../View/Helpers.php';
+require_once __DIR__ . '/../Auth/AuthContext.php';
 
 final class DashboardController
 {
     public static function show(): void
     {
-        requireLogin();
+        Bootstrap::init();
 
-        $mainId = (string)($_SESSION['main_id'] ?? '');
+        AuthContext::requireLogin('/login.php');
+
+        // Prompt nur einmal zeigen
+        $showPwPrompt = !empty($_SESSION['show_pw_prompt']);
+        $_SESSION['show_pw_prompt'] = 0;
+
+        $pwOk  = Request::getString('pw_ok');
+        $pwErr = Request::getString('pw_err');
+
+        $mainId = AuthContext::mainId();
 
         $grp = ParticipantService::getMainAndCompanions($mainId);
-        $main = $grp['main'];
-        $companions = $grp['companions'];
+        $main = $grp['main'] ?? null;
+        $companions = $grp['companions'] ?? [];
 
-        // Gesamtpreis (Soll) via PricingService (inkl. Overrides)
         $calc = PricingService::amountDueForMainId($mainId);
         $amountDue = (int)($calc['amount_due'] ?? 0);
 
-        $amountPaid = ParticipantsRepository::amountPaidForMainId($mainId);
-        $open = $amountDue - $amountPaid;
-        if ($open < 0) $open = 0;
+        $amountPaid = (int)ParticipantsRepository::amountPaidForMainId($mainId);
+        $open = max(0, $amountDue - $amountPaid);
 
-        // Notizen (aus SeatingService)
         $seating = SeatingService::load($mainId);
         $personNotes = $seating['person_notes'] ?? [];
         if (!is_array($personNotes)) $personNotes = [];
+
+        $seatingGroups = $seating['groups'] ?? [];
+        if (!is_array($seatingGroups)) $seatingGroups = [];
+
+        $idToName = [];
+        if (is_array($main) && !empty($main['id'])) {
+            $idToName[(string)$main['id']] = (string)($main['name'] ?? '');
+        }
+        foreach ($companions as $c) {
+            if (!is_array($c) || empty($c['id'])) continue;
+            $idToName[(string)$c['id']] = (string)($c['name'] ?? '');
+        }
 
         Layout::header('Abiball – Dashboard');
         ?>
         <main class="bg-starfield">
           <div class="container py-4" style="max-width: 1100px;">
 
+            <?php if ($pwOk !== ''): ?>
+              <div class="alert alert-success">Passwort wurde geändert.</div>
+            <?php endif; ?>
+
+            <?php if ($pwErr !== ''): ?>
+              <div class="alert alert-danger">
+                <?php
+                  echo match ($pwErr) {
+                    'csrf' => 'Ungültige Anfrage (CSRF).',
+                    'empty' => 'Bitte alle Felder ausfüllen.',
+                    'match' => 'Die neuen Passwörter stimmen nicht überein.',
+                    'len' => 'Neues Passwort muss 6–64 Zeichen haben.',
+                    'old' => 'Aktuelles Passwort ist falsch.',
+                    'main' => 'Hauptgast nicht gefunden.',
+                    'save' => 'Speichern fehlgeschlagen.',
+                    default => 'Fehler.'
+                  };
+                ?>
+              </div>
+            <?php endif; ?>
+
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
               <div>
                 <h1 class="h-serif mb-1" style="font-size: 2rem; font-weight: 300;">Dein Bereich</h1>
                 <div class="text-muted" style="font-size:.95rem;">
-                  Übersicht deiner Daten, Ticketpreise (Standard: <?= (int)PricingService::DEFAULT_TICKET_PRICE ?> €), Sitzgruppen und Zahlungsstand.
+                  Übersicht deiner Daten, Sitzgruppen und Zahlungsstand.
                 </div>
               </div>
               <a class="btn btn-outline-danger btn-sm" href="/logout.php">Logout</a>
@@ -61,14 +103,14 @@ final class DashboardController
                     <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                       <div>
                         <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: 0.5rem;">Hauptgast</div>
-                        <?php if ($main): ?>
+                        <?php if (is_array($main)): ?>
                           <div class="fw-semibold" style="font-size:1.15rem;"><?= e((string)($main['name'] ?? '')) ?></div>
                         <?php else: ?>
                           <div class="text-muted">Hauptgast nicht gefunden.</div>
                         <?php endif; ?>
                       </div>
 
-                      <?php if ($main): ?>
+                      <?php if (is_array($main)): ?>
                         <?php
                           $pid = (string)($main['id'] ?? '');
                           $collapseId = 'note_' . preg_replace('/[^a-zA-Z0-9_\-]/', '_', $pid);
@@ -96,7 +138,7 @@ final class DashboardController
                       <?php endif; ?>
                     </div>
 
-                    <?php if ($main): ?>
+                    <?php if (is_array($main)): ?>
                       <div class="mt-3 p-soft">
                         <div class="d-flex justify-content-between align-items-center">
                           <div class="text-muted">Ticketpreis</div>
@@ -117,7 +159,7 @@ final class DashboardController
                           <input type="hidden" name="pid" value="<?= e($pid) ?>">
                           <label class="form-label mb-1">Notiz (im Portal)</label>
                           <textarea class="form-control form-control-sm" rows="2" name="note"
-                            placeholder="z.B. Hinweise, Ansprechpartner, Besonderheiten …"><?= e((string)($personNotes[$pid] ?? '')) ?></textarea>
+                            placeholder="z.B. Hinweise …"><?= e((string)($personNotes[$pid] ?? '')) ?></textarea>
                           <button class="btn btn-save btn-sm mt-2" type="submit">Notiz speichern</button>
                         </form>
                       </div>
@@ -128,19 +170,16 @@ final class DashboardController
                 <!-- Begleitpersonen -->
                 <div class="card mb-3">
                   <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                      <div>
-                        <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: 0.5rem;">Begleitpersonen</div>
-                        <div class="h6 mb-0">Übersicht</div>
-                      </div>
-                    </div>
+                    <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: 0.5rem;">Begleitpersonen</div>
+                    <div class="h6 mb-0">Übersicht</div>
 
-                    <?php if (!$companions): ?>
+                    <?php if (empty($companions)): ?>
                       <div class="text-muted mt-3">Keine Begleitpersonen.</div>
                     <?php else: ?>
                       <div class="list-group list-group-flush mt-3">
                         <?php foreach ($companions as $c): ?>
                           <?php
+                            if (!is_array($c)) continue;
                             $pid = (string)($c['id'] ?? '');
                             $collapseId = 'note_' . preg_replace('/[^a-zA-Z0-9_\-]/', '_', $pid);
 
@@ -168,7 +207,6 @@ final class DashboardController
 
                               <div class="d-flex gap-2 align-items-center flex-wrap">
                                 <a href="/ticket/pdf.php?pid=<?= e($pid) ?>" class="btn btn-sm btn-outline-primary" target="_blank">Ticket (PDF)</a>
-
                                 <button class="note-btn" type="button"
                                   data-bs-toggle="collapse"
                                   data-bs-target="#<?= e($collapseId) ?>"
@@ -190,7 +228,7 @@ final class DashboardController
                                 <input type="hidden" name="pid" value="<?= e($pid) ?>">
                                 <label class="form-label mb-1">Notiz (im Portal)</label>
                                 <textarea class="form-control form-control-sm" rows="2" name="note"
-                                  placeholder="z.B. Hinweise, Allergien, Sitzwunsch …"><?= e((string)($personNotes[$pid] ?? '')) ?></textarea>
+                                  placeholder="z.B. Hinweise …"><?= e((string)($personNotes[$pid] ?? '')) ?></textarea>
                                 <button class="btn btn-save btn-sm mt-2" type="submit">Notiz speichern</button>
                               </form>
                             </div>
@@ -204,6 +242,7 @@ final class DashboardController
               </div>
 
               <div class="col-12 col-lg-5">
+
                 <!-- Zahlung -->
                 <div class="card mb-3">
                   <div class="card-body p-4">
@@ -231,11 +270,98 @@ final class DashboardController
                   </div>
                 </div>
 
+                <!-- Passwort ändern -->
+                <div class="card mb-3">
+                  <div class="card-body p-4">
+                    <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: .5rem;">Sicherheit</div>
+                    <div class="h6 mb-0">Passwort ändern</div>
+
+                    <?php if ($showPwPrompt): ?>
+                      <div class="text-muted mt-2" style="font-size:.95rem;">Erste Anmeldung: Möchtest du deinen Login-Code jetzt ändern?</div>
+                    <?php endif; ?>
+
+                    <form class="mt-3" method="post" action="/dashboard_password_change.php">
+                      <?= Csrf::inputField() ?>
+                      <div class="row g-2" style="font-size: 0.875rem;">
+                        <div class="col-12">
+                          <label class="form-label">Aktuelles Passwort</label>
+                          <input class="form-control" type="password" name="current_password" required autocomplete="current-password">
+                        </div>
+                        <div class="col-12 col-md-6">
+                          <label class="form-label">Neues Passwort</label>
+                          <input class="form-control" type="password" name="new_password" required autocomplete="new-password">
+                        </div>
+                        <div class="col-12 col-md-6">
+                          <label class="form-label">Neues Passwort wiederholen</label>
+                          <input class="form-control" type="password" name="new_password2" required autocomplete="new-password">
+                        </div>
+                      </div>
+
+                      <button class="btn btn-save mt-3" type="submit">Speichern</button>
+                    </form>
+                  </div>
+                </div>
+
+                <!-- Sitzgruppen (Anzeige) -->
+                <div class="card mb-3">
+                  <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                      <div>
+                        <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: .5rem;">Sitzordnung</div>
+                        <div class="h6 mb-0">Aktuelle Sitzgruppen</div>
+                      </div>
+                      <a class="btn btn-outline-secondary btn-sm" href="/seating.php" style="border-radius:12px;">Bearbeiten</a>
+                    </div>
+
+                    <?php if (empty($seatingGroups)): ?>
+                      <div class="text-muted">Keine Sitzgruppen gespeichert.</div>
+                    <?php else: ?>
+                      <div class="d-flex flex-column gap-3">
+                        <?php foreach ($seatingGroups as $gid => $g): ?>
+                          <?php
+                            if (!is_array($g)) continue;
+                            $gidStr = (string)$gid;
+
+                            $groupName = trim((string)($g['name'] ?? ''));
+                            if ($groupName === '') $groupName = 'Gruppe ' . $gidStr;
+
+                            $members = $g['members'] ?? [];
+                            if (!is_array($members)) $members = [];
+                          ?>
+                          <div class="border rounded-3 p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                              <div class="fw-semibold"><?= e($groupName) ?></div>
+                              <span class="badge text-bg-secondary"><?= count($members) ?> Mitglied<?= count($members) !== 1 ? 'er' : '' ?></span>
+                            </div>
+
+                            <?php if (empty($members)): ?>
+                              <div class="text-muted small">Keine Mitglieder</div>
+                            <?php else: ?>
+                              <div class="d-flex flex-column gap-1">
+                                <?php foreach ($members as $mid): ?>
+                                  <?php
+                                    $mid = trim((string)$mid);
+                                    if ($mid === '') continue;
+                                    $memberName = $idToName[$mid] ?? $mid;
+                                  ?>
+                                  <div class="d-flex justify-content-between align-items-center small">
+                                    <span><?= e($memberName) ?></span>
+                                    <span class="badge text-bg-secondary" style="font-size:0.7rem;"><?= e($mid) ?></span>
+                                  </div>
+                                <?php endforeach; ?>
+                              </div>
+                            <?php endif; ?>
+                          </div>
+                        <?php endforeach; ?>
+                      </div>
+                    <?php endif; ?>
+                  </div>
+                </div>
+
                 <!-- Aktionen -->
                 <div class="card">
                   <div class="card-body p-4">
                     <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: 0.5rem;">Aktionen</div>
-                    
                     <div class="d-flex gap-2 flex-wrap">
                       <a class="btn btn-cta btn-cta-sm" href="/seating.php">Sitzgruppen</a>
                       <a class="btn btn-outline-secondary btn-sm" href="/location.php" style="border-radius:12px;">Location</a>
@@ -250,5 +376,64 @@ final class DashboardController
         </main>
         <?php
         Layout::footer();
+    }
+
+    public static function changePassword(): void
+    {
+        Bootstrap::init();
+        AuthContext::requireLogin('/login.php');
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Response::redirect('/dashboard.php');
+        }
+
+        if (!Csrf::validate(Request::postString('_csrf'))) {
+            Response::redirect('/dashboard.php?pw_err=csrf');
+        }
+
+        $mainId = AuthContext::mainId();
+        $current = trim(Request::postString('current_password'));
+        $new1 = trim(Request::postString('new_password'));
+        $new2 = trim(Request::postString('new_password2'));
+
+        if ($new1 === '' || $new2 === '' || $current === '') {
+            Response::redirect('/dashboard.php?pw_err=empty');
+        }
+        if ($new1 !== $new2) {
+            Response::redirect('/dashboard.php?pw_err=match');
+        }
+        if (mb_strlen($new1) < 6 || mb_strlen($new1) > 64) {
+            Response::redirect('/dashboard.php?pw_err=len');
+        }
+
+        $mainRow = ParticipantsRepository::mainRowForMainId($mainId);
+        if (!$mainRow) {
+            Response::redirect('/dashboard.php?pw_err=main');
+        }
+
+        $stored = (string)($mainRow['login_code'] ?? '');
+        if ($stored === '') {
+            Response::redirect('/dashboard.php?pw_err=old');
+        }
+
+        $isHashed = str_starts_with($stored, '$2y$') || str_starts_with($stored, '$argon2');
+        $currentValid = $isHashed ? password_verify($current, $stored) : hash_equals($stored, $current);
+
+        if (!$currentValid) {
+            Response::redirect('/dashboard.php?pw_err=old');
+        }
+
+        $newHashed = password_hash($new1, PASSWORD_DEFAULT);
+        if ($newHashed === false) {
+            Response::redirect('/dashboard.php?pw_err=save');
+        }
+
+        try {
+            ParticipantsRepository::updateLoginCodeForMainId($mainId, $newHashed);
+            $_SESSION['show_pw_prompt'] = 0;
+            Response::redirect('/dashboard.php?pw_ok=1');
+        } catch (Throwable $e) {
+            Response::redirect('/dashboard.php?pw_err=save');
+        }
     }
 }

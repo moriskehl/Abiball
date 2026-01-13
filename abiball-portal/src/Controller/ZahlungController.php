@@ -6,6 +6,7 @@ require_once __DIR__ . '/../Bootstrap.php';
 require_once __DIR__ . '/../View/Layout.php';
 require_once __DIR__ . '/../Repository/ParticipantsRepository.php';
 require_once __DIR__ . '/../Service/PricingService.php';
+require_once __DIR__ . '/../Auth/AuthContext.php';
 
 final class ZahlungController
 {
@@ -13,24 +14,19 @@ final class ZahlungController
     {
         Bootstrap::init();
 
-        // -------------------------------------------------------
-        // Session-Werte lesen (Hauptgast/main_id)
-        // -------------------------------------------------------
-        $participantId = $_SESSION['participant_id'] ?? $_SESSION['main_id'] ?? $_SESSION['user_id'] ?? null;
-        $name          = $_SESSION['participant_name'] ?? $_SESSION['guest_name'] ?? null;
-        $tickets       = $_SESSION['ticket_count'] ?? null;
+        // Robust: Login-Status über mainId (statt nur isLoggedIn)
+        $participantId = trim(AuthContext::mainId());
+        $isLoggedIn    = ($participantId !== '');
 
-        // Typvalidierung
-        $participantId = is_string($participantId) ? trim($participantId) : '';
-        $name          = is_string($name) ? trim($name) : '';
-        $tickets       = is_numeric($tickets) ? (int)$tickets : null;
+        $name    = trim(AuthContext::name());
+        $tickets = AuthContext::ticketCount();
 
         // -------------------------------------------------------
         // Beträge berechnen (Overrides berücksichtigt)
         // -------------------------------------------------------
-        $amountDue  = null; // fällig gesamt
-        $amountPaid = null; // bezahlt (aus CSV amount_paid beim Hauptgast)
-        $amountOpen = null; // offen
+        $amountDue  = null;
+        $amountPaid = null;
+        $amountOpen = null;
 
         if ($participantId !== '') {
             $due       = PricingService::amountDueForMainId($participantId);
@@ -49,10 +45,9 @@ final class ZahlungController
         $bankName  = 'Kreissparkasse Böblingen';
 
         // -------------------------------------------------------
-        // Verwendungszweck:
-        // → vollständig aus Session ODER Standardversion
+        // Verwendungszweck
         // -------------------------------------------------------
-        if ($participantId !== '' && $name !== '' && $tickets !== null) {
+        if ($participantId !== '' && $name !== '' && $tickets > 0) {
             $purpose =
                 'Abiball 2026'
                 . ' | Name: ' . $name
@@ -81,9 +76,30 @@ final class ZahlungController
                 Hier findest du die Bankdaten sowie ein Beispiel für den Verwendungszweck.
               </p>
 
-              <div class="d-flex justify-content-center gap-3 flex-wrap pt-2">
-                <a class="btn btn-cta btn-cta-lg" href="/dashboard.php">Zum Dashboard</a>
-                <a class="btn btn-cta btn-cta-lg" href="/">Zur Startseite</a>
+              <style>
+                .zahlung-cta{
+                  display:inline-flex;
+                  align-items:center;
+                  justify-content:center;
+                  white-space:nowrap;
+                }
+                @media (max-width: 575.98px){
+                  .zahlung-cta{ width:100%; }
+                  .zahlung-cta-wrap{
+                    width:100%;
+                    padding-left:.25rem;
+                    padding-right:.25rem;
+                  }
+                }
+              </style>
+
+              <div class="d-flex justify-content-center gap-3 flex-wrap pt-2 zahlung-cta-wrap">
+                <?php if ($isLoggedIn): ?>
+                  <a class="btn btn-cta btn-cta-lg zahlung-cta" href="/dashboard.php">Zum Dashboard</a>
+                <?php else: ?>
+                  <a class="btn btn-cta btn-cta-lg zahlung-cta" href="/login.php">Zum Login</a>
+                <?php endif; ?>
+                <a class="btn btn-cta btn-cta-lg zahlung-cta" href="/">Zur Startseite</a>
               </div>
             </div>
 
@@ -123,7 +139,6 @@ final class ZahlungController
                 <hr class="my-4">
 
                 <div class="row g-4">
-                  <!-- LEFT COLUMN: Bankdaten -->
                   <div class="col-12 col-lg-6">
                     <div class="text-muted small mb-1">Empfänger</div>
                     <div class="fw-semibold"><?= htmlspecialchars($recipient, ENT_QUOTES, 'UTF-8') ?></div>
@@ -144,7 +159,6 @@ final class ZahlungController
                     <div class="fw-semibold"><?= htmlspecialchars($bankName, ENT_QUOTES, 'UTF-8') ?></div>
                   </div>
 
-                  <!-- RIGHT COLUMN: Verwendungszweck -->
                   <div class="col-12 col-lg-6">
                     <div class="text-muted small" style="letter-spacing:.22em; text-transform:uppercase;">
                       Beispiel Verwendungszweck
@@ -155,7 +169,7 @@ final class ZahlungController
                       <?= nl2br(htmlspecialchars($purpose, ENT_QUOTES, 'UTF-8')) ?>
                     </div>
 
-                    <?php if ($participantId !== '' && $name !== '' && $tickets !== null): ?>
+                    <?php if ($participantId !== '' && $name !== '' && $tickets > 0): ?>
                       <div class="text-muted small mt-2">
                         Automatisch erkannt aus deinem Konto.
                       </div>

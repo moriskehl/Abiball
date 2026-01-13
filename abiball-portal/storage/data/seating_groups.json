@@ -55,14 +55,14 @@
                 "SG1": {
                     "name": "Sitzgruppe 1",
                     "members": [
-                        "ABI00B1"
+                        "ABI00S"
                     ]
                 },
                 "SG2": {
                     "name": "Sitzgruppe 2",
                     "members": [
-                        "ABI00S",
-                        "ABI00B2"
+                        "ABI00B2",
+                        "ABI00B1"
                     ]
                 }
             },

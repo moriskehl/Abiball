@@ -1,10 +1,16 @@
 <?php
-// src/View/Partials/Navbar.php (oder wo deine Navbar liegt)
-$togglePath = __DIR__ . '/../../../public/components/darkmode-toggle.php';
+// src/View/Partials/Navbar.php
+
+require_once __DIR__ . '/../../Auth/AuthContext.php';
+
+$togglePath  = __DIR__ . '/../../../public/components/darkmode-toggle.php';
+
+$mainId     = trim(AuthContext::mainId());
+$isLoggedIn = ($mainId !== '');
+$initials   = $isLoggedIn ? AuthContext::userInitials() : '';
 ?>
 
 <style>
-  /* ---------- Brand / Glow (deins unverändert, nur minimal geordnet) ---------- */
   .navbar-brand{
     position: relative;
     display: inline-flex;
@@ -36,36 +42,61 @@ $togglePath = __DIR__ . '/../../../public/components/darkmode-toggle.php';
     mix-blend-mode: normal;
   }
 
-  /* ---------- Mobile toggle placement between logo and hamburger ---------- */
+  /* NEW: right cluster on mobile (initials + toggle) */
+  .navbar-right-mobile{
+    display:flex;
+    align-items:center;
+    gap:.35rem;
+    margin-left:auto;
+    margin-right:.35rem; /* small gap before hamburger */
+  }
+
+  /* Keep toggle in-between logo and hamburger as before (centered slot removed) */
   .navbar-toggle-slot{
     display:none;
-    margin-left:auto;
-    margin-right:auto;
     align-items:center;
   }
 
+  .navbar-user{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:44px;
+    height:44px;
+    border-radius:999px;
+    font-weight:700;
+    font-size:.95rem;
+    letter-spacing:.02em;
+    background: var(--surface-2);
+    border:1px solid var(--border);
+    color: var(--text, inherit);
+    user-select:none;
+  }
+
   @media (max-width: 991.98px){
+    /* On mobile: show toggle outside menu and show initials outside menu */
     .navbar-toggle-slot{ display:flex; }
+
+    /* Hide the in-menu toggle on mobile */
     .navbar-toggle-inmenu{ display:none !important; }
 
-    .navbar .container{ justify-content: space-between; }
+    .navbar .container{
+      justify-content: space-between;
+    }
+
     .navbar-left{
       display:flex;
       align-items:center;
       gap:.5rem;
     }
 
-    /* =========================================================
-       Hamburger menu spacing + separation (requested)
-       ========================================================= */
     .navbar-collapse{
       margin-top: .75rem;
     }
 
-    /* make menu look like a separated list */
     #mainNavbar .navbar-nav{
       width: 100%;
-      gap: 0 !important;                /* use our margins instead */
+      gap: 0 !important;
       padding: .25rem 0;
       border-top: 1px solid var(--border);
       margin-top: .5rem;
@@ -80,7 +111,7 @@ $togglePath = __DIR__ . '/../../../public/components/darkmode-toggle.php';
     #mainNavbar .nav-link{
       display: block;
       width: 100%;
-      padding: .95rem 1.0rem !important; /* bigger touch target */
+      padding: .95rem 1.0rem !important;
       margin: .15rem 0 !important;
       border-radius: 12px;
       border: 1px solid transparent;
@@ -96,14 +127,12 @@ $togglePath = __DIR__ . '/../../../public/components/darkmode-toggle.php';
       border-color: rgba(201,162,39,.22);
     }
 
-    /* clear separators between items */
     #mainNavbar .nav-item + .nav-item{
       border-top: 1px solid var(--border);
       padding-top: .20rem;
       margin-top: .20rem;
     }
 
-    /* CTA in menu full width */
     #mainNavbar .btn-cta{
       display: inline-flex;
       justify-content: center;
@@ -113,6 +142,8 @@ $togglePath = __DIR__ . '/../../../public/components/darkmode-toggle.php';
   }
 
   @media (min-width: 992px){
+    /* Desktop: hide the outside-mobile cluster, show everything in-menu */
+    .navbar-right-mobile{ display:none; }
     .navbar-toggle-slot{ display:none; }
   }
 </style>
@@ -120,7 +151,7 @@ $togglePath = __DIR__ . '/../../../public/components/darkmode-toggle.php';
 <nav class="navbar navbar-expand-lg sticky-top">
   <div class="container py-2">
 
-    <!-- Left cluster: Logo + (mobile) toggle -->
+    <!-- Left cluster -->
     <div class="navbar-left">
       <a class="navbar-brand d-flex align-items-center" href="/">
         <img class="navbar-logo"
@@ -129,8 +160,20 @@ $togglePath = __DIR__ . '/../../../public/components/darkmode-toggle.php';
              data-logo-dark="/favicon-dark.png"
              width="60" height="60" alt="Logo">
       </a>
+    </div>
 
-      <!-- Toggle shown ONLY on mobile (between logo and hamburger) -->
+    <!-- Mobile right cluster (outside hamburger menu): initials + toggle -->
+    <div class="navbar-right-mobile">
+      <?php if ($isLoggedIn): ?>
+        <a href="/dashboard.php"
+          class="navbar-user"
+          title="Zum Dashboard"
+          aria-label="Zum Dashboard">
+          <?= htmlspecialchars($initials, ENT_QUOTES, 'UTF-8') ?>
+        </a>
+
+      <?php endif; ?>
+
       <div class="navbar-toggle-slot">
         <?php if (is_file($togglePath)) { require $togglePath; } ?>
       </div>
@@ -153,18 +196,33 @@ $togglePath = __DIR__ . '/../../../public/components/darkmode-toggle.php';
           <a class="nav-link" href="/Location.php">Location</a>
         </li>
 
-        <!-- NEW: Zahlung -->
         <li class="nav-item">
           <a class="nav-link" href="/zahlung.php">Zahlung</a>
         </li>
 
-        <!-- Toggle in collapsed/desktop menu (hidden on mobile) -->
+        <!-- Desktop: show initials + toggle inside menu -->
+        <?php if ($isLoggedIn): ?>
+          <li class="nav-item ms-lg-2 d-none d-lg-flex">
+            <a href="/dashboard.php"
+              class="navbar-user"
+              title="Zum Dashboard"
+              aria-label="Zum Dashboard">
+              <?= htmlspecialchars($initials, ENT_QUOTES, 'UTF-8') ?>
+            </a>
+          </li>
+
+        <?php endif; ?>
+
         <li class="nav-item ms-lg-2 navbar-toggle-inmenu">
           <?php if (is_file($togglePath)) { require $togglePath; } ?>
         </li>
 
         <li class="nav-item ms-lg-2">
-          <a class="btn btn-cta btn-cta-sm" href="/dashboard.php">Dashboard</a>
+          <?php if ($isLoggedIn): ?>
+            <a class="btn btn-cta btn-cta-sm" href="/dashboard.php">Dashboard</a>
+          <?php else: ?>
+            <a class="btn btn-cta btn-cta-sm" href="/login.php">Login</a>
+          <?php endif; ?>
         </li>
 
       </ul>

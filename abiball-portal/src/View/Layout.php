@@ -17,6 +17,8 @@ final class Layout
             <link rel="icon" href="/favicon.ico" type="image/x-icon">
             <title><?= e($title) ?></title>
 
+            <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+
             <!-- Theme init before CSS to avoid flicker -->
             <script>
                 (function () {

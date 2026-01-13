@@ -30,6 +30,9 @@ require_once __DIR__ . '/../Helpers.php';
     <div class="d-flex gap-3 small">
       <a class="text-muted" href="/Location.php">Location</a>
       <a class="text-muted" href="/login.php">Login</a>
+      <a class="text-muted" href="/zahlung.php">Zahlung</a>
+      <a class="text-muted" href="/impressum.php">Impressum</a>
+      <a class="text-muted" href="/dashboard.php">Dashboard</a>
     </div>
 
   </div>

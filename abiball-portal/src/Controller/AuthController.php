@@ -10,12 +10,18 @@ require_once __DIR__ . '/../Http/Response.php';
 require_once __DIR__ . '/../Repository/ParticipantsRepository.php';
 require_once __DIR__ . '/../View/Layout.php';
 require_once __DIR__ . '/../View/Helpers.php';
+require_once __DIR__ . '/../Auth/AuthContext.php';
 
 final class AuthController
 {
     public static function showLoginForm(string $error = '', string $identifier = ''): void
     {
         Bootstrap::init();
+
+        // Wenn schon eingeloggt -> direkt ins Dashboard
+        if (AuthContext::mainId() !== '') {
+            Response::redirect('/dashboard.php');
+        }
 
         Layout::header('Abiball – Login');
         ?>
@@ -90,8 +96,8 @@ final class AuthController
     {
         Bootstrap::init();
 
-        // Wenn schon eingeloggt (neuer und alter Key)
-        if (!empty($_SESSION['main_id']) || !empty($_SESSION['participant_id'])) {
+        // Wenn schon eingeloggt -> direkt ins Dashboard
+        if (AuthContext::mainId() !== '') {
             Response::redirect('/dashboard.php');
         }
 
@@ -107,7 +113,7 @@ final class AuthController
         }
 
         $identifier = Request::postString('identifier');
-        $password = (string)($_POST['password'] ?? '');
+        $password   = Request::postString('password');
 
         if ($identifier === '' || $password === '') {
             self::showLoginForm('Bitte Name/ID und Passwort eingeben.', $identifier);
@@ -122,58 +128,42 @@ final class AuthController
 
         $stored = (string)($user['login_code'] ?? '');
         if ($stored === '' || $stored === '0') {
-            self::showLoginForm('Für diesen Hauptgast ist kein Login-Code gesetzt.', $identifier);
+            self::showLoginForm('Login-Code fehlt in CSV.', $identifier);
             return;
         }
 
-        if (!hash_equals($stored, $password)) {
-            self::showLoginForm('Passwort ist falsch.', $identifier);
+        $input = $password;
+
+        // hashed oder klartext akzeptieren
+        $isHashed = str_starts_with($stored, '$2y$') || str_starts_with($stored, '$argon2');
+        $ok = $isHashed ? password_verify($input, $stored) : hash_equals($stored, $input);
+
+        if (!$ok) {
+            self::showLoginForm('Login-Code ist falsch.', $identifier);
             return;
         }
 
-        // ----------------------------
-        // Session setzen (WICHTIG)
-        // ----------------------------
-        session_regenerate_id(true);
+        if (!$isHashed) {
+            $newHash = password_hash($input, PASSWORD_DEFAULT);
+            if ($newHash !== false) {
+                try { ParticipantsRepository::updateLoginCodeForMainId((string)($user['main_id'] ?? ''), $newHash); } catch (Throwable $e) {}
+            }
+        }
 
-        // main_id robust bestimmen (für Hauptgast ist main_id meist = id, aber nicht garantiert)
+        // Session setzen zentral
+        AuthContext::loginAsMain($user);
+
         $mainId = ParticipantsRepository::resolveMainIdFromRow($user);
-
-        // Ticketanzahl: Gruppengröße (Hauptgast + Begleiter) als sinnvoller Default
-        $ticketCount = ParticipantsRepository::ticketCountForMainId($mainId);
-
-        // neue Keys (für ZahlungController)
-        $_SESSION['participant_id']   = $mainId;
-        $_SESSION['participant_name'] = (string)($user['name'] ?? '');
-        $_SESSION['ticket_count']     = $ticketCount;
-
-        // alte Keys (Backwards-Compatibility für vorhandene Seiten)
-        $_SESSION['main_id']     = $mainId;
-        $_SESSION['guest_id']    = (string)($user['id'] ?? '');
-        $_SESSION['guest_name']  = (string)($user['name'] ?? '');
+        $changed = ParticipantsRepository::isPasswordChangedForMainId($mainId);
+        if (!$changed) {
+            $_SESSION['show_pw_prompt'] = 1; // nur einmal pro Login-Session anzeigen
+        }
 
         Response::redirect('/dashboard.php');
     }
 
     public static function logout(): void
     {
-        Bootstrap::init();
-
-        $_SESSION = [];
-        if (ini_get('session.use_cookies')) {
-            $p = session_get_cookie_params();
-            setcookie(
-                session_name(),
-                '',
-                time() - 42000,
-                $p['path'],
-                $p['domain'],
-                (bool)$p['secure'],
-                (bool)$p['httponly']
-            );
-        }
-        session_destroy();
-
-        Response::redirect('/login.php');
+        AuthContext::logout('/login.php');
     }
 }

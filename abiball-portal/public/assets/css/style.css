@@ -235,6 +235,128 @@ html.dark .navbar, .dark .navbar{
   box-shadow: 0 2px 18px rgba(0,0,0,.25);
 }
 
+/* Navbar initials badge: match global theme transition */
+.navbar-user{
+  transition:
+    background-color var(--theme-transition),
+    color var(--theme-transition),
+    border-color var(--theme-transition),
+    box-shadow var(--theme-transition),
+    opacity var(--theme-transition),
+    filter var(--theme-transition);
+}
+
+.navbar-user:hover{
+  background: rgba(201,162,39,.08);
+  border-color: rgba(201,162,39,.25);
+}
+
+/* Theme Toggle: Hover gelb + kein Fokus-Ring */
+.btn.btn-ghost[data-theme-toggle]{
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+.btn.btn-ghost[data-theme-toggle]:hover{
+  color: var(--gold, #c9a227) !important; /* fallback */
+}
+
+/* auch beim Fokus/Click kein gelber Ring */
+.btn.btn-ghost[data-theme-toggle]:focus,
+.btn.btn-ghost[data-theme-toggle]:focus-visible,
+.btn.btn-ghost[data-theme-toggle]:active{
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Bootstrap Focus-Ring sicher abschalten */
+.btn.btn-ghost[data-theme-toggle]:focus-visible{
+  --bs-btn-focus-shadow-rgb: 0,0,0;
+}
+
+
+
+/* Theme Toggle: Hover gelb + kein Fokus-Ring */
+.btn.btn-ghost[data-theme-toggle]{
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+.btn.btn-ghost[data-theme-toggle]:hover{
+  color: var(--gold, #c9a227) !important; /* fallback */
+}
+
+/* auch beim Fokus/Click kein gelber Ring */
+.btn.btn-ghost[data-theme-toggle]:focus,
+.btn.btn-ghost[data-theme-toggle]:focus-visible,
+.btn.btn-ghost[data-theme-toggle]:active{
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Bootstrap Focus-Ring sicher abschalten */
+.btn.btn-ghost[data-theme-toggle]:focus-visible{
+  --bs-btn-focus-shadow-rgb: 0,0,0;
+}
+
+/* ===============================
+   Links: Navbar & Footer
+   =============================== */
+
+/* Basis: keine Unterstreichung, sanfter Übergang */
+.navbar a,
+footer a{
+  text-decoration: none !important;
+  transition: color .15s ease;
+}
+
+/* Hover: gelb */
+.navbar a:hover,
+footer a:hover{
+  color: var(--gold, #c9a227) !important;
+  text-decoration: none !important;
+}
+
+/* Fokus/Click: kein Ring, keine Unterstreichung */
+.navbar a:focus,
+.navbar a:focus-visible,
+.navbar a:active,
+footer a:focus,
+footer a:focus-visible,
+footer a:active{
+  outline: none !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+
+/* ===============================
+   Navbar User (Initials)
+   =============================== */
+
+/* Basis: keine Unterstreichung */
+.navbar .navbar-user{
+  text-decoration: none !important;
+  transition: color .15s ease;
+}
+
+/* Hover: gelb, keine Unterstreichung */
+.navbar .navbar-user:hover{
+  color: var(--gold, #c9a227) !important;
+  text-decoration: none !important;
+}
+
+/* Fokus / Klick: kein Ring, keine Unterstreichung */
+.navbar .navbar-user:focus,
+.navbar .navbar-user:focus-visible,
+.navbar .navbar-user:active{
+  outline: none !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+
+
 .navbar-brand{
   letter-spacing: .22em;
   text-transform: uppercase;
@@ -712,4 +834,102 @@ html.dark .p-soft{
   .badge-hide-mobile{
     display: none !important;
   }
+}
+
+/* =========================
+   Admin Dashboard – Theme-safe
+   ========================= */
+
+.admin-dashboard .admin-kicker{
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+/* Panels inside cards to match the “premium” site look */
+.admin-dashboard .admin-panel{
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+}
+
+html.dark .admin-dashboard .admin-panel{
+  border-color: rgba(255,255,255,.10);
+  background: rgba(16,16,22,.55);
+}
+
+.admin-dashboard .admin-seatgroup{
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+}
+
+html.dark .admin-dashboard .admin-seatgroup{
+  border-color: rgba(255,255,255,.10);
+  background: rgba(16,16,22,.60);
+}
+
+.admin-dashboard .admin-seatperson{
+  padding: .65rem .75rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(255,255,255,.03);
+}
+
+html.dark .admin-dashboard .admin-seatperson{
+  border-color: rgba(255,255,255,.08);
+  background: rgba(0,0,0,.18);
+}
+
+/* Card tint – keep consistent with rest site */
+.admin-dashboard .admin-card{
+  border-radius: 18px;
+}
+
+/* Dark-mode tables: Bootstrap default often becomes unreadable */
+.admin-dashboard .admin-table{
+  --bs-table-bg: transparent;
+  --bs-table-color: inherit;
+}
+
+html.dark .admin-dashboard .table{
+  color: rgba(243,243,246,.92);
+}
+
+html.dark .admin-dashboard .table thead th{
+  color: rgba(243,243,246,.92);
+}
+
+html.dark .admin-dashboard .table-striped > tbody > tr:nth-of-type(odd) > *{
+  background-color: rgba(255,255,255,.03);
+  color: rgba(243,243,246,.92);
+}
+
+html.dark .admin-dashboard .table-hover > tbody > tr:hover > *{
+  background-color: rgba(201,162,39,.08);
+}
+
+/* Inputs in dark mode */
+html.dark .admin-dashboard .form-control,
+html.dark .admin-dashboard .form-select{
+  background-color: rgba(10,10,14,.55);
+  color: rgba(243,243,246,.92);
+  border-color: rgba(255,255,255,.14);
+}
+
+html.dark .admin-dashboard .form-control::placeholder{
+  color: rgba(243,243,246,.45);
+}
+
+/* Buttons: align to site “save” styling if existing .btn-save is used */
+.admin-dashboard .btn-save{
+  border-radius: 12px !important;
+}
+
+/* Hide sections smoothly (optional) */
+.admin-dashboard .admin-section{
+  animation: adminFade .12s ease-out;
+}
+@keyframes adminFade{
+  from { opacity: .0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

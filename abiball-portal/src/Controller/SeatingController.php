@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 // src/Controller/SeatingController.php
 require_once __DIR__ . '/../Bootstrap.php';
-require_once __DIR__ . '/../Security/SessionGuard.php';
 require_once __DIR__ . '/../Security/Csrf.php';
+require_once __DIR__ . '/../Auth/AuthContext.php';
 require_once __DIR__ . '/../Service/ParticipantService.php';
 require_once __DIR__ . '/../Service/SeatingService.php';
 require_once __DIR__ . '/../View/Layout.php';
@@ -14,19 +14,15 @@ final class SeatingController
 {
     public static function show(): void
     {
-        // Wichtig: Session sauber starten (falls requireLogin() das nicht macht)
         Bootstrap::init();
-        requireLogin();
+        AuthContext::requireLogin('/login.php');
 
-        $mainId = isset($_SESSION['main_id']) ? trim((string)$_SESSION['main_id']) : '';
+        $mainId = AuthContext::mainId();
         if ($mainId === '') {
             header('Location: /login.php');
             exit;
         }
 
-        // ----------------------------
-        // Personen (nur für diese main_id)
-        // ----------------------------
         $group = ParticipantService::getMainAndCompanions($mainId);
         $main = $group['main'] ?? null;
         $companions = $group['companions'] ?? [];
@@ -42,37 +38,29 @@ final class SeatingController
             }
         }
 
-        // Mapping id -> name
         $byId = [];
         foreach ($people as $p) {
             $byId[$p['id']] = $p['name'];
         }
 
-        // ----------------------------
-        // Sitzgruppen laden (nur für diese main_id)
-        // ----------------------------
-        $SG1 = 'SG1';
-        $SG2 = 'SG2';
-        $SG3 = 'SG3';
+        $SG1 = 'SG1'; $SG2 = 'SG2'; $SG3 = 'SG3';
 
         $seating = SeatingService::load($mainId);
-        $groups = (isset($seating['groups']) && is_array($seating['groups'])) ? $seating['groups'] : [];
-        $groupNotes = (isset($seating['group_notes']) && is_array($seating['group_notes'])) ? $seating['group_notes'] : [];
+        $groups = $seating['groups'] ?? [];
+        if (!is_array($groups)) $groups = [];
+        $groupNotes = $seating['group_notes'] ?? [];
+        if (!is_array($groupNotes)) $groupNotes = [];
 
         $hasSG2 = isset($groups[$SG2]) && is_array($groups[$SG2]);
         $hasSG3 = isset($groups[$SG3]) && is_array($groups[$SG3]);
 
-        // ----------------------------
-        // Members aus Storage ziehen + auf aktuelle erlaubte IDs filtern
-        // (das verhindert "reset", wenn sich Daten ändern oder leer geladen wird)
-        // ----------------------------
         $allowed = [];
         foreach ($people as $p) $allowed[$p['id']] = true;
 
         $g2Members = [];
         if ($hasSG2 && isset($groups[$SG2]['members']) && is_array($groups[$SG2]['members'])) {
             foreach ($groups[$SG2]['members'] as $id) {
-                $id = (string)$id;
+                $id = trim((string)$id);
                 if ($id !== '' && isset($allowed[$id])) $g2Members[] = $id;
             }
         }
@@ -80,12 +68,12 @@ final class SeatingController
         $g3Members = [];
         if ($hasSG3 && isset($groups[$SG3]['members']) && is_array($groups[$SG3]['members'])) {
             foreach ($groups[$SG3]['members'] as $id) {
-                $id = (string)$id;
+                $id = trim((string)$id);
                 if ($id !== '' && isset($allowed[$id])) $g3Members[] = $id;
             }
         }
 
-        // Unique-Regel: SG2 zuerst, dann SG3, Rest -> SG1
+        // Unique: SG2, dann SG3, Rest -> SG1
         $seen = [];
         $g2Clean = [];
         foreach ($g2Members as $id) {
@@ -114,15 +102,12 @@ final class SeatingController
 
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
               <div>
-                <div class="text-muted small" style="letter-spacing:.22em; text-transform:uppercase;">
-                  Sitzgruppen
-                </div>
+                <div class="text-muted small" style="letter-spacing:.22em; text-transform:uppercase;">Sitzgruppen</div>
                 <h1 class="h-serif mb-1" style="font-size: clamp(28px, 3.5vw, 40px); font-weight: 300; line-height: 1.1;">
                   Gruppen verwalten
                 </h1>
                 <div class="text-muted" style="font-size:.95rem; line-height:1.6; max-width: 68ch;">
-                  Ab 2 Gruppen kannst du Personen per Suche zwischen Gruppen verschieben.
-                  Drag &amp; Drop ist nur am Desktop verfügbar. Pro Gruppe kannst du außerdem eine Info hinterlegen.
+                  Personen zwischen Gruppen verschieben. Änderungen werden erst nach „Speichern“ übernommen.
                 </div>
               </div>
 
@@ -139,73 +124,32 @@ final class SeatingController
               </div>
             </div>
 
-            <!-- Inline CSS nur für Grid/Plus/Placeholder -->
             <style>
-              .groups-grid{
-                display: grid;
-                gap: 1rem;
-                align-items: start;
-              }
+              .groups-grid{ display:grid; gap:1rem; align-items:start; }
               @media (min-width: 992px){
                 .groups-grid.groups--1{ grid-template-columns: 1fr 1fr; }
                 .groups-grid.groups--2{ grid-template-columns: repeat(3, 1fr); }
                 .groups-grid.groups--3{ grid-template-columns: repeat(3, 1fr); }
-                .group-wrap{ min-width: 0; }
+                .group-wrap{ min-width:0; }
               }
-              @media (max-width: 991.98px){
-                .groups-grid{ grid-template-columns: 1fr; }
-              }
+              @media (max-width: 991.98px){ .groups-grid{ grid-template-columns: 1fr; } }
 
-              .group-add-tile{
-                width: 100%;
-                text-align: left;
-                background: transparent;
-                border: 1px dashed var(--border);
-                border-radius: var(--radius);
-                box-shadow: none;
-                cursor: pointer;
+              .group-add-tile{ width:100%; text-align:left; background:transparent; border:1px dashed var(--border);
+                border-radius:var(--radius); box-shadow:none; cursor:pointer;
                 transition: transform var(--theme-transition), border-color var(--theme-transition), background-color var(--theme-transition);
               }
-              .group-add-tile:hover{
-                transform: translateY(-1px);
-                background: var(--surface-2);
-                border-color: rgba(201,162,39,.38);
+              .group-add-tile:hover{ transform: translateY(-1px); background: var(--surface-2); border-color: rgba(201,162,39,.38); }
+              .group-add-plus{ width:58px; height:58px; border-radius:16px; display:grid; place-items:center; font-size:34px;
+                font-weight:700; line-height:1; background: rgba(201,162,39,.12); border:1px solid rgba(201,162,39,.28); color: var(--primary);
+                margin-bottom:.75rem;
               }
-              .group-add-plus{
-                width: 58px;
-                height: 58px;
-                border-radius: 16px;
-                display: grid;
-                place-items: center;
-                font-size: 34px;
-                font-weight: 700;
-                line-height: 1;
-                background: rgba(201,162,39,.12);
-                border: 1px solid rgba(201,162,39,.28);
-                color: var(--primary);
-                margin-bottom: .75rem;
-              }
+              .drop-placeholder{ border-radius:12px; border:1px dashed rgba(201,162,39,.35); background: rgba(201,162,39,.08); margin:.35rem 0; }
+              .person-item{ cursor:grab; }
+              @media (max-width: 991.98px){ .person-item{ cursor:default; } }
 
-              .drop-placeholder{
-                border-radius: 12px;
-                border: 1px dashed rgba(201,162,39,.35);
-                background: rgba(201,162,39,.08);
-                margin: .35rem 0;
-              }
-
-              .person-item{ cursor: grab; }
-              @media (max-width: 991.98px){
-                .person-item{ cursor: default; }
-              }
-
-              .btn-save-strong{
-                border-radius: 12px !important;
-                background: linear-gradient(180deg, var(--gold-2), var(--gold));
-                border: 1px solid rgba(0,0,0,.12);
-                color: #0b0b0f !important;
-                box-shadow: 0 14px 34px rgba(201,162,39,.22);
-                padding: .70rem 1.15rem;
-                font-weight: 700;
+              .btn-save-strong{ border-radius:12px !important; background: linear-gradient(180deg, var(--gold-2), var(--gold));
+                border:1px solid rgba(0,0,0,.12); color:#0b0b0f !important; box-shadow:0 14px 34px rgba(201,162,39,.22);
+                padding:.70rem 1.15rem; font-weight:700;
               }
               .btn-save-strong:hover{ filter: brightness(1.02); }
               .btn-save-strong:focus{ box-shadow: var(--focus), 0 14px 34px rgba(201,162,39,.22); }
@@ -224,27 +168,23 @@ final class SeatingController
                     <div class="mt-3">
                       <label class="form-label mb-1">Info zur Sitzgruppe</label>
                       <textarea class="form-control form-control-sm group-note" rows="2" data-group-id="<?= e($SG1) ?>"
-                                placeholder="z.B. Tischwunsch, Hinweise …"><?= e((string)($groupNotes[$SG1] ?? '')) ?></textarea>
+                        placeholder="z.B. Tischwunsch …"><?= e((string)($groupNotes[$SG1] ?? '')) ?></textarea>
                     </div>
 
                     <div class="group-tools mt-3">
                       <input class="form-control form-control-sm person-search"
-                             placeholder="Person suchen (Name oder ID) …"
-                             autocomplete="off"
-                             data-group-id="<?= e($SG1) ?>">
-                      <div class="text-muted" style="font-size:.85rem;">
-                        Auswahl/Enter → Person wird in Sitzgruppe 1 verschoben
-                      </div>
+                        placeholder="Person suchen (Name oder ID) …"
+                        autocomplete="off"
+                        data-group-id="<?= e($SG1) ?>">
+                      <div class="text-muted" style="font-size:.85rem;">Auswahl/Enter → Person wird in Sitzgruppe 1 verschoben</div>
                     </div>
 
                     <div class="drop-label mt-2">Personen</div>
                     <div class="dropzone" data-dropzone="group" data-group-id="<?= e($SG1) ?>">
                       <div class="list-group list-group-flush">
                         <?php foreach ($g1Clean as $pid): ?>
-                          <div class="list-group-item person-item"
-                               draggable="true"
-                               data-person-id="<?= e($pid) ?>"
-                               data-person-name="<?= e($byId[$pid] ?? '') ?>">
+                          <div class="list-group-item person-item" draggable="true"
+                            data-person-id="<?= e($pid) ?>" data-person-name="<?= e($byId[$pid] ?? '') ?>">
                             <div class="d-flex justify-content-between align-items-center gap-2">
                               <div class="fw-semibold"><?= e($byId[$pid] ?? '') ?></div>
                               <span class="badge text-bg-secondary"><?= e($pid) ?></span>
@@ -269,27 +209,23 @@ final class SeatingController
                     <div class="mt-3">
                       <label class="form-label mb-1">Info zur Sitzgruppe</label>
                       <textarea class="form-control form-control-sm group-note" rows="2" data-group-id="<?= e($SG2) ?>"
-                                placeholder="z.B. Tischwunsch, Hinweise …"><?= e((string)($groupNotes[$SG2] ?? '')) ?></textarea>
+                        placeholder="z.B. Tischwunsch …"><?= e((string)($groupNotes[$SG2] ?? '')) ?></textarea>
                     </div>
 
                     <div class="group-tools mt-3">
                       <input class="form-control form-control-sm person-search"
-                             placeholder="Person suchen (Name oder ID) …"
-                             autocomplete="off"
-                             data-group-id="<?= e($SG2) ?>">
-                      <div class="text-muted" style="font-size:.85rem;">
-                        Auswahl/Enter → Person wird in Sitzgruppe 2 verschoben
-                      </div>
+                        placeholder="Person suchen (Name oder ID) …"
+                        autocomplete="off"
+                        data-group-id="<?= e($SG2) ?>">
+                      <div class="text-muted" style="font-size:.85rem;">Auswahl/Enter → Person wird in Sitzgruppe 2 verschoben</div>
                     </div>
 
                     <div class="drop-label mt-2">Personen</div>
                     <div class="dropzone" data-dropzone="group" data-group-id="<?= e($SG2) ?>">
                       <div class="list-group list-group-flush">
                         <?php foreach ($g2Clean as $pid): ?>
-                          <div class="list-group-item person-item"
-                               draggable="true"
-                               data-person-id="<?= e($pid) ?>"
-                               data-person-name="<?= e($byId[$pid] ?? '') ?>">
+                          <div class="list-group-item person-item" draggable="true"
+                            data-person-id="<?= e($pid) ?>" data-person-name="<?= e($byId[$pid] ?? '') ?>">
                             <div class="d-flex justify-content-between align-items-center gap-2">
                               <div class="fw-semibold"><?= e($byId[$pid] ?? '') ?></div>
                               <span class="badge text-bg-secondary"><?= e($pid) ?></span>
@@ -299,9 +235,7 @@ final class SeatingController
                       </div>
                     </div>
 
-                    <div class="text-muted mt-2" style="font-size:.85rem;">
-                      Entfernen der Gruppe verschiebt alle wieder nach Sitzgruppe 1.
-                    </div>
+                    <div class="text-muted mt-2" style="font-size:.85rem;">Entfernen der Gruppe verschiebt alle wieder nach Sitzgruppe 1.</div>
                   </div>
                 </div>
               </section>
@@ -318,27 +252,23 @@ final class SeatingController
                     <div class="mt-3">
                       <label class="form-label mb-1">Info zur Sitzgruppe</label>
                       <textarea class="form-control form-control-sm group-note" rows="2" data-group-id="<?= e($SG3) ?>"
-                                placeholder="z.B. Tischwunsch, Hinweise …"><?= e((string)($groupNotes[$SG3] ?? '')) ?></textarea>
+                        placeholder="z.B. Tischwunsch …"><?= e((string)($groupNotes[$SG3] ?? '')) ?></textarea>
                     </div>
 
                     <div class="group-tools mt-3">
                       <input class="form-control form-control-sm person-search"
-                             placeholder="Person suchen (Name oder ID) …"
-                             autocomplete="off"
-                             data-group-id="<?= e($SG3) ?>">
-                      <div class="text-muted" style="font-size:.85rem;">
-                        Auswahl/Enter → Person wird in Sitzgruppe 3 verschoben
-                      </div>
+                        placeholder="Person suchen (Name oder ID) …"
+                        autocomplete="off"
+                        data-group-id="<?= e($SG3) ?>">
+                      <div class="text-muted" style="font-size:.85rem;">Auswahl/Enter → Person wird in Sitzgruppe 3 verschoben</div>
                     </div>
 
                     <div class="drop-label mt-2">Personen</div>
                     <div class="dropzone" data-dropzone="group" data-group-id="<?= e($SG3) ?>">
                       <div class="list-group list-group-flush">
                         <?php foreach ($g3Clean as $pid): ?>
-                          <div class="list-group-item person-item"
-                               draggable="true"
-                               data-person-id="<?= e($pid) ?>"
-                               data-person-name="<?= e($byId[$pid] ?? '') ?>">
+                          <div class="list-group-item person-item" draggable="true"
+                            data-person-id="<?= e($pid) ?>" data-person-name="<?= e($byId[$pid] ?? '') ?>">
                             <div class="d-flex justify-content-between align-items-center gap-2">
                               <div class="fw-semibold"><?= e($byId[$pid] ?? '') ?></div>
                               <span class="badge text-bg-secondary"><?= e($pid) ?></span>
@@ -348,9 +278,7 @@ final class SeatingController
                       </div>
                     </div>
 
-                    <div class="text-muted mt-2" style="font-size:.85rem;">
-                      Entfernen der Gruppe verschiebt alle wieder nach Sitzgruppe 1.
-                    </div>
+                    <div class="text-muted mt-2" style="font-size:.85rem;">Entfernen der Gruppe verschiebt alle wieder nach Sitzgruppe 1.</div>
                   </div>
                 </div>
               </section>
@@ -371,10 +299,7 @@ final class SeatingController
               <?= Csrf::inputField() ?>
               <input type="hidden" name="payload" id="payload">
 
-              <div class="text-muted" style="font-size:.9rem;">
-                Änderungen werden erst nach „Speichern“ übernommen.
-              </div>
-
+              <div class="text-muted" style="font-size:.9rem;">Änderungen werden erst nach „Speichern“ übernommen.</div>
               <button class="btn btn-save-strong" type="submit">Speichern</button>
             </form>
 
@@ -395,7 +320,6 @@ final class SeatingController
           const tileAdd = document.getElementById('addGroupTile');
 
           const groupsEl = document.getElementById('groups');
-
           const mqDesktop = window.matchMedia('(min-width: 992px)');
           const mqMobileLike = window.matchMedia('(max-width: 991.98px)');
 
@@ -432,13 +356,10 @@ final class SeatingController
 
           function refreshControls() {
             const n = visibleGroupCount();
-
             if (btnAdd) btnAdd.style.display = (n >= 3) ? 'none' : '';
             if (btnRemove) btnRemove.style.display = (n >= 2) ? '' : 'none';
-
             const showTile = (n < 3);
             if (tileWrap) tileWrap.style.display = showTile ? '' : 'none';
-
             applyGridMode();
           }
 
@@ -464,12 +385,11 @@ final class SeatingController
             }
 
             targetWrap.style.display = 'none';
-
             refreshControls();
             updateCounts();
           }
 
-          // ---------- Search ----------
+          // Search
           function getAllPeopleElements() {
             return Array.from(document.querySelectorAll('.person-item'));
           }
@@ -481,10 +401,8 @@ final class SeatingController
           function movePersonToGroup(groupId, personId) {
             const zone = document.querySelector(`.dropzone[data-dropzone="group"][data-group-id="${CSS.escape(groupId)}"]`);
             if (!zone) return;
-
             const person = document.querySelector(`.person-item[data-person-id="${CSS.escape(personId)}"]`);
             if (!person) return;
-
             ensureList(zone).appendChild(person);
             updateCounts();
           }
@@ -522,7 +440,6 @@ final class SeatingController
             input.addEventListener('input', () => {
               const q = input.value.trim().toLowerCase();
               if (q.length < 2) { closeDropdown(); return; }
-
               const candidates = getAllPeopleElements().filter(el => matchesQuery(el, q));
               if (candidates.length === 0) { closeDropdown(); return; }
               openDropdown(candidates);
@@ -530,12 +447,10 @@ final class SeatingController
 
             input.addEventListener('keydown', (e) => {
               if (e.key === 'Escape') closeDropdown();
-
               if (e.key === 'Enter') {
                 e.preventDefault();
                 const q = input.value.trim().toLowerCase();
                 if (q.length < 1) return;
-
                 const candidates = getAllPeopleElements().filter(el => matchesQuery(el, q));
                 if (candidates.length >= 1) {
                   movePersonToGroup(input.dataset.groupId, candidates[0].dataset.personId);
@@ -553,13 +468,11 @@ final class SeatingController
           }
           document.querySelectorAll('.person-search').forEach(wireSearchInput);
 
-          // ---------- Drag & Drop (Desktop only) + Placeholder ----------
+          // Drag & Drop
           let placeholder = null;
           let dragHeight = 0;
 
-          function isDragEnabled() {
-            return mqDesktop.matches;
-          }
+          function isDragEnabled() { return mqDesktop.matches; }
 
           function makePlaceholder(heightPx) {
             const ph = document.createElement('div');
@@ -567,26 +480,19 @@ final class SeatingController
             ph.style.height = `${Math.max(44, heightPx)}px`;
             return ph;
           }
-
           function removePlaceholder() {
             if (placeholder && placeholder.parentElement) placeholder.parentElement.removeChild(placeholder);
             placeholder = null;
           }
-
           function setDraggableState() {
             const enabled = isDragEnabled();
             document.querySelectorAll('.person-item').forEach(el => {
               el.setAttribute('draggable', enabled ? 'true' : 'false');
             });
           }
-
           function wireDrag(el) {
             el.addEventListener('dragstart', (e) => {
-              if (!isDragEnabled()) {
-                e.preventDefault();
-                return;
-              }
-
+              if (!isDragEnabled()) { e.preventDefault(); return; }
               dragHeight = el.getBoundingClientRect().height || 48;
 
               e.dataTransfer.setData('text/plain', JSON.stringify({
@@ -605,6 +511,7 @@ final class SeatingController
               document.querySelectorAll('.dropzone').forEach(z => z.classList.remove('is-over'));
             });
           }
+          document.querySelectorAll('.person-item').forEach(wireDrag);
 
           function getZone(target) {
             if (!isDragEnabled()) return null;
@@ -621,8 +528,6 @@ final class SeatingController
               list.appendChild(placeholder);
             }
           }
-
-          document.querySelectorAll('.person-item').forEach(wireDrag);
 
           document.addEventListener('dragover', (e) => {
             const zone = getZone(e.target);
@@ -655,18 +560,14 @@ final class SeatingController
             if (!person) { removePlaceholder(); return; }
 
             const list = ensureList(zone);
-
-            if (placeholder && placeholder.parentElement === list) {
-              list.insertBefore(person, placeholder);
-            } else {
-              list.appendChild(person);
-            }
+            if (placeholder && placeholder.parentElement === list) list.insertBefore(person, placeholder);
+            else list.appendChild(person);
 
             removePlaceholder();
             updateCounts();
           }, true);
 
-          // ---------- Save payload ----------
+          // Save payload
           document.getElementById('saveForm').addEventListener('submit', () => {
             const data = { groups: {}, group_notes: {} };
 
@@ -696,21 +597,15 @@ final class SeatingController
             document.getElementById('payload').value = JSON.stringify(data);
           });
 
-          // ---------- Controls ----------
           if (btnAdd) btnAdd.addEventListener('click', addGroup);
           if (tileAdd) tileAdd.addEventListener('click', addGroup);
           if (btnRemove) btnRemove.addEventListener('click', removeLastGroup);
 
-          function onResizeLike() {
-            setDraggableState();
-            refreshControls();
-          }
-
+          function onResizeLike() { setDraggableState(); refreshControls(); }
           mqDesktop.addEventListener?.('change', onResizeLike);
           mqMobileLike.addEventListener?.('change', onResizeLike);
           window.addEventListener('resize', onResizeLike);
 
-          // init
           setDraggableState();
           refreshControls();
           updateCounts();
@@ -724,7 +619,7 @@ final class SeatingController
     public static function save(): void
     {
         Bootstrap::init();
-        requireLogin();
+        AuthContext::requireLogin('/login.php');
 
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
             header('Location: /seating.php');
@@ -737,14 +632,13 @@ final class SeatingController
             exit;
         }
 
-        $mainId = isset($_SESSION['main_id']) ? trim((string)$_SESSION['main_id']) : '';
+        $mainId = AuthContext::mainId();
         if ($mainId === '') {
             header('Location: /login.php');
             exit;
         }
 
         $payload = (string)($_POST['payload'] ?? '');
-
         $data = json_decode($payload, true);
         if (!is_array($data) || !isset($data['groups']) || !is_array($data['groups'])) {
             http_response_code(400);
@@ -755,14 +649,14 @@ final class SeatingController
         $groupNotes = $data['group_notes'] ?? [];
         if (!is_array($groupNotes)) $groupNotes = [];
 
-        $SG1 = 'SG1';
-        $SG2 = 'SG2';
-        $SG3 = 'SG3';
+        $SG1='SG1'; $SG2='SG2'; $SG3='SG3';
 
-        // Erlaubte IDs: nur Hauptgast + Begleiter dieser main_id
+        // Allowed IDs (nur eigene Gruppe)
         $grp = ParticipantService::getMainAndCompanions($mainId);
         $allowed = [];
-        if (!empty($grp['main']) && is_array($grp['main'])) $allowed[(string)$grp['main']['id']] = true;
+        if (!empty($grp['main']) && is_array($grp['main']) && !empty($grp['main']['id'])) {
+            $allowed[(string)$grp['main']['id']] = true;
+        }
         if (!empty($grp['companions']) && is_array($grp['companions'])) {
             foreach ($grp['companions'] as $c) {
                 if (!is_array($c) || empty($c['id'])) continue;
@@ -775,7 +669,6 @@ final class SeatingController
         $has2 = isset($raw[$SG2]) && is_array($raw[$SG2]);
         $has3 = isset($raw[$SG3]) && is_array($raw[$SG3]);
 
-        // Unique: SG2 zuerst, dann SG3, Rest -> SG1
         $seen = [];
 
         $g2 = [];
@@ -783,7 +676,7 @@ final class SeatingController
             $m = $raw[$SG2]['members'] ?? [];
             if (!is_array($m)) $m = [];
             foreach ($m as $id) {
-                $id = (string)$id;
+                $id = trim((string)$id);
                 if ($id === '' || !isset($allowed[$id]) || isset($seen[$id])) continue;
                 $seen[$id] = true;
                 $g2[] = $id;
@@ -795,7 +688,7 @@ final class SeatingController
             $m = $raw[$SG3]['members'] ?? [];
             if (!is_array($m)) $m = [];
             foreach ($m as $id) {
-                $id = (string)$id;
+                $id = trim((string)$id);
                 if ($id === '' || !isset($allowed[$id]) || isset($seen[$id])) continue;
                 $seen[$id] = true;
                 $g3[] = $id;
@@ -812,7 +705,6 @@ final class SeatingController
         if ($has2) $clean[$SG2] = ['name' => 'Sitzgruppe 2', 'members' => $g2];
         if ($has3) $clean[$SG3] = ['name' => 'Sitzgruppe 3', 'members' => $g3];
 
-        // Person-Notes beibehalten
         $existing = SeatingService::load($mainId);
         $personNotes = $existing['person_notes'] ?? [];
         if (!is_array($personNotes)) $personNotes = [];
