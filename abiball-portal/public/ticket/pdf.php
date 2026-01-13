@@ -4,77 +4,47 @@ declare(strict_types=1);
 // public/ticket/pdf.php
 
 require_once __DIR__ . '/../../vendor/autoload.php';
-
-require_once __DIR__ . '/../../src/Bootstrap.php';
-require_once __DIR__ . '/../../src/Http/Request.php';
-require_once __DIR__ . '/../../src/Http/Response.php';
-
 require_once __DIR__ . '/../../src/Security/SessionGuard.php';
-require_once __DIR__ . '/../../src/Repository/TicketRepository.php';
-require_once __DIR__ . '/../../src/Service/PricingService.php';
-require_once __DIR__ . '/../../src/Config.php';
+require_once __DIR__ . '/../../src/Repository/ParticipantsRepository.php';
+require_once __DIR__ . '/../../src/Repository/PricingOverridesRepository.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\PngWriter;
 
-Bootstrap::init();
 requireLogin();
 
-// In DB-Welt: canonical session key (empfohlen)
-$sessionUserId = (string)($_SESSION['user_id'] ?? $_SESSION['main_id'] ?? '');
-if ($sessionUserId === '') {
-    http_response_code(403);
-    exit('Forbidden');
-}
-
-/**
- * Input:
- * - Übergangsweise akzeptieren wir weiterhin pid (Person-ID) aus deinem alten System.
- * - Empfohlen: zukünftig ticket_id oder person_id (intern identisch möglich).
- */
 $pid = isset($_GET['pid']) ? trim((string)$_GET['pid']) : '';
-if ($pid === '') {
-    http_response_code(400);
-    exit('Missing pid');
-}
+if ($pid === '') { http_response_code(400); exit('Missing pid'); }
 
-/**
- * DB: Ticket + Person + Main nur laden, wenn sie dem eingeloggten Nutzer gehören.
- * Diese Funktion MUSS Ownership serverseitig durchsetzen:
- * - ticket.main_id === sessionUserId
- */
-$ticket = TicketRepository::findOwnedTicketForPdf($pid, $sessionUserId);
-if (!$ticket) {
-    http_response_code(404);
-    exit('Ticket not found');
-}
+$person = ParticipantsRepository::findById($pid);
+if (!$person) { http_response_code(404); exit('Person not found'); }
 
-/**
- * Token für QR:
- * - QR enthält t=<token> (Klartext)
- * - DB speichert nur token_hash
- * TicketRepository::ensureVerifyToken() soll:
- * - falls noch kein Token existiert: generieren, Hash speichern
- * - Klartext-Token zurückgeben (nur für PDF-Ausgabe)
- */
-$token = TicketRepository::ensureVerifyToken($ticket);
-if (!is_string($token) || $token === '') {
-    http_response_code(500);
-    exit('Token error');
-}
+$mainId = (string)($person['main_id'] ?? '');
+if ($mainId === '') { http_response_code(500); exit('Invalid main_id'); }
+
+$sessionMainId = (string)($_SESSION['main_id'] ?? '');
+if ($sessionMainId === '' || $sessionMainId !== $mainId) { http_response_code(403); exit('Forbidden'); }
+
+$main = ParticipantsRepository::findById($mainId);
+if (!$main) { http_response_code(500); exit('Main user not found'); }
 
 // --------------------
-// Preis / Override (DB)
+// Preis / Override
 // --------------------
-$personId = (string)($ticket['person_id'] ?? $pid);
+$DEFAULT_PRICE = 17;
+$override = PricingOverridesRepository::mapById()[$pid] ?? null;
 
-$priceInfo = PricingService::ticketPriceForPersonId($personId);
-// Erwartet: ['price'=>int, 'has_override'=>bool, 'reason'=>?string]
-$ticketPrice = (int)($priceInfo['price'] ?? 0);
-$hasOverride = (bool)($priceInfo['has_override'] ?? false);
-$overrideReason = trim((string)($priceInfo['reason'] ?? ''));
+$ticketPrice = $DEFAULT_PRICE;
+$overrideReason = '';
+$hasOverride = false;
+
+if (is_array($override)) {
+    $hasOverride = true;
+    $ticketPrice = (int)($override['ticket_price'] ?? $DEFAULT_PRICE);
+    $overrideReason = trim((string)($override['reason'] ?? ''));
+}
 
 // --------------------
 // Logo (Data-URI)
@@ -92,19 +62,16 @@ $logoHtml = ($logoDataUri !== '')
     : '';
 
 // --------------------
-// Verify URL + QR (Base URL aus Config, nicht HTTP_HOST)
+// Verify URL + QR
 // --------------------
-$base = rtrim((string)Config::baseUrl(), '/');
-if ($base === '') {
-    http_response_code(500);
-    exit('Base URL not configured');
-}
-$verifyUrl = $base . '/ticket/verify.php?t=' . rawurlencode($token);
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$verifyUrl = $scheme . '://' . $host . '/ticket/verify.php?pid=' . rawurlencode($pid);
 
 $qr = Builder::create()
     ->writer(new PngWriter())
     ->data($verifyUrl)
-    ->size(340)
+    ->size(340)     // echte Pixelgröße; Anzeige steuern wir im CSS
     ->margin(10)
     ->build();
 
@@ -113,9 +80,9 @@ $qrDataUri = $qr->getDataUri();
 // --------------------
 // Daten
 // --------------------
-$personName = (string)($ticket['person_name'] ?? '');
-$personPublicId = (string)($ticket['person_public_id'] ?? $ticket['person_id'] ?? $pid); // optional
-$mainName   = (string)($ticket['main_name'] ?? '');
+$personName = (string)($person['name'] ?? '');
+$personId   = (string)($person['id'] ?? $pid);
+$mainName   = (string)($main['name'] ?? '');
 
 $priceText = (string)$ticketPrice . ' €';
 $priceNote = '';
@@ -126,19 +93,25 @@ if ($hasOverride && $overrideReason !== '') {
 }
 
 // --------------------
-// Skalierung (wie bisher)
+// Skalierung (WICHTIG)
 // --------------------
+// Ziel: Ticket IMMER kleiner als A5, mittig, ohne CSS-transform.
+// Werte zwischen 0.86 und 0.94 sind realistisch.
 $SCALE = 0.90;
 
+// A5 in mm
 $PAGE_W = 148.0;
 $PAGE_H = 210.0;
 
+// "Design"-Innenmaß (wie früher bei 10mm Rand): 128 x 190
 $BASE_W = 128.0;
 $BASE_H = 190.0;
 
+// Finale Ticket-Maße (mm) – garantiert kleiner als Seite
 $TICKET_W = $BASE_W * $SCALE;
 $TICKET_H = $BASE_H * $SCALE;
 
+// Hilfsfunktionen für saubere CSS-Werte
 $mm = static fn(float $v): string => rtrim(rtrim(number_format($v, 2, '.', ''), '0'), '.') . 'mm';
 $pt = static fn(float $v): string => rtrim(rtrim(number_format($v, 2, '.', ''), '0'), '.') . 'pt';
 
@@ -173,10 +146,13 @@ $html = '
   <meta charset="utf-8">
   <style>
     @page { size: A5 portrait; margin: 0; }
+
     html, body { margin: 0; padding: 0; }
     * { box-sizing: border-box; }
+
     body { font-family: DejaVu Sans, Arial, sans-serif; color: #111; }
 
+    /* Eine Seite, exakt A5 */
     table.page {
       width: ' . $mm($PAGE_W) . ';
       height: ' . $mm($PAGE_H) . ';
@@ -190,6 +166,7 @@ $html = '
       padding: 0;
     }
 
+    /* Ticket ist bereits "physisch skaliert" (keine transform) */
     .ticket {
       display: inline-block;
       width: ' . $mm($TICKET_W) . ';
@@ -200,8 +177,10 @@ $html = '
       overflow: hidden;
     }
 
+    /* Reset für dompdf */
     h1, p { margin: 0; padding: 0; }
 
+    /* Header als Tabelle (stabil) */
     table.head { width: 100%; border-collapse: collapse; }
     table.head td { vertical-align: top; padding: 0; }
     td.left { width: 100%; }
@@ -286,7 +265,7 @@ $html = '
                 </span>
               </td>
               <td class="right">
-                <span class="pill">' . htmlspecialchars($personPublicId, ENT_QUOTES, "UTF-8") . '</span>
+                <span class="pill">' . htmlspecialchars($personId, ENT_QUOTES, "UTF-8") . '</span>
               </td>
             </tr>
           </table>
@@ -334,12 +313,14 @@ $html = '
 $options = new Options();
 $options->set('isRemoteEnabled', false);
 $options->set('defaultFont', 'DejaVu Sans');
+// optional stabiler in vielen Setups:
+// $options->set('isHtml5ParserEnabled', true);
 
 $dompdf = new Dompdf($options);
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A5', 'portrait');
 $dompdf->render();
 
-$filename = 'ticket_' . preg_replace('/[^A-Za-z0-9_-]/', '_', (string)$personPublicId) . '.pdf';
+$filename = 'ticket_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $personId) . '.pdf';
 $dompdf->stream($filename, ['Attachment' => true]);
 exit;

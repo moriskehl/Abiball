@@ -1,29 +1,13 @@
 <?php
 declare(strict_types=1);
 
-// src/Controller/AuthController.php (DB-ready, gehärtet)
-//
-// Änderungen ggü. CSV-Version:
-// - ParticipantsRepository -> UserRepository (DB)
-// - login_code Klartext -> password_hash + password_verify
-// - einheitliche Session-Keys: user_id, role, display_name, ticket_count
-// - Fehlermeldungen vereinheitlicht (keine Enumeration)
-// - optional: password_needs_rehash
-//
-// Voraussetzungen (neu/DB):
-// - src/Repository/UserRepository.php
-//   - findMainByIdOrName(string $identifier): ?array {id, name, main_id, role, password_hash}
-//   - ticketCountForMainId(string $mainId): int
-//   - resolveMainIdFromRow(array $row): string (oder direkt main_id Feld sauber pflegen)
-//   - updatePasswordHash(string $userId, string $hash): void
-// - Bootstrap, Csrf, RateLimiter, Request, Response, Layout, Helpers wie gehabt
-
+// src/Controller/AuthController.php
 require_once __DIR__ . '/../Bootstrap.php';
 require_once __DIR__ . '/../Security/Csrf.php';
 require_once __DIR__ . '/../Security/RateLimiter.php';
 require_once __DIR__ . '/../Http/Request.php';
 require_once __DIR__ . '/../Http/Response.php';
-require_once __DIR__ . '/../Repository/UserRepository.php';
+require_once __DIR__ . '/../Repository/ParticipantsRepository.php';
 require_once __DIR__ . '/../View/Layout.php';
 require_once __DIR__ . '/../View/Helpers.php';
 
@@ -32,11 +16,6 @@ final class AuthController
     public static function showLoginForm(string $error = '', string $identifier = ''): void
     {
         Bootstrap::init();
-
-        // Wenn bereits eingeloggt: direkt Dashboard
-        if (!empty($_SESSION['user_id'])) {
-            Response::redirect('/dashboard.php');
-        }
 
         Layout::header('Abiball – Login');
         ?>
@@ -49,7 +28,7 @@ final class AuthController
               </h1>
 
               <p class="text-muted mb-0" style="font-size: 1.05rem; line-height: 1.7;">
-                Melde dich mit Hauptgast-ID oder Name und deinem Passwort an, um Tickets, Sitzplätze und Status im Dashboard einzusehen.
+                Melde dich mit Hauptgast-ID oder Name und deinem Login-Code an, um Tickets, Sitzplätze und Status im Dashboard einzusehen.
               </p>
             </div>
 
@@ -76,7 +55,7 @@ final class AuthController
                   </div>
 
                   <div class="mb-4">
-                    <label class="form-label">Passwort</label>
+                    <label class="form-label">Passwort (Login-Code)</label>
                     <input
                       class="form-control"
                       type="password"
@@ -94,7 +73,7 @@ final class AuthController
                   <hr class="my-4">
 
                   <div class="text-muted small" style="line-height: 1.6;">
-                    Hinweis: Das Passwort wird vom Organisationsteam vergeben. Bitte prüfe Groß-/Kleinschreibung und Sonderzeichen.
+                    Hinweis: Der Login-Code wird vom Organisationsteam vergeben. Bitte prüfe Groß-/Kleinschreibung und Sonderzeichen.
                   </div>
                 </form>
 
@@ -111,70 +90,67 @@ final class AuthController
     {
         Bootstrap::init();
 
-        if (!empty($_SESSION['user_id'])) {
+        // Wenn schon eingeloggt (neuer und alter Key)
+        if (!empty($_SESSION['main_id']) || !empty($_SESSION['participant_id'])) {
             Response::redirect('/dashboard.php');
         }
 
-        // RateLimit: User-Login moderat
         $ipKey = 'login_' . Request::ip();
         if (!RateLimiter::allow($ipKey, 10, 60)) {
-            self::showLoginForm('Zu viele Versuche. Bitte kurz warten.');
+            self::showLoginForm('Zu viele Versuche. Bitte 1 Minute warten.');
             return;
         }
 
         if (!Csrf::validate(Request::postString('_csrf'))) {
-            self::showLoginForm('Ungültige Anfrage. Bitte Seite neu laden.', Request::postString('identifier'));
+            self::showLoginForm('Ungültige Anfrage (CSRF). Seite neu laden und erneut versuchen.');
             return;
         }
 
         $identifier = Request::postString('identifier');
-        $password   = (string)($_POST['password'] ?? '');
+        $password = (string)($_POST['password'] ?? '');
 
         if ($identifier === '' || $password === '') {
-            self::showLoginForm('Login fehlgeschlagen.', $identifier);
+            self::showLoginForm('Bitte Name/ID und Passwort eingeben.', $identifier);
             return;
         }
 
-        // DB Lookup: Hauptgast (USER) anhand ID oder Name
-        $user = UserRepository::findMainByIdOrName($identifier);
-
-        // Keine Enumeration: gleiche Fehlermeldung
+        $user = ParticipantsRepository::findMainByIdOrName($identifier);
         if (!$user) {
-            self::showLoginForm('Login fehlgeschlagen.', $identifier);
+            self::showLoginForm('Kein Hauptgast gefunden.', $identifier);
             return;
         }
 
-        $hash = (string)($user['password_hash'] ?? '');
-        if ($hash === '' || !password_verify($password, $hash)) {
-            self::showLoginForm('Login fehlgeschlagen.', $identifier);
+        $stored = (string)($user['login_code'] ?? '');
+        if ($stored === '' || $stored === '0') {
+            self::showLoginForm('Für diesen Hauptgast ist kein Login-Code gesetzt.', $identifier);
             return;
         }
 
-        // Optional: Rehash bei geänderter Policy
-        if (password_needs_rehash($hash, PASSWORD_DEFAULT)) {
-            UserRepository::updatePasswordHash((string)$user['id'], password_hash($password, PASSWORD_DEFAULT));
+        if (!hash_equals($stored, $password)) {
+            self::showLoginForm('Passwort ist falsch.', $identifier);
+            return;
         }
 
-        // Session setzen
+        // ----------------------------
+        // Session setzen (WICHTIG)
+        // ----------------------------
         session_regenerate_id(true);
 
-        // Canonical: mainId = Group Identifier
-        $mainId = (string)UserRepository::resolveMainIdFromRow($user);
+        // main_id robust bestimmen (für Hauptgast ist main_id meist = id, aber nicht garantiert)
+        $mainId = ParticipantsRepository::resolveMainIdFromRow($user);
 
-        // Ticketanzahl: Gruppengröße
-        $ticketCount = (int)UserRepository::ticketCountForMainId($mainId);
+        // Ticketanzahl: Gruppengröße (Hauptgast + Begleiter) als sinnvoller Default
+        $ticketCount = ParticipantsRepository::ticketCountForMainId($mainId);
 
-        $_SESSION['user_id']      = $mainId; // canonical "Hauptgast" / group owner
-        $_SESSION['role']         = (string)($user['role'] ?? 'USER');
-        $_SESSION['display_name'] = (string)($user['name'] ?? '');
-        $_SESSION['ticket_count'] = max(1, $ticketCount);
+        // neue Keys (für ZahlungController)
+        $_SESSION['participant_id']   = $mainId;
+        $_SESSION['participant_name'] = (string)($user['name'] ?? '');
+        $_SESSION['ticket_count']     = $ticketCount;
 
-        // Backwards-Compatibility (nur während Migration)
-        $_SESSION['main_id']         = $mainId;
-        $_SESSION['participant_id']  = $mainId;
-        $_SESSION['participant_name']= (string)($user['name'] ?? '');
-        $_SESSION['guest_id']        = (string)($user['id'] ?? '');
-        $_SESSION['guest_name']      = (string)($user['name'] ?? '');
+        // alte Keys (Backwards-Compatibility für vorhandene Seiten)
+        $_SESSION['main_id']     = $mainId;
+        $_SESSION['guest_id']    = (string)($user['id'] ?? '');
+        $_SESSION['guest_name']  = (string)($user['name'] ?? '');
 
         Response::redirect('/dashboard.php');
     }
@@ -184,20 +160,18 @@ final class AuthController
         Bootstrap::init();
 
         $_SESSION = [];
-
         if (ini_get('session.use_cookies')) {
             $p = session_get_cookie_params();
             setcookie(
                 session_name(),
                 '',
                 time() - 42000,
-                $p['path'] ?? '/',
-                $p['domain'] ?? '',
-                (bool)($p['secure'] ?? false),
-                (bool)($p['httponly'] ?? true)
+                $p['path'],
+                $p['domain'],
+                (bool)$p['secure'],
+                (bool)$p['httponly']
             );
         }
-
         session_destroy();
 
         Response::redirect('/login.php');

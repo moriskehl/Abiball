@@ -2,35 +2,10 @@
 declare(strict_types=1);
 
 // public/ticket/verify.php
-//
-// DB-kompatible & sicherere Version:
-// - QR nutzt token ?t=... statt ?pid=... (verhindert einfache Enumeration)
-// - Rate-Limit gegen Scans/Bruteforce
-// - Keine detailreichen Fehlermeldungen (verhindert Enumeration/Side-Channel)
-// - Optional: Self-Scan zeigt keine sensiblen Daten (konfigurierbar)
-// - Pricing/Payments über DB-Services/Repos
-//
-// Voraussetzungen:
-// - src/Bootstrap.php
-// - src/Security/RateLimiter.php
-// - src/Security/TicketToken.php
-// - src/Repository/TicketRepository.php
-// - src/Service/PricingService.php
-// - src/View/Helpers.php
-// - src/Config.php (baseUrl, ticketTokenSecret, etc.)
 
-require_once __DIR__ . '/../../src/Bootstrap.php';
-require_once __DIR__ . '/../../src/Config.php';
-
-require_once __DIR__ . '/../../src/Security/RateLimiter.php';
-require_once __DIR__ . '/../../src/Security/TicketToken.php';
-
-require_once __DIR__ . '/../../src/Repository/TicketRepository.php';
+require_once __DIR__ . '/../../src/Repository/ParticipantsRepository.php';
 require_once __DIR__ . '/../../src/Service/PricingService.php';
-
 require_once __DIR__ . '/../../src/View/Helpers.php';
-
-Bootstrap::init();
 
 function badge(string $text, string $variant = 'ok'): string
 {
@@ -38,18 +13,13 @@ function badge(string $text, string $variant = 'ok'): string
     return '<span class="pill pill-' . $variant . '">' . e($text) . '</span>';
 }
 
-/**
- * Konfiguration:
- * - Bei Self-Scan ist es sicherer, KEINE personenbezogenen Daten anzuzeigen.
- * - Wenn ihr am Einlass wirklich Name/ID sehen wollt: auf true setzen, aber idealerweise nur im "Staff-Modus".
- */
-const SHOW_PERSONAL_DATA = true;
-
 function renderPage(string $state, array $data): void
 {
+    // $state: ok|bad
     http_response_code(200);
 
     $title = ($state === 'ok') ? 'Ticket Prüfung – Gültig' : 'Ticket Prüfung – Ungültig';
+
     $headline = ($state === 'ok') ? 'Gültiges Ticket' : 'Ungültiges Ticket';
     $icon = ($state === 'ok') ? '✓' : '✕';
 
@@ -216,7 +186,9 @@ function renderPage(string $state, array $data): void
                 background: rgba(255,77,90,.10);
             }
 
-            .body{ padding: 18px; }
+            .body{
+                padding: 18px;
+            }
 
             .grid{
                 display:grid;
@@ -250,6 +222,16 @@ function renderPage(string $state, array $data): void
                 font-size: .98rem;
                 text-align:right;
                 word-break: break-word;
+            }
+
+            .note{
+                margin-top: 12px;
+                padding: 12px;
+                border-radius: 14px;
+                border: 1px dashed var(--border);
+                color: var(--muted);
+                font-size: .9rem;
+                line-height: 1.55;
             }
 
             .statusline{
@@ -317,21 +299,21 @@ function renderPage(string $state, array $data): void
 
                     <div class="body">
                         <div class="grid">
-                            <?php if (SHOW_PERSONAL_DATA && $personName !== ''): ?>
+                            <?php if ($personName !== ''): ?>
                                 <div class="row">
                                     <div class="label">Name</div>
                                     <div class="value"><?= e($personName) ?></div>
                                 </div>
                             <?php endif; ?>
 
-                            <?php if (SHOW_PERSONAL_DATA && $personId !== ''): ?>
+                            <?php if ($personId !== ''): ?>
                                 <div class="row">
                                     <div class="label">Ticket-ID</div>
                                     <div class="value"><?= e($personId) ?></div>
                                 </div>
                             <?php endif; ?>
 
-                            <?php if (SHOW_PERSONAL_DATA && $mainName !== ''): ?>
+                            <?php if ($mainName !== ''): ?>
                                 <div class="row">
                                     <div class="label">Hauptgast</div>
                                     <div class="value"><?= e($mainName) ?></div>
@@ -368,93 +350,55 @@ function renderPage(string $state, array $data): void
     exit;
 }
 
-// --------------------
-// Rate-Limit (wichtig)
-// --------------------
-$ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-$rlKey = 'ticket_verify_' . $ip;
-if (!RateLimiter::allow($rlKey, 60, 60)) {
-    // 60 Requests / Minute pro IP
+// --- Input ---
+$pid = isset($_GET['pid']) ? trim((string)$_GET['pid']) : '';
+if ($pid === '') {
     renderPage('bad', [
-        'reason' => 'Zu viele Anfragen. Bitte kurz warten.',
+        'reason' => 'Ticket-ID fehlt oder QR-Code ist beschädigt.',
     ]);
 }
 
-// --------------------
-// Input: token ?t=...
-// --------------------
-$t = isset($_GET['t']) ? trim((string)$_GET['t']) : '';
-if ($t === '') {
-    // Übergangsweise: alte QR-Codes mit pid akzeptieren, aber NICHT bevorzugen.
-    $pid = isset($_GET['pid']) ? trim((string)$_GET['pid']) : '';
-    if ($pid !== '') {
-        // Fallback: unsicherer Altpfad (sollte nach Migration entfernt werden)
-        $legacy = TicketRepository::findLegacyByPersonId($pid);
-        if (!$legacy) {
-            renderPage('bad', ['reason' => 'Ungültiges Ticket.']);
-        }
-        // Preis-/Zahlungsprüfung wie unten
-        $mainId = (string)($legacy['main_id'] ?? '');
-        if ($mainId === '') {
-            renderPage('bad', ['reason' => 'Ungültiges Ticket.']);
-        }
-
-        $paid = (int)TicketRepository::amountPaidForMain($mainId);
-        $dueInfo = PricingService::amountDueForMainId($mainId);
-        $due = (int)($dueInfo['amount_due'] ?? 0);
-
-        if ($due < 0) {
-            renderPage('bad', ['reason' => 'Ungültiges Ticket.']);
-        }
-        $open = max(0, $due - $paid);
-        if ($due > 0 && $open > 0) {
-            renderPage('bad', ['reason' => 'Zahlung unvollständig.', 'paid' => $paid, 'due' => $due, 'open' => $open]);
-        }
-
-        renderPage('ok', [
-            'person_name' => (string)($legacy['person_name'] ?? ''),
-            'person_id'   => (string)($legacy['person_id'] ?? $pid),
-            'main_name'   => (string)($legacy['main_name'] ?? ''),
-            'paid'        => $paid,
-            'due'         => $due,
-            'open'        => $open,
-        ]);
-    }
-
+// --- Person laden ---
+$person = ParticipantsRepository::findById($pid);
+if (!$person) {
     renderPage('bad', [
-        'reason' => 'Ungültiges Ticket.',
+        'reason' => 'Ticket existiert nicht (unbekannte Ticket-ID).',
     ]);
 }
 
-// Token hash -> DB lookup
-$tokenHash = TicketToken::hash($t);
-
-$ticket = TicketRepository::findByTokenHash($tokenHash);
-if (!$ticket) {
-    renderPage('bad', [
-        'reason' => 'Ungültiges Ticket.',
-    ]);
-}
-
-$mainId = (string)($ticket['main_id'] ?? '');
+// --- Gruppe / Hauptgast laden ---
+$mainId = (string)($person['main_id'] ?? '');
 if ($mainId === '') {
     renderPage('bad', [
-        'reason' => 'Ungültiges Ticket.',
+        'reason' => 'Ticketdaten sind unvollständig (main_id fehlt).',
     ]);
 }
 
-// Zahlung & Gesamtbetrag (DB-Services)
-$paid = (int)TicketRepository::amountPaidForMain($mainId);
+$group = ParticipantsRepository::getGroupByMainId($mainId);
+$main  = $group['main'] ?? null;
+if (!$main) {
+    renderPage('bad', [
+        'reason' => 'Hauptgast konnte nicht geladen werden.',
+    ]);
+}
+
+// --- Zahlung & Gesamtbetrag (inkl. Overrides) ---
+$paid = (int)ParticipantsRepository::amountPaidForMainId($mainId);
 
 $dueInfo = PricingService::amountDueForMainId($mainId);
 $due = (int)($dueInfo['amount_due'] ?? 0);
 
-// due kann 0 sein => gültig
+// NEUE LOGIK: due kann 0 sein (z.B. Lehrer/Ehemalige/Behinderung/Kleinkind via Override)
+// - due == 0  => gültig (nichts zu zahlen)
+// - due  > 0  => nur gültig wenn paid >= due
 if ($due < 0) {
     renderPage('bad', [
-        'reason' => 'Ungültiges Ticket.',
-        'paid'   => $paid,
-        'due'    => $due,
+        'person_name' => (string)($person['name'] ?? ''),
+        'person_id'   => (string)($person['id'] ?? $pid),
+        'main_name'   => (string)($main['name'] ?? ''),
+        'reason'      => 'Preislogik fehlerhaft (Gesamtbetrag < 0).',
+        'paid'        => $paid,
+        'due'         => $due,
     ]);
 }
 
@@ -462,18 +406,21 @@ $open = max(0, $due - $paid);
 
 if ($due > 0 && $open > 0) {
     renderPage('bad', [
-        'reason' => 'Zahlung unvollständig – Ticket ist erst nach vollständiger Zahlung gültig.',
-        'paid'   => $paid,
-        'due'    => $due,
-        'open'   => $open,
+        'person_name' => (string)($person['name'] ?? ''),
+        'person_id'   => (string)($person['id'] ?? $pid),
+        'main_name'   => (string)($main['name'] ?? ''),
+        'reason'      => 'Zahlung unvollständig – Ticket ist erst nach vollständiger Zahlung gültig.',
+        'paid'        => $paid,
+        'due'         => $due,
+        'open'        => $open,
     ]);
 }
 
-// Gültig
+// --- Gültig ---
 renderPage('ok', [
-    'person_name' => (string)($ticket['person_name'] ?? ''),
-    'person_id'   => (string)($ticket['ticket_public_id'] ?? $ticket['person_id'] ?? ''),
-    'main_name'   => (string)($ticket['main_name'] ?? ''),
+    'person_name' => (string)($person['name'] ?? ''),
+    'person_id'   => (string)($person['id'] ?? $pid),
+    'main_name'   => (string)($main['name'] ?? ''),
     'paid'        => $paid,
     'due'         => $due,
     'open'        => $open,
