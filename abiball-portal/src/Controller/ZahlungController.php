@@ -64,7 +64,7 @@ final class ZahlungController
         Layout::header('Abiball – Zahlung');
         ?>
         <main class="bg-starfield">
-          <div class="container py-5" style="max-width: 1100px;">
+          <div class="container py-5 px-3 px-sm-4" style="max-width: 1100px;">
 
             <div class="text-center mx-auto" style="max-width: 820px; padding-top: 18px; padding-bottom: 26px;">
               <h1 class="h-serif mb-3" style="font-size: clamp(34px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
@@ -91,6 +91,20 @@ final class ZahlungController
                     padding-right:.25rem;
                   }
                 }
+
+                /* Einheitlicher Look für beide Kacheln */
+                .zahl-card{
+                  background: rgba(201,162,39,.10);
+                  border: 1px solid rgba(201,162,39,.35);
+                }
+                .zahl-pill{
+                  font-size: .95rem;
+                  letter-spacing: .18em;
+                  text-transform: uppercase;
+                  background: rgba(201,162,39,.22);
+                  border: 1px solid rgba(201,162,39,.45);
+                  color: var(--primary);
+                }
               </style>
 
               <div class="d-flex justify-content-center gap-3 flex-wrap pt-2 zahlung-cta-wrap">
@@ -103,7 +117,41 @@ final class ZahlungController
               </div>
             </div>
 
-            <div class="card mx-auto" style="max-width: 980px;">
+            <!-- Kachel 1: Wichtiger Hinweis -->
+            <div class="card zahl-card mx-auto mb-3" style="max-width: 980px;">
+              <div class="card-body p-4 p-md-5 text-center">
+
+                <div class="mb-3">
+                  <span class="badge rounded-pill px-4 py-2 zahl-pill">Wichtiger Hinweis</span>
+                </div>
+
+                <div class="h-serif" style="font-size: 1.6rem; font-weight: 300; line-height: 1.2;">
+                  Neue Begleitpersonen bitte vor der Zahlung anmelden
+                </div>
+
+                <p class="text-muted mt-3 mb-3"
+                   style="max-width: 760px; margin-left:auto; margin-right:auto; line-height: 1.7;">
+                  Wenn du noch neue Begleitpersonen anmelden möchtest oder als ehemaliger Schüler
+                  bzw. Freund eines Schülers ebenfalls teilnehmen willst, melde dich bitte
+                  <strong>vor der Überweisung</strong> per E-Mail bei:
+                </p>
+
+                <div class="p-soft d-inline-block"
+                     style="
+                       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+                                    'Liberation Mono','Courier New', monospace;
+                       font-size: 1.05rem;
+                     ">
+                  <a href="mailto:moris.kehl@gmail.com" style="color: var(--primary); text-decoration: none;">
+                    moris.kehl@gmail.com
+                  </a>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Kachel 2: Bankverbindung -->
+            <div class="card zahl-card mx-auto mt-0 mb-4" style="max-width: 980px;">
               <div class="card-body p-4 p-md-5">
 
                 <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
@@ -130,8 +178,7 @@ final class ZahlungController
                     <?php endif; ?>
                   </div>
 
-                  <span class="badge rounded-pill"
-                        style="background: rgba(201,162,39,.12); border: 1px solid rgba(201,162,39,.28); color: var(--primary);">
+                  <span class="badge rounded-pill px-4 py-2 zahl-pill" style="height: fit-content;">
                     Abiball 2026
                   </span>
                 </div>

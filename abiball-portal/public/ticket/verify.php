@@ -46,6 +46,33 @@ function renderPage(string $state, array $data): void
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title><?= e($title) ?></title>
+
+        <!-- Favicon -->
+        <link rel="icon" href="/favicon.ico">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+        <!-- Theme: persisted via localStorage (default = system) -->
+        <script>
+          (function () {
+            try {
+              var saved = localStorage.getItem('abiball_theme'); // 'dark'|'light'|null
+              if (saved === 'dark' || saved === 'light') {
+                document.documentElement.setAttribute('data-theme', saved);
+              } else {
+                // system default
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+              }
+            } catch (e) {
+              // fallback: system
+              var prefersDark2 = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+              document.documentElement.setAttribute('data-theme', prefersDark2 ? 'dark' : 'light');
+            }
+          })();
+        </script>
+
         <style>
             :root{
                 --bg:#fbfbfd;
@@ -63,16 +90,15 @@ function renderPage(string $state, array $data): void
                 --radius:18px;
             }
 
-            @media (prefers-color-scheme: dark){
-                :root{
-                    --bg:#07070a;
-                    --surface:rgba(18,18,24,.84);
-                    --surface2:rgba(18,18,24,.62);
-                    --text:#f3f3f6;
-                    --muted:rgba(243,243,246,.70);
-                    --border:rgba(243,243,246,.14);
-                    --shadow:0 14px 40px rgba(0,0,0,.35);
-                }
+            /* Dark mode is controlled by data-theme, not by OS only */
+            html[data-theme="dark"]{
+                --bg:#07070a;
+                --surface:rgba(18,18,24,.84);
+                --surface2:rgba(18,18,24,.62);
+                --text:#f3f3f6;
+                --muted:rgba(243,243,246,.70);
+                --border:rgba(243,243,246,.14);
+                --shadow:0 14px 40px rgba(0,0,0,.35);
             }
 
             html, body{
@@ -87,7 +113,7 @@ function renderPage(string $state, array $data): void
                 min-height:100%;
                 position:relative;
                 overflow:hidden;
-                padding: 22px 16px;
+                padding: 18px 16px 22px 16px;
             }
 
             .bg::before{
@@ -103,14 +129,12 @@ function renderPage(string $state, array $data): void
                 opacity:.9;
             }
 
-            @media (prefers-color-scheme: dark){
-                .bg::before{
-                    background:
-                        radial-gradient(760px 520px at 50% 22%, rgba(201,162,39,.16), transparent 64%),
-                        radial-gradient(980px 720px at 50% 42%, rgba(201,162,39,.07), transparent 72%),
-                        radial-gradient(1120px 860px at 50% 50%, transparent 56%, rgba(0,0,0,.34) 100%);
-                    opacity:.85;
-                }
+            html[data-theme="dark"] .bg::before{
+                background:
+                    radial-gradient(760px 520px at 50% 22%, rgba(201,162,39,.16), transparent 64%),
+                    radial-gradient(980px 720px at 50% 42%, rgba(201,162,39,.07), transparent 72%),
+                    radial-gradient(1120px 860px at 50% 50%, transparent 56%, rgba(0,0,0,.34) 100%);
+                opacity:.85;
             }
 
             .wrap{
@@ -118,6 +142,110 @@ function renderPage(string $state, array $data): void
                 z-index:1;
                 max-width: 720px;
                 margin: 0 auto;
+            }
+
+            /* Header (no links) */
+            .topbar{
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:12px;
+                padding: 10px 12px;
+                margin: 0 auto 12px auto;
+                border: 1px solid var(--border);
+                border-radius: 16px;
+                background: var(--surface);
+                box-shadow: var(--shadow);
+                backdrop-filter: blur(10px);
+            }
+
+            .brandmark{
+                display:flex;
+                align-items:center;
+                gap:10px;
+                min-width: 0;
+            }
+
+            .branddot{
+                width: 10px;
+                height: 10px;
+                border-radius: 999px;
+                background: rgba(201,162,39,.85);
+                box-shadow: 0 0 0 4px rgba(201,162,39,.14);
+                flex: 0 0 auto;
+            }
+
+            .brandtext{
+                display:flex;
+                flex-direction:column;
+                line-height:1.15;
+                min-width: 0;
+            }
+
+            .brandtitle{
+                font-weight: 800;
+                font-size: .98rem;
+                letter-spacing: .2px;
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+            }
+
+            .brandsub{
+                color: var(--muted);
+                font-size: .82rem;
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+            }
+
+            .toggle{
+                display:inline-flex;
+                align-items:center;
+                gap:10px;
+                padding: 8px 10px;
+                border-radius: 999px;
+                border: 1px solid var(--border);
+                background: rgba(11,11,15,.06);
+                color: var(--text);
+                cursor:pointer;
+                user-select:none;
+                font-weight: 800;
+                letter-spacing:.08em;
+                text-transform: uppercase;
+                font-size: .72rem;
+            }
+
+            html[data-theme="dark"] .toggle{
+                background: rgba(243,243,246,.08);
+            }
+
+            .toggle .knob{
+                width: 34px;
+                height: 18px;
+                border-radius: 999px;
+                border: 1px solid var(--border);
+                background: rgba(201,162,39,.12);
+                position: relative;
+                flex: 0 0 auto;
+            }
+
+            .toggle .knob::after{
+                content:"";
+                position:absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 14px;
+                height: 14px;
+                border-radius: 999px;
+                background: rgba(201,162,39,.85);
+                left: 2px;
+                transition: left .18s ease;
+                box-shadow: 0 6px 14px rgba(0,0,0,.18);
+            }
+
+            html[data-theme="dark"] .toggle .knob::after{
+                left: 18px;
             }
 
             .card{
@@ -178,9 +306,8 @@ function renderPage(string $state, array $data): void
                 background: rgba(11,11,15,.06);
                 color: var(--text);
             }
-            @media (prefers-color-scheme: dark){
-                .pill{ background: rgba(243,243,246,.08); }
-            }
+            html[data-theme="dark"] .pill{ background: rgba(243,243,246,.08); }
+
             .pill-ok{
                 border-color: rgba(43,212,125,.35);
                 background: rgba(43,212,125,.10);
@@ -210,9 +337,7 @@ function renderPage(string $state, array $data): void
                 border-radius: 14px;
                 background: rgba(255,255,255,.42);
             }
-            @media (prefers-color-scheme: dark){
-                .row{ background: rgba(255,255,255,.03); }
-            }
+            html[data-theme="dark"] .row{ background: rgba(255,255,255,.03); }
 
             .label{
                 color:var(--muted);
@@ -272,11 +397,46 @@ function renderPage(string $state, array $data): void
                 font-size: .82rem;
                 line-height: 1.5;
             }
+
+            /* Footer */
+            .footer{
+                margin-top: 12px;
+                padding: 10px 4px 0 4px;
+                text-align:center;
+                color: var(--muted);
+                font-size: .82rem;
+                line-height: 1.5;
+            }
+            .footer a{
+                color: var(--text);
+                text-decoration: none;
+                border-bottom: 1px solid rgba(201,162,39,.35);
+            }
+            .footer a:hover{
+                border-bottom-color: rgba(201,162,39,.75);
+            }
         </style>
     </head>
     <body>
         <div class="bg">
             <div class="wrap">
+
+                <!-- Header with dark mode toggle (no navigation links) -->
+                <div class="topbar" role="banner" aria-label="Ticketprüfung Kopfzeile">
+                    <div class="brandmark">
+                        <div class="branddot" aria-hidden="true"></div>
+                        <div class="brandtext">
+                            <div class="brandtitle">Abi Ball 2026 – Einlass</div>
+                            <div class="brandsub">Ticketprüfung per QR-Code</div>
+                        </div>
+                    </div>
+
+                    <button id="themeToggle" class="toggle" type="button" aria-label="Darstellung umschalten">
+                        <span id="themeLabel">Dark</span>
+                        <span class="knob" aria-hidden="true"></span>
+                    </button>
+                </div>
+
                 <div class="card">
                     <div class="head">
                         <div class="brand">
@@ -288,7 +448,7 @@ function renderPage(string $state, array $data): void
                                 Abi Ball 2026
                             </div>
                         </div>
-                        <p class="sub">Ticketprüfung per QR-Code. Diese Seite ist für den Einlass gedacht.</p>
+                        <p class="sub">Diese Seite ist für den Einlass gedacht.</p>
                     </div>
 
                     <div class="body">
@@ -336,8 +496,46 @@ function renderPage(string $state, array $data): void
                         </div>
                     </div>
                 </div>
+
+                <div class="footer" role="contentinfo">
+                    © <?= (int)date('Y') ?> Abiball · Moris Kehl ·
+                    <a href="https://www.linkedin.com/in/moris-kehl/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                </div>
+
             </div>
         </div>
+
+        <script>
+          (function () {
+            var btn = document.getElementById('themeToggle');
+            var label = document.getElementById('themeLabel');
+
+            function currentTheme() {
+              var t = document.documentElement.getAttribute('data-theme');
+              return (t === 'dark' || t === 'light') ? t : 'light';
+            }
+
+            function syncLabel() {
+              var t = currentTheme();
+              // Button shows the mode that will be activated on click
+              label.textContent = (t === 'dark') ? 'Light' : 'Dark';
+              btn.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+            }
+
+            function setTheme(t) {
+              document.documentElement.setAttribute('data-theme', t);
+              try { localStorage.setItem('abiball_theme', t); } catch (e) {}
+              syncLabel();
+            }
+
+            btn.addEventListener('click', function () {
+              var t = currentTheme();
+              setTheme(t === 'dark' ? 'light' : 'dark');
+            });
+
+            syncLabel();
+          })();
+        </script>
     </body>
     </html>
     <?php
