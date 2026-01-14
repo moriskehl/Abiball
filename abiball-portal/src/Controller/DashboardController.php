@@ -310,7 +310,7 @@ final class DashboardController
                         <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: .5rem;">Sitzordnung</div>
                         <div class="h6 mb-0">Aktuelle Sitzgruppen</div>
                       </div>
-                      <a class="btn btn-outline-secondary btn-sm" href="/seating.php" style="border-radius:12px;">Bearbeiten</a>
+                      <a class="btn btn-outline-secondary btn-soft btn-sm" href="/seating.php">Bearbeiten</a>
                     </div>
 
                     <?php if (empty($seatingGroups)): ?>
@@ -358,13 +358,13 @@ final class DashboardController
                   </div>
                 </div>
 
-                <!-- Aktionen -->
                 <div class="card">
                   <div class="card-body p-4">
-                    <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: 0.5rem;">Aktionen</div>
+                    <div class="section-label mb-3">Aktionen</div>
                     <div class="d-flex gap-2 flex-wrap">
-                      <a class="btn btn-cta btn-cta-sm" href="/seating.php">Sitzgruppen</a>
-                      <a class="btn btn-outline-secondary btn-sm" href="/location.php" style="border-radius:12px;">Location</a>
+                      <a class="btn btn-outline-secondary btn-soft" href="/seating.php">Sitzgruppen</a>
+                      <a class="btn btn-outline-secondary btn-soft" href="/location.php">Location</a>
+                      <a class="btn btn-outline-secondary btn-soft" href="/zahlung.php">Zahlung</a>
                     </div>
                   </div>
                 </div>

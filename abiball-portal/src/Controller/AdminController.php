@@ -10,6 +10,7 @@ require_once __DIR__ . '/../Http/Request.php';
 require_once __DIR__ . '/../Http/Response.php';
 require_once __DIR__ . '/../Repository/ParticipantsRepository.php';
 require_once __DIR__ . '/../Repository/PricingOverridesRepository.php';
+require_once __DIR__ . '/../Repository/AdminAuditLogRepository.php';
 require_once __DIR__ . '/../Service/PricingService.php';
 require_once __DIR__ . '/../Service/SeatingService.php';
 require_once __DIR__ . '/../View/Layout.php';
@@ -155,6 +156,7 @@ final class AdminController
 
         if ($mainId === '') {
             Response::redirect('/admin_dashboard.php?err=main#edit');
+       
         }
 
         if ($paidRaw === '' || !preg_match('/^\d+$/', $paidRaw)) {
@@ -164,8 +166,17 @@ final class AdminController
         $paid = (int)$paidRaw;
         if ($paid < 0) $paid = 0;
 
+        $oldPaid = (int)ParticipantsRepository::amountPaidForMainId($mainId);
+
         try {
             ParticipantsRepository::updateAmountPaidForMainId($mainId, $paid);
+
+            AdminAuditLogRepository::append('update_paid', [
+                'main_id' => $mainId,
+                'old' => $oldPaid,
+                'new' => $paid,
+            ]);
+
             Response::redirect('/admin_dashboard.php?ok=1#edit');
         } catch (Throwable $e) {
             Response::redirect('/admin_dashboard.php?err=save#edit');
@@ -195,8 +206,18 @@ final class AdminController
         $price = (int)$priceRaw;
         if ($price < 0) $price = 0;
 
+        $before = PricingOverridesRepository::mapById();
+        $old = $before[$id] ?? null;
+
         try {
             PricingOverridesRepository::upsertOverrideForId($id, $price, $reason);
+
+            AdminAuditLogRepository::append('override_save', [
+                'id' => $id,
+                'old' => $old,
+                'new' => ['ticket_price' => $price, 'reason' => $reason],
+            ]);
+
             Response::redirect('/admin_dashboard.php?ok_override=1#ovr');
         } catch (Throwable $e) {
             Response::redirect('/admin_dashboard.php?err=override_save#ovr');
@@ -216,8 +237,17 @@ final class AdminController
             Response::redirect('/admin_dashboard.php?err=override_id#ovr');
         }
 
+        $before = PricingOverridesRepository::mapById();
+        $old = $before[$id] ?? null;
+
         try {
             PricingOverridesRepository::deleteOverrideForId($id);
+
+            AdminAuditLogRepository::append('override_delete', [
+                'id' => $id,
+                'old' => $old,
+            ]);
+
             Response::redirect('/admin_dashboard.php?ok_override=1#ovr');
         } catch (Throwable $e) {
             Response::redirect('/admin_dashboard.php?err=override_delete#ovr');
@@ -238,6 +268,13 @@ final class AdminController
 
         try {
             ParticipantsRepository::createMainGuest($id, $name, $login, 'USER');
+
+            AdminAuditLogRepository::append('create_main_guest', [
+                'id' => $id,
+                'name' => $name,
+                'login_code_set' => ($login !== ''),
+            ]);
+
             Response::redirect('/admin_dashboard.php?ok_create=1#create');
         } catch (Throwable $e) {
             Response::redirect('/admin_dashboard.php?err=create_main#create');
@@ -258,6 +295,14 @@ final class AdminController
 
         try {
             $newId = ParticipantsRepository::createCompanion($mainId, $name, $login);
+
+            AdminAuditLogRepository::append('create_companion', [
+                'main_id' => $mainId,
+                'new_id' => $newId,
+                'name' => $name,
+                'login_code_set' => ($login !== ''),
+            ]);
+
             Response::redirect('/admin_dashboard.php?ok_create=1#create');
         } catch (Throwable $e) {
             Response::redirect('/admin_dashboard.php?err=create_companion#create');
@@ -419,15 +464,16 @@ final class AdminController
             $kindCounts[$kind] = ($kindCounts[$kind] ?? 0) + 1;
 
             // class labels:
-            // - SGGS/SSGS + Zahl => separat (SGGS1, SSGS2)
+            // - SGGS/SSGS + ERSTE Zahl => separat (SGGS1, SSGS2)
             // - TEACHER => LEHRER
             // - sonst: prefix ohne zahlen
             $classLabel = '';
 
             if ($kind === 'TEACHER') {
                 $classLabel = 'LEHRER';
-            } elseif (preg_match('/^(SGGS|SSGS)\d+/i', $id, $mm)) {
-                $classLabel = strtoupper($mm[0]);
+            } elseif (preg_match('/^(SGGS|SSGS)(\d)/i', $id, $mm)) {
+                // Nur erste Zahl zählt: SGGS104S -> SGGS1
+                $classLabel = strtoupper($mm[1]) . $mm[2];
             } else {
                 $classId = $id;
                 $classId = preg_replace('/B\d+$/i', '', $classId);
@@ -480,6 +526,7 @@ final class AdminController
         $totalOpen = max(0, $totalDue - $totalPaid);
 
         $overrides = PricingOverridesRepository::mapById();
+        $audit = AdminAuditLogRepository::latest(200);
 
         // UI flags
         $ok  = Request::getString('ok');
@@ -573,6 +620,7 @@ final class AdminController
                         <option value="ovr">Pricing Overrides</option>
                         <option value="edit" selected>Teilnehmer & Paid bearbeiten</option>
                         <option value="seating">Sitzgruppen & Notizen</option>
+                        <option value="logs">Änderungsprotokoll</option>
                       </select>
                       <div class="text-muted small mt-2">
                         Auswertung bleibt immer sichtbar.
@@ -996,6 +1044,50 @@ final class AdminController
               </div>
             </section>
 
+            <section class="admin-section" data-section="logs" id="logs">
+              <div class="card admin-card mb-3">
+                <div class="card-body p-4">
+                  <div class="text-muted small admin-kicker">Sicherheit</div>
+                  <div class="h6 mb-0">Änderungsprotokoll (letzte 200)</div>
+
+                  <div class="table-responsive mt-3">
+                    <table class="table table-sm table-striped table-hover align-middle mb-0 admin-table">
+                      <thead>
+                        <tr>
+                          <th style="width: 190px;">Zeit</th>
+                          <th style="width: 220px;">Admin</th>
+                          <th style="width: 160px;">Aktion</th>
+                          <th>Details</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      <?php if (count($audit) === 0): ?>
+                        <tr><td colspan="4" class="text-muted">Noch keine Einträge.</td></tr>
+                      <?php else: ?>
+                        <?php foreach ($audit as $row): ?>
+                          <tr>
+                            <td class="text-nowrap"><?= e((string)($row['ts'] ?? '')) ?></td>
+                            <td class="text-nowrap">
+                              <?= e((string)(($row['admin']['name'] ?? '') ?: '')) ?>
+                              <?php if (!empty($row['admin']['id'])): ?>
+                                <span class="text-muted">·</span> <?= e((string)$row['admin']['id']) ?>
+                              <?php endif; ?>
+                            </td>
+                            <td class="text-nowrap"><?= e((string)($row['action'] ?? '')) ?></td>
+                            <td style="white-space: normal;">
+                              <code style="font-size: .82rem;"><?= e(json_encode($row['data'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}') ?></code>
+                            </td>
+                          </tr>
+                        <?php endforeach; ?>
+                      <?php endif; ?>
+                      </tbody>
+                    </table>
+                  </div>
+
+                </div>
+              </div>
+            </section>
+
           </div>
         </main>
 
@@ -1008,25 +1100,18 @@ final class AdminController
               sections.forEach(s => {
                 s.style.display = (s.dataset.section === key) ? '' : 'none';
               });
-              // keep hash usable for reload
-              if (key) {
-                history.replaceState(null, '', '#'+key);
-              }
+              if (key) history.replaceState(null, '', '#'+key);
             }
 
             function init(){
-              // hash -> section
               const hash = (location.hash || '').replace('#','').trim();
-              const valid = ['create','ovr','edit','seating'];
+              const valid = ['create','ovr','edit','seating','logs'];
               const start = valid.includes(hash) ? hash : (sel ? sel.value : 'edit');
               if (sel) sel.value = start;
               show(start);
             }
 
-            if (sel) {
-              sel.addEventListener('change', () => show(sel.value));
-            }
-
+            if (sel) sel.addEventListener('change', () => show(sel.value));
             window.addEventListener('hashchange', init);
             init();
           })();

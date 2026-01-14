@@ -3,10 +3,12 @@
 /* =========================================================
    Abiball Portal – Premium Theme (Black / White / Gold)
    - Bootstrap 5 friendly
-   - Dark Mode via html.dark
+   - Dark Mode via html.dark (and .dark body)
    ========================================================= */
 
-/* ---------- Design Tokens ---------- */
+/* =========================================================
+   Design Tokens
+   ========================================================= */
 :root{
   /* Typography */
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", sans-serif;
@@ -62,7 +64,8 @@
 }
 
 /* Dark mode variables */
-html.dark, .dark body{
+html.dark,
+.dark body{
   --bg: #07070a;
   --surface: rgba(18,18,24,.80);
   --surface-2: rgba(18,18,24,.62);
@@ -81,41 +84,28 @@ html.dark, .dark body{
   --nav-glass: rgba(7,7,10,.65);
 }
 
-/* ---------- Base ---------- */
+/* =========================================================
+   Base
+   ========================================================= */
+*{ box-sizing: border-box; }
+
 html, body{
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
 }
-*{ box-sizing: border-box; }
 
-a{ color: var(--primary); text-decoration: none; }
-a:hover{ color: var(--primary-600); text-decoration: underline; }
+a{
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover{
+  color: var(--primary-600);
+  text-decoration: underline;
+}
 
 .text-muted{ color: var(--muted) !important; }
 
-/* ---------- Theme Transitions ---------- */
-html, body,
-.bg-starfield,
-.navbar, footer,
-.card, .table,
-.form-control, .btn,
-.alert, .dropdown-menu, .list-group-item{
-  transition:
-    background-color var(--theme-transition),
-    color var(--theme-transition),
-    border-color var(--theme-transition),
-    box-shadow var(--theme-transition),
-    filter var(--theme-transition),
-    opacity var(--theme-transition);
-}
-
-html.no-theme-transition,
-html.no-theme-transition *{
-  transition: none !important;
-}
-
-/* Headings */
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6{
   color: var(--text) !important;
@@ -138,6 +128,27 @@ hr{
 .text-danger{ color: var(--danger) !important; }
 .text-success{ color: var(--success) !important; }
 
+/* Theme transitions (global) */
+html, body,
+.bg-starfield,
+.navbar, footer,
+.card, .table,
+.form-control, .btn,
+.alert, .dropdown-menu, .list-group-item{
+  transition:
+    background-color var(--theme-transition),
+    color var(--theme-transition),
+    border-color var(--theme-transition),
+    box-shadow var(--theme-transition),
+    filter var(--theme-transition),
+    opacity var(--theme-transition);
+}
+
+html.no-theme-transition,
+html.no-theme-transition *{
+  transition: none !important;
+}
+
 /* =========================================================
    Premium Background (STATIC)
    ========================================================= */
@@ -154,7 +165,6 @@ hr{
   inset:-15%;
   pointer-events:none;
   z-index:0;
-
   background:
     radial-gradient(
       var(--glow1-w) var(--glow1-h) at var(--glow-x) var(--glow-y),
@@ -171,7 +181,6 @@ hr{
       transparent 58%,
       rgba(0,0,0,.08) 100%
     );
-
   opacity: .90;
   filter: blur(.25px);
 }
@@ -224,138 +233,20 @@ html.dark .bg-starfield::after,
   background-position: 160px 240px;
 }
 
-/* ---------- Navbar ---------- */
+/* =========================================================
+   Navbar
+   ========================================================= */
 .navbar{
   background: var(--nav-glass) !important;
   border-bottom: 1px solid var(--border);
   box-shadow: 0 2px 18px rgba(0,0,0,.04);
   backdrop-filter: blur(10px);
 }
-html.dark .navbar, .dark .navbar{
+
+html.dark .navbar,
+.dark .navbar{
   box-shadow: 0 2px 18px rgba(0,0,0,.25);
 }
-
-/* Navbar initials badge: match global theme transition */
-.navbar-user{
-  transition:
-    background-color var(--theme-transition),
-    color var(--theme-transition),
-    border-color var(--theme-transition),
-    box-shadow var(--theme-transition),
-    opacity var(--theme-transition),
-    filter var(--theme-transition);
-}
-
-.navbar-user:hover{
-  background: rgba(201,162,39,.08);
-  border-color: rgba(201,162,39,.25);
-}
-
-/* Theme Toggle: Hover gelb + kein Fokus-Ring */
-.btn.btn-ghost[data-theme-toggle]{
-  outline: none !important;
-  box-shadow: none !important;
-  border-color: transparent !important;
-}
-
-.btn.btn-ghost[data-theme-toggle]:hover{
-  color: var(--gold, #c9a227) !important; /* fallback */
-}
-
-/* auch beim Fokus/Click kein gelber Ring */
-.btn.btn-ghost[data-theme-toggle]:focus,
-.btn.btn-ghost[data-theme-toggle]:focus-visible,
-.btn.btn-ghost[data-theme-toggle]:active{
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* Bootstrap Focus-Ring sicher abschalten */
-.btn.btn-ghost[data-theme-toggle]:focus-visible{
-  --bs-btn-focus-shadow-rgb: 0,0,0;
-}
-
-
-
-/* Theme Toggle: Hover gelb + kein Fokus-Ring */
-.btn.btn-ghost[data-theme-toggle]{
-  outline: none !important;
-  box-shadow: none !important;
-  border-color: transparent !important;
-}
-
-.btn.btn-ghost[data-theme-toggle]:hover{
-  color: var(--gold, #c9a227) !important; /* fallback */
-}
-
-/* auch beim Fokus/Click kein gelber Ring */
-.btn.btn-ghost[data-theme-toggle]:focus,
-.btn.btn-ghost[data-theme-toggle]:focus-visible,
-.btn.btn-ghost[data-theme-toggle]:active{
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* Bootstrap Focus-Ring sicher abschalten */
-.btn.btn-ghost[data-theme-toggle]:focus-visible{
-  --bs-btn-focus-shadow-rgb: 0,0,0;
-}
-
-/* ===============================
-   Links: Navbar & Footer
-   =============================== */
-
-/* Basis: keine Unterstreichung, sanfter Übergang */
-.navbar a,
-footer a{
-  text-decoration: none !important;
-  transition: color .15s ease;
-}
-
-/* Hover: gelb */
-.navbar a:hover,
-footer a:hover{
-  color: var(--gold, #c9a227) !important;
-  text-decoration: none !important;
-}
-
-/* Fokus/Click: kein Ring, keine Unterstreichung */
-.navbar a:focus,
-.navbar a:focus-visible,
-.navbar a:active,
-footer a:focus,
-footer a:focus-visible,
-footer a:active{
-  outline: none !important;
-  box-shadow: none !important;
-  text-decoration: none !important;
-}
-
-/* ===============================
-   Navbar User (Initials)
-   =============================== */
-
-/* Basis: keine Unterstreichung */
-.navbar .navbar-user{
-  text-decoration: none !important;
-  transition: color .15s ease;
-}
-
-/* Hover: gelb, keine Unterstreichung */
-.navbar .navbar-user:hover{
-  color: var(--gold, #c9a227) !important;
-  text-decoration: none !important;
-}
-
-/* Fokus / Klick: kein Ring, keine Unterstreichung */
-.navbar .navbar-user:focus,
-.navbar .navbar-user:focus-visible,
-.navbar .navbar-user:active{
-  outline: none !important;
-  box-shadow: none !important;
-  text-decoration: none !important;
-}
-
 
 .navbar-brand{
   letter-spacing: .22em;
@@ -374,6 +265,28 @@ footer a:active{
   text-decoration: none !important;
 }
 
+/* Navbar links & footer links: no underline, gold hover */
+.navbar a,
+footer a{
+  text-decoration: none !important;
+  transition: color .15s ease;
+}
+.navbar a:hover,
+footer a:hover{
+  color: var(--gold, #c9a227) !important;
+  text-decoration: none !important;
+}
+.navbar a:focus,
+.navbar a:focus-visible,
+.navbar a:active,
+footer a:focus,
+footer a:focus-visible,
+footer a:active{
+  outline: none !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+
 .navbar-toggler{
   border-color: var(--border) !important;
 }
@@ -385,7 +298,63 @@ html.dark .navbar-toggler-icon,
   filter: invert(1);
 }
 
-/* ---------- Cards ---------- */
+/* Navbar user badge */
+.navbar-user{
+  transition:
+    background-color var(--theme-transition),
+    color var(--theme-transition),
+    border-color var(--theme-transition),
+    box-shadow var(--theme-transition),
+    opacity var(--theme-transition),
+    filter var(--theme-transition);
+  text-decoration: none !important;
+}
+.navbar-user:hover{
+  background: rgba(201,162,39,.08);
+  border-color: rgba(201,162,39,.25);
+  color: var(--gold, #c9a227) !important;
+  text-decoration: none !important;
+}
+.navbar-user:focus,
+.navbar-user:focus-visible,
+.navbar-user:active{
+  outline: none !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+
+/* Theme toggle button: no ring */
+.btn.btn-ghost[data-theme-toggle]{
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+.btn.btn-ghost[data-theme-toggle]:hover{
+  color: var(--gold, #c9a227) !important;
+}
+.btn.btn-ghost[data-theme-toggle]:focus,
+.btn.btn-ghost[data-theme-toggle]:focus-visible,
+.btn.btn-ghost[data-theme-toggle]:active{
+  outline: none !important;
+  box-shadow: none !important;
+}
+.btn.btn-ghost[data-theme-toggle]:focus-visible{
+  --bs-btn-focus-shadow-rgb: 0,0,0;
+}
+
+/* Theme toggle icon fix */
+#themeToggleBtn svg{
+  filter: none !important;
+  box-shadow: none !important;
+}
+#themeToggleBtn::before,
+#themeToggleBtn::after{
+  content: none !important;
+}
+
+/* =========================================================
+   Cards
+   ========================================================= */
 .card{
   background: var(--surface) !important;
   border: 1px solid var(--border) !important;
@@ -399,17 +368,29 @@ html.dark .navbar-toggler-icon,
 }
 .shadow-sm{ box-shadow: var(--shadow-sm) !important; }
 
-/* ---------- Tables ---------- */
+/* =========================================================
+   Tables
+   ========================================================= */
 .table{ color: var(--text); }
+
 .table thead th{
   background: var(--surface-2);
   color: var(--text);
   border-bottom: 1px solid var(--border);
 }
-.table td, .table th{ border-color: var(--border) !important; }
-.table-hover tbody tr:hover{ background: rgba(201,162,39,.06); }
 
-/* ---------- Forms ---------- */
+.table td,
+.table th{
+  border-color: var(--border) !important;
+}
+
+.table-hover tbody tr:hover{
+  background: rgba(201,162,39,.06);
+}
+
+/* =========================================================
+   Forms
+   ========================================================= */
 .form-control{
   background: var(--surface);
   color: var(--text);
@@ -438,7 +419,9 @@ html.dark .navbar-toggler-icon,
   border-color: var(--primary);
 }
 
-/* ---------- Buttons ---------- */
+/* =========================================================
+   Buttons
+   ========================================================= */
 .btn{
   border-radius: 999px;
   padding: .55rem 1.05rem;
@@ -458,7 +441,6 @@ html.dark .navbar-toggler-icon,
 .btn-primary:focus{
   box-shadow: var(--focus), 0 12px 30px var(--gold-glow);
 }
-.btn-primary:active{ transform: translateY(0); }
 
 .btn-outline-secondary{
   color: var(--text);
@@ -515,17 +497,240 @@ html.dark .navbar-toggler-icon,
   box-shadow: 0 16px 40px var(--cta-glow);
 }
 
-/* Theme Toggle Icon Fix */
-#themeToggleBtn svg{
-  filter: none !important;
-  box-shadow: none !important;
-}
-#themeToggleBtn::before,
-#themeToggleBtn::after{
-  content: none !important;
+/* =========================================================
+   Premium CTA Button (anchor-safe)
+   ========================================================= */
+a.btn-cta,
+a.btn-cta:visited{
+  position: relative;
+  isolation: isolate;
+  background: transparent !important;
+  border-radius: 12px !important;
+  padding: .78rem 1.65rem !important;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: .02em;
+  border: 1.5px solid rgba(11,11,15,.35) !important;
+  color: var(--text) !important;
+  text-decoration: none !important;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 200ms ease,
+    box-shadow 260ms ease,
+    transform 120ms ease;
 }
 
-/* ---------- Badges ---------- */
+html.dark a.btn-cta,
+.dark a.btn-cta{
+  border-color: rgba(243,243,246,.88) !important;
+  color: #f3f3f6 !important;
+}
+
+a.btn-cta:hover,
+a.btn-cta:focus-visible{
+  background-color: var(--cta-gold-hover) !important;
+  border-color: rgba(0,0,0,.22) !important;
+  color: #0b0b0f !important;
+  text-decoration: none !important;
+  box-shadow:
+    0 14px 34px var(--cta-glow),
+    inset 0 0 0 1px rgba(255,255,255,.22);
+  transform: translateY(-1px);
+}
+
+a.btn-cta:active{
+  transform: translateY(0);
+  box-shadow: 0 10px 24px var(--cta-glow);
+}
+
+a.btn-cta:focus-visible{
+  outline: none;
+  box-shadow: var(--focus), 0 14px 34px var(--cta-glow);
+}
+
+/* Navbar compact CTA */
+a.btn-cta.btn-cta-sm{
+  padding: .42rem .95rem !important;
+  font-size: .82rem;
+  min-width: unset;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   Dashboard – Aktionen Kachel (einheitlicher Luxus-Stil)
+   ========================================================= */
+.actions-kicker{
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  font-size: .7rem;
+  color: var(--muted);
+}
+
+/* Optional: add class "actions-card" to the card if desired */
+.actions-card{
+  overflow: hidden;
+}
+
+/* Modern luxe action button (neutral) */
+.btn-action{
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .52rem 1.05rem !important;
+  border-radius: 14px !important;
+  font-size: .84rem !important;
+  font-weight: 650;
+  letter-spacing: .02em;
+  text-decoration: none !important;
+
+  color: var(--text) !important;
+  background: linear-gradient(135deg, rgba(11,11,15,.06), rgba(11,11,15,.02));
+  border: 1px solid rgba(11,11,15,.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    0 10px 22px rgba(0,0,0,.06);
+
+  transition: transform 140ms ease, box-shadow 220ms ease, background-color 220ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+html.dark .btn-action{
+  color: rgba(243,243,246,.92) !important;
+  background: linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  border-color: rgba(243,243,246,.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 14px 34px rgba(0,0,0,.30);
+}
+
+.btn-action:hover,
+.btn-action:focus-visible{
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(201,162,39,.18), rgba(11,11,15,.02));
+  border-color: rgba(201,162,39,.40);
+  text-decoration: none !important;
+  box-shadow:
+    0 16px 38px rgba(0,0,0,.10),
+    0 10px 26px var(--gold-glow),
+    inset 0 0 0 1px rgba(255,255,255,.18);
+}
+
+html.dark .btn-action:hover,
+html.dark .btn-action:focus-visible{
+  box-shadow:
+    0 18px 44px rgba(0,0,0,.40),
+    0 10px 26px rgba(201,162,39,.18),
+    inset 0 0 0 1px rgba(255,255,255,.10);
+}
+
+.btn-action:active{
+  transform: translateY(0);
+}
+
+/* Accent action button (e.g., Zahlung) */
+.btn-action-accent{
+  background: linear-gradient(180deg, var(--gold-2), var(--gold)) !important;
+  border-color: rgba(0,0,0,.14) !important;
+  color: #0b0b0f !important;
+  box-shadow: 0 14px 34px var(--gold-glow);
+}
+.btn-action-accent:hover,
+.btn-action-accent:focus-visible{
+  filter: brightness(1.02);
+  box-shadow: 0 16px 40px var(--gold-glow);
+}
+
+/* =========================================================
+   Aktionen – Buttons (Anchor-safe, overrides links)
+   ========================================================= */
+a.btn-action,
+a.btn-action:visited{
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+
+  padding: .62rem 1.12rem !important;
+  border-radius: 14px !important;
+
+  font-size: .86rem !important;
+  font-weight: 650 !important;
+  letter-spacing: .02em;
+
+  text-decoration: none !important;
+  cursor: pointer;
+
+  color: var(--text) !important;
+  background: linear-gradient(135deg, rgba(11,11,15,.06), rgba(11,11,15,.02)) !important;
+  border: 1px solid rgba(11,11,15,.18) !important;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    0 10px 22px rgba(0,0,0,.06);
+
+  transition:
+    transform 140ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+html.dark a.btn-action,
+html.dark a.btn-action:visited{
+  color: rgba(243,243,246,.92) !important;
+  background: linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.02)) !important;
+  border-color: rgba(243,243,246,.14) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 14px 34px rgba(0,0,0,.30);
+}
+
+/* Hover / Focus */
+a.btn-action:hover,
+a.btn-action:focus-visible{
+  text-decoration: none !important;
+
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(201,162,39,.18), rgba(11,11,15,.02)) !important;
+  border-color: rgba(201,162,39,.40) !important;
+
+  box-shadow:
+    0 16px 38px rgba(0,0,0,.10),
+    0 10px 26px var(--gold-glow),
+    inset 0 0 0 1px rgba(255,255,255,.18);
+}
+
+html.dark a.btn-action:hover,
+html.dark a.btn-action:focus-visible{
+  box-shadow:
+    0 18px 44px rgba(0,0,0,.40),
+    0 10px 26px rgba(201,162,39,.18),
+    inset 0 0 0 1px rgba(255,255,255,.10);
+}
+
+a.btn-action:active{
+  transform: translateY(0);
+}
+
+/* Accent (Zahlung) */
+a.btn-action.btn-action-accent,
+a.btn-action.btn-action-accent:visited{
+  background: linear-gradient(180deg, var(--gold-2), var(--gold)) !important;
+  border-color: rgba(0,0,0,.14) !important;
+  color: #0b0b0f !important;
+  box-shadow: 0 14px 34px var(--gold-glow);
+}
+
+a.btn-action.btn-action-accent:hover,
+a.btn-action.btn-action-accent:focus-visible{
+  filter: brightness(1.02);
+  box-shadow: 0 16px 40px var(--gold-glow);
+}
+
+/* =========================================================
+   Badges
+   ========================================================= */
 .badge.text-bg-secondary{
   background: rgba(11,11,15,.10) !important;
   color: var(--text) !important;
@@ -543,7 +748,9 @@ html.dark .badge.text-bg-secondary,
   border-radius: 999px;
 }
 
-/* ---------- Alerts ---------- */
+/* =========================================================
+   Alerts / Dropdown / List Group
+   ========================================================= */
 .alert{
   background: var(--surface);
   border: 1px solid var(--border);
@@ -551,7 +758,6 @@ html.dark .badge.text-bg-secondary,
   border-radius: var(--radius-sm);
 }
 
-/* ---------- Dropdown / List Group ---------- */
 .list-group{ border-radius: 12px; }
 .list-group-item{
   background: var(--surface) !important;
@@ -577,11 +783,14 @@ html.dark .badge.text-bg-secondary,
 .dropdown-item{ color: var(--text) !important; }
 .dropdown-item:hover{ background: var(--surface-2) !important; }
 
-/* ---------- Footer ---------- */
+/* =========================================================
+   Footer
+   ========================================================= */
 .site-footer{
   background: var(--surface);
   border-top: 1px solid var(--border);
 }
+
 .footer-linkedin{
   display: inline-flex;
   align-items: center;
@@ -621,10 +830,13 @@ html.dark .badge.text-bg-secondary,
   border-radius: var(--radius);
   background: var(--surface-2);
 }
-html.dark .dropzone, .dark .dropzone{
+
+html.dark .dropzone,
+.dark .dropzone{
   border-color: rgba(243,243,246,.20);
   background: rgba(255,255,255,0.03);
 }
+
 .dropzone.is-over{
   border-color: var(--primary);
   background: var(--primary-100);
@@ -638,77 +850,6 @@ html.dark .dropzone, .dark .dropzone{
   margin-top: .75rem;
 }
 .group-tools .form-control{ max-width: 420px; }
-
-/* =========================================================
-   Premium CTA Button (anchor-safe)
-   ========================================================= */
-a.btn-cta,
-a.btn-cta:visited{
-  position: relative;
-  isolation: isolate;
-
-  background: transparent !important;
-  border-radius: 12px !important;
-  padding: .78rem 1.65rem !important;
-
-  font-family: var(--font-sans);
-  font-weight: 700;
-  letter-spacing: .02em;
-
-  border: 1.5px solid rgba(11,11,15,.35) !important;
-  color: var(--text) !important;
-  text-decoration: none !important;
-
-  transition:
-    color 180ms ease,
-    border-color 180ms ease,
-    background-color 200ms ease,
-    box-shadow 260ms ease,
-    transform 120ms ease;
-}
-
-html.dark a.btn-cta,
-.dark a.btn-cta{
-  border-color: rgba(243,243,246,.88) !important;
-  color: #f3f3f6 !important;
-}
-
-a.btn-cta:hover,
-a.btn-cta:focus-visible{
-  background-color: var(--cta-gold-hover) !important;
-  border-color: rgba(0,0,0,.22) !important;
-  color: #0b0b0f !important;
-  text-decoration: none !important;
-
-  box-shadow:
-    0 14px 34px var(--cta-glow),
-    inset 0 0 0 1px rgba(255,255,255,.22);
-  transform: translateY(-1px);
-}
-
-a.btn-cta:active{
-  transform: translateY(0);
-  box-shadow: 0 10px 24px var(--cta-glow);
-}
-
-a.btn-cta:focus-visible{
-  outline: none;
-  box-shadow: var(--focus), 0 14px 34px var(--cta-glow);
-}
-
-.btn-cta-lg{
-  font-size: 1.05rem;
-  min-width: 240px;
-}
-
-/* Navbar compact CTA */
-a.btn-cta.btn-cta-sm{
-  padding: .42rem .95rem !important;
-  font-size: .82rem;
-  min-width: unset;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
 
 /* =========================================================
    Sticky Footer Layout
@@ -769,6 +910,144 @@ html.dark .p-soft{
 }
 
 /* =========================================================
+   Admin Dashboard – Theme-safe (improved dark tables)
+   ========================================================= */
+.admin-dashboard .admin-kicker{
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.admin-dashboard .admin-card{
+  border-radius: 18px;
+}
+
+/* Panels inside cards */
+.admin-dashboard .admin-panel{
+  border-radius: 16px;
+  border: 1px solid rgba(11,11,15,.10);
+  background: rgba(11,11,15,.03);
+}
+
+html.dark .admin-dashboard .admin-panel{
+  border-color: rgba(243,243,246,.10);
+  background: rgba(16,16,22,.55);
+}
+
+.admin-dashboard .admin-seatgroup{
+  border-radius: 16px;
+  border: 1px solid rgba(11,11,15,.10);
+  background: rgba(11,11,15,.02);
+}
+
+html.dark .admin-dashboard .admin-seatgroup{
+  border-color: rgba(243,243,246,.10);
+  background: rgba(16,16,22,.60);
+}
+
+.admin-dashboard .admin-seatperson{
+  padding: .65rem .75rem;
+  border-radius: 14px;
+  border: 1px solid rgba(11,11,15,.10);
+  background: rgba(11,11,15,.02);
+}
+
+html.dark .admin-dashboard .admin-seatperson{
+  border-color: rgba(243,243,246,.10);
+  background: rgba(0,0,0,.18);
+}
+
+/* Tables: override Bootstrap white cells in dark mode */
+.admin-dashboard .table{
+  color: var(--text);
+}
+
+.admin-dashboard .table > :not(caption) > * > *{
+  background-color: transparent !important; /* kills white cell bg */
+  color: inherit;
+}
+
+.admin-dashboard .table thead th{
+  background: var(--surface-2) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+html.dark .admin-dashboard .table{
+  color: rgba(243,243,246,.92) !important;
+}
+
+html.dark .admin-dashboard .table thead th{
+  background: rgba(16,16,22,.70) !important;
+  color: rgba(243,243,246,.92) !important;
+  border-bottom-color: rgba(243,243,246,.14) !important;
+}
+
+html.dark .admin-dashboard .table td,
+html.dark .admin-dashboard .table th{
+  border-color: rgba(243,243,246,.14) !important;
+}
+
+/* Striped + hover in dark */
+html.dark .admin-dashboard .table-striped > tbody > tr:nth-of-type(odd) > *{
+  background-color: rgba(255,255,255,.03) !important;
+}
+
+html.dark .admin-dashboard .table-hover > tbody > tr:hover > *{
+  background-color: rgba(201,162,39,.10) !important;
+}
+
+/* Inputs in dark mode */
+html.dark .admin-dashboard .form-control,
+html.dark .admin-dashboard .form-select{
+  background-color: rgba(10,10,14,.55);
+  color: rgba(243,243,246,.92);
+  border-color: rgba(255,255,255,.14);
+}
+html.dark .admin-dashboard .form-control::placeholder{
+  color: rgba(243,243,246,.45);
+}
+
+/* Buttons: align with site “save” styling */
+.admin-dashboard .btn-save{
+  border-radius: 12px !important;
+}
+
+/* Hide sections smoothly (optional) */
+.admin-dashboard .admin-section{
+  animation: adminFade .12s ease-out;
+}
+
+@keyframes adminFade{
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================================
+   Dashboard: dezentes Notiz-Icon
+   ========================================================= */
+.note-btn{
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 12px;
+  padding: .35rem .5rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+.note-btn:hover{
+  background: rgba(201,162,39,.08);
+  color: var(--text);
+  border-color: rgba(201,162,39,.35);
+}
+.note-btn:focus{
+  outline: none;
+  box-shadow: var(--focus);
+}
+.note-icon{ display: inline-flex; }
+
+/* =========================================================
    Responsive tuning (Glow + layout)
    ========================================================= */
 @media (max-width: 992px){
@@ -780,6 +1059,10 @@ html.dark .p-soft{
     --glow3-w: 1120px;
     --glow3-h: 860px;
   }
+}
+
+@media (max-width: 700px){
+  .badge-hide-mobile{ display: none !important; }
 }
 
 @media (max-width: 576px){
@@ -806,130 +1089,150 @@ html.dark .p-soft{
   .navbar .container{ padding-top: .35rem; padding-bottom: .35rem; }
 }
 
-/* Dashboard: dezentes Notiz-Icon */
-.note-btn{
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted);
-  border-radius: 12px;
-  padding: .35rem .5rem;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
-}
-.note-btn:hover{
-  background: rgba(201,162,39,.08);
-  color: var(--text);
-  border-color: rgba(201,162,39,.35);
-}
-.note-btn:focus{
-  outline: none;
-  box-shadow: var(--focus);
-}
-.note-icon{ display: inline-flex; }
-
-@media (max-width: 699.98px){
-  .badge-hide-mobile{
-    display: none !important;
-  }
+/* =========================================================
+   Aktionen – Lux Kachel + Lux Buttons (matches HTML: btn-lux)
+   ========================================================= */
+.card-elevated{
+  background: linear-gradient(180deg, rgba(11,11,15,.04), rgba(11,11,15,.02)) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
-/* =========================
-   Admin Dashboard – Theme-safe
-   ========================= */
+html.dark .card-elevated{
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)) !important;
+  border-color: rgba(243,243,246,.14) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
 
-.admin-dashboard .admin-kicker{
+.section-label{
+  font-size: .72rem;
   letter-spacing: .18em;
   text-transform: uppercase;
+  color: var(--muted);
 }
 
-/* Panels inside cards to match the “premium” site look */
-.admin-dashboard .admin-panel{
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.04);
+/* Anchor-safe Lux Button */
+a.btn.btn-lux,
+a.btn.btn-lux:visited{
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+
+  padding: .58rem 1.10rem !important;
+  border-radius: 14px !important;
+  font-size: .86rem !important;
+  font-weight: 650 !important;
+  letter-spacing: .02em;
+
+  text-decoration: none !important;
+  cursor: pointer;
+
+  color: var(--text) !important;
+  background: linear-gradient(135deg, rgba(11,11,15,.06), rgba(11,11,15,.02)) !important;
+  border: 1px solid rgba(11,11,15,.18) !important;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    0 10px 22px rgba(0,0,0,.06);
+
+  transition:
+    transform 140ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
 }
 
-html.dark .admin-dashboard .admin-panel{
-  border-color: rgba(255,255,255,.10);
-  background: rgba(16,16,22,.55);
+html.dark a.btn.btn-lux,
+html.dark a.btn.btn-lux:visited{
+  color: rgba(243,243,246,.92) !important;
+  background: linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.02)) !important;
+  border-color: rgba(243,243,246,.14) !important;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 14px 34px rgba(0,0,0,.30);
 }
 
-.admin-dashboard .admin-seatgroup{
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.03);
+a.btn.btn-lux:hover,
+a.btn.btn-lux:focus-visible{
+  text-decoration: none !important;
+
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(201,162,39,.18), rgba(11,11,15,.02)) !important;
+  border-color: rgba(201,162,39,.40) !important;
+
+  box-shadow:
+    0 16px 38px rgba(0,0,0,.10),
+    0 10px 26px var(--gold-glow),
+    inset 0 0 0 1px rgba(255,255,255,.18);
 }
 
-html.dark .admin-dashboard .admin-seatgroup{
-  border-color: rgba(255,255,255,.10);
-  background: rgba(16,16,22,.60);
+html.dark a.btn.btn-lux:hover,
+html.dark a.btn.btn-lux:focus-visible{
+  box-shadow:
+    0 18px 44px rgba(0,0,0,.40),
+    0 10px 26px rgba(201,162,39,.18),
+    inset 0 0 0 1px rgba(255,255,255,.10);
 }
 
-.admin-dashboard .admin-seatperson{
-  padding: .65rem .75rem;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.07);
-  background: rgba(255,255,255,.03);
+a.btn.btn-lux:active{
+  transform: translateY(0);
 }
 
-html.dark .admin-dashboard .admin-seatperson{
-  border-color: rgba(255,255,255,.08);
-  background: rgba(0,0,0,.18);
+/* Accent button (Zahlung) */
+a.btn.btn-lux.btn-lux-accent,
+a.btn.btn-lux.btn-lux-accent:visited{
+  background: linear-gradient(180deg, var(--gold-2), var(--gold)) !important;
+  border-color: rgba(0,0,0,.14) !important;
+  color: #0b0b0f !important;
+  box-shadow: 0 14px 34px var(--gold-glow);
 }
 
-/* Card tint – keep consistent with rest site */
-.admin-dashboard .admin-card{
-  border-radius: 18px;
+a.btn.btn-lux.btn-lux-accent:hover,
+a.btn.btn-lux.btn-lux-accent:focus-visible{
+  filter: brightness(1.02);
+  box-shadow: 0 16px 40px var(--gold-glow);
 }
 
-/* Dark-mode tables: Bootstrap default often becomes unreadable */
-.admin-dashboard .admin-table{
-  --bs-table-bg: transparent;
-  --bs-table-color: inherit;
+/* =========================================================
+   Soft Outline Buttons – Light Mode
+   Text = Gold, Background = subtle highlight
+   ========================================================= */
+html:not(.dark) .btn.btn-outline-secondary.btn-soft:hover,
+html:not(.dark) .btn.btn-outline-secondary.btn-soft:focus-visible{
+  background: rgba(201,162,39,.10) !important;   /* leichtes Highlight */
+  border-color: var(--gold) !important;
+  color: var(--gold) !important;                 /* Text 100% Gold */
+  text-decoration: none !important;
+
+  box-shadow:
+    0 10px 24px rgba(201,162,39,.22),
+    inset 0 0 0 1px rgba(201,162,39,.25);
+
+  transform: translateY(-1px);
 }
 
-html.dark .admin-dashboard .table{
-  color: rgba(243,243,246,.92);
+/* Active – minimal dunkler */
+html:not(.dark) .btn.btn-outline-secondary.btn-soft:active{
+  background: rgba(201,162,39,.18) !important;
+  border-color: var(--gold-3) !important;
+  color: var(--gold-3) !important;
+
+  box-shadow:
+    0 6px 14px rgba(201,162,39,.18);
 }
 
-html.dark .admin-dashboard .table thead th{
-  color: rgba(243,243,246,.92);
-}
+/* =========================================================
+   Soft Outline Buttons – Dark Mode (unchanged, elegant)
+   ========================================================= */
+html.dark .btn.btn-outline-secondary.btn-soft:hover,
+html.dark .btn.btn-outline-secondary.btn-soft:focus-visible{
+  background: rgba(201,162,39,.12) !important;
+  border-color: rgba(201,162,39,.70) !important;
+  color: rgba(243,243,246,.98) !important;
 
-html.dark .admin-dashboard .table-striped > tbody > tr:nth-of-type(odd) > *{
-  background-color: rgba(255,255,255,.03);
-  color: rgba(243,243,246,.92);
-}
-
-html.dark .admin-dashboard .table-hover > tbody > tr:hover > *{
-  background-color: rgba(201,162,39,.08);
-}
-
-/* Inputs in dark mode */
-html.dark .admin-dashboard .form-control,
-html.dark .admin-dashboard .form-select{
-  background-color: rgba(10,10,14,.55);
-  color: rgba(243,243,246,.92);
-  border-color: rgba(255,255,255,.14);
-}
-
-html.dark .admin-dashboard .form-control::placeholder{
-  color: rgba(243,243,246,.45);
-}
-
-/* Buttons: align to site “save” styling if existing .btn-save is used */
-.admin-dashboard .btn-save{
-  border-radius: 12px !important;
-}
-
-/* Hide sections smoothly (optional) */
-.admin-dashboard .admin-section{
-  animation: adminFade .12s ease-out;
-}
-@keyframes adminFade{
-  from { opacity: .0; transform: translateY(2px); }
-  to   { opacity: 1; transform: translateY(0); }
+  box-shadow:
+    0 14px 32px rgba(0,0,0,.35);
 }

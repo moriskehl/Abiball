@@ -1,5 +1,6 @@
-id;name;is_main;main_id;login_code;role;amount_paid;password_changed;;amount_subsided
+id;name;is_main;main_id;login_code;role;amount_paid;password_changed;;
 ADMIN00;Admin;1;ADMIN00;2NmPGH46kq!~oAawd%N;ADMIN;;;;
+ADMIN01;Bahaa;1;ADMIN01;3$yTg!9kLzVQeD#7h2a;ADMIN;;;;
 ABI00S;"Max Mustermann";1;ABI00S;$2y$12$L.oZEgDHnHvDHFzDanidDen4MyMjUCZHKDpNtybxBrT4zpPGwwFPG;USER;34;;;
 ABI00B1;"Erika Mustermann";0;ABI00S;test;USER;;;;
 ABI00B2;"Hans Mustermann";0;ABI00S;test;USER;;;;
@@ -577,3 +578,4 @@ E04S;"Linus (WGI)";1;E04S;8@aS;USER;0;;;
 E05S;"Carolin Aichele (SGGS2)";1;E05S;%FM%;USER;0;;;
 E06S;"Linda Dambacher (SGGS2)";1;E06S;VcWM;USER;0;;;
 E07S;"Anna Homann (SGGS2)";1;E07S;J8@J;USER;0;;;
+ABI03S;Hans;1;ABI03S;test;USER;0;;;

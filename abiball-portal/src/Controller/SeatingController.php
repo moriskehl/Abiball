@@ -111,17 +111,20 @@ final class SeatingController
                 </div>
               </div>
 
-              <div class="d-flex gap-2 flex-wrap">
-                <button id="addGroupBtn" class="btn btn-outline-secondary" type="button" style="border-radius:12px;">
-                  Gruppe hinzufügen
-                </button>
-                <button id="removeGroupBtn" class="btn btn-outline-secondary" type="button" style="border-radius:12px; display:none;">
-                  Gruppe entfernen
-                </button>
-                <a class="btn btn-outline-secondary" href="/dashboard.php" style="border-radius:12px;">
-                  Zurück
-                </a>
-              </div>
+                <div class="d-flex gap-2 flex-wrap">
+                  <button id="addGroupBtn" class="btn btn-outline-secondary btn-soft" type="button">
+                    Gruppe hinzufügen
+                  </button>
+
+                  <button id="removeGroupBtn" class="btn btn-outline-secondary btn-soft" type="button" style="display:none;">
+                    Gruppe entfernen
+                  </button>
+
+                  <a class="btn btn-outline-secondary btn-soft" href="/dashboard.php">
+                    Zurück
+                  </a>
+                </div>
+
             </div>
 
             <style>

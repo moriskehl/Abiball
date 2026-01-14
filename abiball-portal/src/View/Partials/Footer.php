@@ -28,12 +28,19 @@ require_once __DIR__ . '/../Helpers.php';
     </div>
 
     <div class="d-flex gap-3 small">
-      <a class="text-muted" href="/Location.php">Location</a>
-      <a class="text-muted" href="/login.php">Login</a>
-      <a class="text-muted" href="/zahlung.php">Zahlung</a>
-      <a class="text-muted" href="/impressum.php">Impressum</a>
-      <a class="text-muted" href="/dashboard.php">Dashboard</a>
-    </div>
+    <a class="text-muted" href="/Location.php">Location</a>
+    <a class="text-muted" href="/login.php">Login</a>
+
+    <?php if (basename($_SERVER['PHP_SELF']) === 'login.php'): ?>
+      <a class="text-muted" href="/admin_login.php">Admin</a>
+    <?php endif; ?>
+
+    <a class="text-muted" href="/zahlung.php">Zahlung</a>
+    <a class="text-muted" href="/impressum.php">Impressum</a>
+    <a class="text-muted" href="/dashboard.php">Dashboard</a>
+  </div>
+
+
 
   </div>
 </footer>
