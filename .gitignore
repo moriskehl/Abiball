@@ -1,0 +1,3 @@
+/storage/*.log
+/storage/data/*.csv
+/storage/seating/*.json
