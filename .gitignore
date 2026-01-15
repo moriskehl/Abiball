@@ -1,3 +1,5 @@
-/storage/*.log
-/storage/data/*.csv
-/storage/seating/*.json
+/abiball-portal/storage/*.log
+/abiball-portal/storage/data/*.csv
+/abiball-portal/storage/data/*.lock
+/abiball-portal/storage/seating/*.json
+/abiball-portal/storage/secrets/*
