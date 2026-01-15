@@ -529,6 +529,34 @@ final class AdminController
         }
     }
 
+    public static function changeParticipantPassword(): void
+    {
+        AdminContext::requireAdmin();
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Response::redirect('/admin_dashboard.php');
+        }
+
+        if (!Csrf::validate(Request::postString('_csrf'))) {
+            Response::redirect('/admin_dashboard.php?err=csrf#edit');
+        }
+
+        $participantId = trim(Request::postString('participant_id'));
+        $newPassword = trim(Request::postString('new_password'));
+
+        $result = ParticipantAdminService::changeParticipantPassword($participantId, $newPassword);
+
+        if ($result['success']) {
+            AdminAuditLogRepository::append('change_participant_password', [
+                'participant_id' => $participantId,
+            ]);
+            Response::redirect('/admin_dashboard.php?ok=change_participant_password#edit');
+        } else {
+            $error = $result['error'] ?? 'unknown';
+            Response::redirect('/admin_dashboard.php?err=' . urlencode($error) . '#edit');
+        }
+    }
+
     /* =========================
      * DASHBOARD
      * ========================= */
@@ -995,7 +1023,34 @@ final class AdminController
                                   <button class="btn btn-sm btn-save" type="submit">✓</button>
                                 </form>
                               </td>
-                              <td><code class="text-nowrap" style="font-size: 0.9rem;"><?= e((string)($main['login_code'] ?? '')) ?></code></td>
+                              <td>
+                                <div class="password-cell" id="password-cell-<?= e($main['id']) ?>">
+                                  <div class="password-display">
+                                    <?php 
+                                      $loginCode = (string)($main['login_code'] ?? '');
+                                      $isHashed = str_starts_with($loginCode, '$2y$') || str_starts_with($loginCode, '$argon2');
+                                    ?>
+                                    <?php if ($isHashed): ?>
+                                      <span class="text-muted" style="font-size: 0.85rem;" title="Passwort wurde bereits vom Benutzer geändert">🔒 [gehasht]</span>
+                                    <?php else: ?>
+                                      <code class="text-nowrap" style="font-size: 0.9rem;"><?= e($loginCode) ?></code>
+                                    <?php endif; ?>
+                                    <button class="btn btn-sm btn-link p-0 ms-2 edit-password-btn" type="button" data-participant-id="<?= e($main['id']) ?>" title="Passwort ändern">
+                                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M2 13.5V14h.5l7.707-7.707-1-1L2 13.5z"/>
+                                        <path d="M10.293 2.293a1 1 0 0 1 1.414 0l2 2a1 1 0 0 1 0 1.414l-8 8"/>
+                                      </svg>
+                                    </button>
+                                  </div>
+                                  <form method="post" action="/admin_change_participant_password.php" class="password-edit-form d-none d-flex gap-2 mt-2" id="password-form-<?= e($main['id']) ?>">
+                                    <?= Csrf::inputField() ?>
+                                    <input type="hidden" name="participant_id" value="<?= e((string)($main['id'] ?? '')) ?>">
+                                    <input type="text" class="form-control form-control-sm" name="new_password" placeholder="Neues Passwort" required style="max-width: 200px;">
+                                    <button class="btn btn-sm btn-save" type="submit">✓</button>
+                                    <button class="btn btn-sm btn-outline-secondary cancel-password-btn" type="button" data-participant-id="<?= e($main['id']) ?>">✕</button>
+                                  </form>
+                                </div>
+                              </td>
                               <td><?= (int)$ticketCount ?></td>
                               <td><?= (int)$amountDue ?> €</td>
                               <td><?= (int)$amountPaid ?> €</td>
@@ -1059,7 +1114,34 @@ final class AdminController
                                     </form>
                                   </div>
                                 </td>
-                                <td><code class="text-nowrap" style="font-size: 0.9rem;"><?= e((string)($c['login_code'] ?? '')) ?></code></td>
+                                <td>
+                                  <div class="password-cell" id="password-cell-<?= e($c['id']) ?>">
+                                    <div class="password-display">
+                                      <?php 
+                                        $companionLoginCode = (string)($c['login_code'] ?? '');
+                                        $isCompanionHashed = str_starts_with($companionLoginCode, '$2y$') || str_starts_with($companionLoginCode, '$argon2');
+                                      ?>
+                                      <?php if ($isCompanionHashed): ?>
+                                        <span class="text-muted" style="font-size: 0.85rem;" title="Passwort wurde bereits vom Benutzer geändert">🔒 [gehasht]</span>
+                                      <?php else: ?>
+                                        <code class="text-nowrap" style="font-size: 0.9rem;"><?= e($companionLoginCode) ?></code>
+                                      <?php endif; ?>
+                                      <button class="btn btn-sm btn-link p-0 ms-2 edit-password-btn" type="button" data-participant-id="<?= e($c['id']) ?>" title="Passwort ändern">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                                          <path d="M2 13.5V14h.5l7.707-7.707-1-1L2 13.5z"/>
+                                          <path d="M10.293 2.293a1 1 0 0 1 1.414 0l2 2a1 1 0 0 1 0 1.414l-8 8"/>
+                                        </svg>
+                                      </button>
+                                    </div>
+                                    <form method="post" action="/admin_change_participant_password.php" class="password-edit-form d-none d-flex gap-2 mt-2" id="password-form-<?= e($c['id']) ?>">
+                                      <?= Csrf::inputField() ?>
+                                      <input type="hidden" name="participant_id" value="<?= e((string)($c['id'])) ?>">
+                                      <input type="text" class="form-control form-control-sm" name="new_password" placeholder="Neues Passwort" required style="max-width: 200px;">
+                                      <button class="btn btn-sm btn-save" type="submit">✓</button>
+                                      <button class="btn btn-sm btn-outline-secondary cancel-password-btn" type="button" data-participant-id="<?= e($c['id']) ?>">✕</button>
+                                    </form>
+                                  </div>
+                                </td>
                                 <td class="text-nowrap"><?= e((string)($c['id'] ?? '')) ?></td>
                                 <td>
                                   <form method="post" action="/admin_delete_participant.php" style="display:inline;" onsubmit="return confirm('Wirklich löschen?');">
@@ -1312,6 +1394,45 @@ final class AdminController
                 form.classList.remove('d-flex');
                 display.classList.remove('d-none');
                 editBtn.classList.remove('d-none');
+              }
+            });
+          })();
+
+          // Inline password editing
+          (function(){
+            document.addEventListener('click', function(e){
+              // Edit password button clicked
+              if (e.target.closest('.edit-password-btn')) {
+                const btn = e.target.closest('.edit-password-btn');
+                const participantId = btn.dataset.participantId;
+                const passwordCell = document.getElementById('password-cell-' + participantId);
+                const display = passwordCell.querySelector('.password-display');
+                const form = document.getElementById('password-form-' + participantId);
+                
+                display.classList.add('d-none');
+                form.classList.remove('d-none');
+                form.classList.add('d-flex');
+                
+                // Focus the input field
+                const input = form.querySelector('input[name="new_password"]');
+                input.focus();
+              }
+              
+              // Cancel password edit button clicked
+              if (e.target.closest('.cancel-password-btn')) {
+                const btn = e.target.closest('.cancel-password-btn');
+                const participantId = btn.dataset.participantId;
+                const passwordCell = document.getElementById('password-cell-' + participantId);
+                const display = passwordCell.querySelector('.password-display');
+                const form = document.getElementById('password-form-' + participantId);
+                
+                form.classList.add('d-none');
+                form.classList.remove('d-flex');
+                display.classList.remove('d-none');
+                
+                // Clear input field
+                const input = form.querySelector('input[name="new_password"]');
+                input.value = '';
               }
             });
           })();

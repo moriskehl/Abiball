@@ -80,4 +80,52 @@ final class ParticipantAdminService
             return ['success' => false, 'error' => 'update_failed'];
         }
     }
+
+    /**
+     * Ändert das Login-Passwort eines Teilnehmers
+     * Admins können ein neues Klartext-Passwort setzen, das beim nächsten Login automatisch gehasht wird
+     * 
+     * @param string $participantId Die ID des Teilnehmers
+     * @param string $newPassword Das neue Passwort (Klartext)
+     * @return array ['success' => bool, 'error' => string|null]
+     */
+    public static function changeParticipantPassword(string $participantId, string $newPassword): array
+    {
+        $participantId = trim($participantId);
+        $newPassword = trim($newPassword);
+        
+        if ($participantId === '') {
+            return ['success' => false, 'error' => 'empty_id'];
+        }
+
+        if ($newPassword === '') {
+            return ['success' => false, 'error' => 'empty_password'];
+        }
+
+        // Validierung: Länge des Passworts (mindestens 4 Zeichen)
+        if (strlen($newPassword) < 4) {
+            return ['success' => false, 'error' => 'password_too_short'];
+        }
+
+        // Validierung: Maximale Länge
+        if (strlen($newPassword) > 255) {
+            return ['success' => false, 'error' => 'password_too_long'];
+        }
+
+        // Prüfen ob Participant existiert
+        $participant = ParticipantsRepository::findById($participantId);
+        if (!$participant) {
+            return ['success' => false, 'error' => 'not_found'];
+        }
+
+        try {
+            // Das neue Passwort wird als Klartext gespeichert
+            // Es wird beim nächsten Login automatisch gehasht (durch AuthController)
+            ParticipantsRepository::updateLoginCodeForId($participantId, $newPassword);
+            return ['success' => true, 'error' => null];
+        } catch (Throwable $e) {
+            error_log('ParticipantAdminService::changeParticipantPassword error: ' . $e->getMessage());
+            return ['success' => false, 'error' => 'update_failed'];
+        }
+    }
 }

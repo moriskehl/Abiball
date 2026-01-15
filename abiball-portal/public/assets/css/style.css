@@ -1335,6 +1335,40 @@ html.dark .btn.btn-outline-secondary.btn-soft:focus-visible{
   min-width: 150px;
 }
 
+/* Password editing */
+.password-cell {
+  position: relative;
+  display: inline-block;
+}
+
+.password-display {
+  display: inline-block;
+}
+
+.edit-password-btn {
+  color: var(--muted);
+  transition: color 150ms ease, opacity 150ms ease;
+  opacity: 0.7;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0 !important;
+}
+
+.edit-password-btn:hover {
+  color: var(--text);
+  opacity: 1;
+}
+
+.password-edit-form {
+  gap: 0.5rem !important;
+  align-items: center;
+}
+
+.password-edit-form input.form-control {
+  min-width: 150px;
+}
+
 /* =========================================================
    Modals
    ========================================================= */
