@@ -13,6 +13,8 @@ require_once __DIR__ . '/../Repository/PricingOverridesRepository.php';
 require_once __DIR__ . '/../Repository/AdminAuditLogRepository.php';
 require_once __DIR__ . '/../Service/PricingService.php';
 require_once __DIR__ . '/../Service/SeatingService.php';
+require_once __DIR__ . '/../Service/AdminPasswordService.php';
+require_once __DIR__ . '/../Service/ParticipantAdminService.php';
 require_once __DIR__ . '/../View/Layout.php';
 require_once __DIR__ . '/../View/Helpers.php';
 require_once __DIR__ . '/../Auth/AdminContext.php';
@@ -437,6 +439,97 @@ final class AdminController
     }
 
     /* =========================
+     * ADMIN MANAGEMENT
+     * ========================= */
+
+    public static function changeAdminPassword(): void
+    {
+        AdminContext::requireAdmin();
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Response::redirect('/admin_dashboard.php');
+        }
+
+        if (!Csrf::validate(Request::postString('_csrf'))) {
+            Response::redirect('/admin_dashboard.php?err=csrf');
+        }
+
+        $adminId = AdminContext::adminId();
+        $current = trim(Request::postString('current_password'));
+        $new1 = trim(Request::postString('new_password'));
+        $new2 = trim(Request::postString('new_password2'));
+
+        // Delegate to AdminPasswordService for validation and password change
+        $result = AdminPasswordService::changePassword($adminId, $current, $new1, $new2);
+
+        if ($result['success']) {
+            AdminAuditLogRepository::append('admin_change_password', [
+                'admin_id' => $adminId,
+            ]);
+            Response::redirect('/admin_dashboard.php?ok=admin_pw_changed');
+        } else {
+            $error = $result['error'] ?? 'unknown';
+            Response::redirect('/admin_dashboard.php?err=' . urlencode($error));
+        }
+    }
+
+    public static function deleteParticipant(): void
+    {
+        AdminContext::requireAdmin();
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Response::redirect('/admin_dashboard.php');
+        }
+
+        if (!Csrf::validate(Request::postString('_csrf'))) {
+            Response::redirect('/admin_dashboard.php?err=csrf#edit');
+        }
+
+        $participantId = trim(Request::postString('participant_id'));
+
+        $result = ParticipantAdminService::deleteParticipant($participantId);
+
+        if ($result['success']) {
+            AdminAuditLogRepository::append('delete_participant', [
+                'participant_id' => $participantId,
+            ]);
+            Response::redirect('/admin_dashboard.php?ok=delete_participant#edit');
+        } else {
+            $error = $result['error'] ?? 'unknown';
+            Response::redirect('/admin_dashboard.php?err=' . urlencode($error) . '#edit');
+        }
+    }
+
+    public static function editParticipantName(): void
+    {
+        AdminContext::requireAdmin();
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Response::redirect('/admin_dashboard.php');
+        }
+
+        if (!Csrf::validate(Request::postString('_csrf'))) {
+            Response::redirect('/admin_dashboard.php?err=csrf#edit');
+        }
+
+        $participantId = trim(Request::postString('participant_id'));
+        $newName = trim(Request::postString('new_name'));
+
+        $result = ParticipantAdminService::editParticipantName($participantId, $newName);
+
+        if ($result['success']) {
+            AdminAuditLogRepository::append('edit_participant_name', [
+                'participant_id' => $participantId,
+                'new_name' => $newName,
+            ]);
+            Response::redirect('/admin_dashboard.php?ok=edit_participant_name#edit');
+        } else {
+            $error = $result['error'] ?? 'unknown';
+            Response::redirect('/admin_dashboard.php?err=' . urlencode($error) . '#edit');
+        }
+    }
+
+    /* =========================
      * DASHBOARD
      * ========================= */
 
@@ -499,11 +592,23 @@ final class AdminController
         $filtered = $all;
         if ($q !== '') {
             $qLower = mb_strtolower($q, 'UTF-8');
-            $filtered = array_values(array_filter($all, static function ($p) use ($qLower) {
+            // First pass: find all matching participants
+            $matchingMainIds = [];
+            foreach ($all as $p) {
                 $id   = mb_strtolower((string)($p['id'] ?? ''), 'UTF-8');
                 $name = mb_strtolower((string)($p['name'] ?? ''), 'UTF-8');
                 $main = mb_strtolower((string)($p['main_id'] ?? ''), 'UTF-8');
-                return str_contains($id, $qLower) || str_contains($name, $qLower) || str_contains($main, $qLower);
+                if (str_contains($id, $qLower) || str_contains($name, $qLower) || str_contains($main, $qLower)) {
+                    $mainId = ParticipantsRepository::resolveMainIdFromRow($p);
+                    if ($mainId !== '') {
+                        $matchingMainIds[$mainId] = true;
+                    }
+                }
+            }
+            // Second pass: include all participants from matching main_ids
+            $filtered = array_values(array_filter($all, static function ($p) use ($matchingMainIds) {
+                $mainId = ParticipantsRepository::resolveMainIdFromRow($p);
+                return isset($matchingMainIds[$mainId]);
             }));
         }
 
@@ -870,15 +975,27 @@ final class AdminController
                         <table class="table table-sm table-striped table-hover align-middle mb-0 admin-table">
                           <thead>
                             <tr>
+                              <th>Hauptgast Name</th>
+                              <th>Login Code</th>
                               <th>Tickets</th>
                               <th>Soll</th>
                               <th>Bezahlt</th>
                               <th>Offen</th>
                               <th style="width: 280px;">paid ändern</th>
+                              <th style="width: 250px;">Aktionen</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr>
+                              <td>
+                                <form method="post" action="/admin_edit_participant_name.php" class="d-flex gap-2">
+                                  <?= Csrf::inputField() ?>
+                                  <input type="hidden" name="participant_id" value="<?= e((string)($main['id'] ?? '')) ?>">
+                                  <input type="text" class="form-control form-control-sm" name="new_name" value="<?= e((string)($main['name'] ?? '')) ?>" required style="max-width: 200px;">
+                                  <button class="btn btn-sm btn-save" type="submit">✓</button>
+                                </form>
+                              </td>
+                              <td><code class="text-nowrap" style="font-size: 0.9rem;"><?= e((string)($main['login_code'] ?? '')) ?></code></td>
                               <td><?= (int)$ticketCount ?></td>
                               <td><?= (int)$amountDue ?> €</td>
                               <td><?= (int)$amountPaid ?> €</td>
@@ -898,6 +1015,13 @@ final class AdminController
                                   <button class="btn btn-sm btn-save" type="submit">Speichern</button>
                                 </form>
                               </td>
+                              <td>
+                                <form method="post" action="/admin_delete_participant.php" style="display:inline;" onsubmit="return confirm('Wirklich löschen? (inkl. alle Begleiter)');">
+                                  <?= Csrf::inputField() ?>
+                                  <input type="hidden" name="participant_id" value="<?= e((string)($main['id'] ?? '')) ?>">
+                                  <button class="btn btn-sm btn-outline-danger" type="submit">Löschen</button>
+                                </form>
+                              </td>
                             </tr>
                           </tbody>
                         </table>
@@ -909,14 +1033,41 @@ final class AdminController
                             <thead>
                               <tr>
                                 <th>Begleiter Name</th>
+                                <th>Login Code</th>
                                 <th class="text-nowrap">Begleiter ID</th>
+                                <th style="width: 250px;">Aktionen</th>
                               </tr>
                             </thead>
                             <tbody>
                             <?php foreach ($companions as $c): ?>
                               <tr>
-                                <td><?= e((string)($c['name'] ?? '')) ?></td>
+                                <td>
+                                  <div class="companion-name-cell" id="name-cell-<?= e($c['id']) ?>">
+                                    <span class="companion-name-display"><?= e((string)($c['name'] ?? '')) ?></span>
+                                    <button class="btn btn-sm btn-link p-0 ms-2 edit-companion-btn" type="button" data-companion-id="<?= e($c['id']) ?>" title="Bearbeiten">
+                                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M2 13.5V14h.5l7.707-7.707-1-1L2 13.5z"/>
+                                        <path d="M10.293 2.293a1 1 0 0 1 1.414 0l2 2a1 1 0 0 1 0 1.414l-8 8"/>
+                                      </svg>
+                                    </button>
+                                    <form method="post" action="/admin_edit_participant_name.php" class="companion-edit-form d-none d-flex gap-2 mt-2" id="edit-form-<?= e($c['id']) ?>">
+                                      <?= Csrf::inputField() ?>
+                                      <input type="hidden" name="participant_id" value="<?= e((string)($c['id'])) ?>">
+                                      <input type="text" class="form-control form-control-sm" name="new_name" placeholder="<?= e((string)($c['name'] ?? '')) ?>" required style="max-width: 200px;">
+                                      <button class="btn btn-sm btn-save" type="submit">✓</button>
+                                      <button class="btn btn-sm btn-outline-secondary cancel-edit-btn" type="button" data-companion-id="<?= e($c['id']) ?>">✕</button>
+                                    </form>
+                                  </div>
+                                </td>
+                                <td><code class="text-nowrap" style="font-size: 0.9rem;"><?= e((string)($c['login_code'] ?? '')) ?></code></td>
                                 <td class="text-nowrap"><?= e((string)($c['id'] ?? '')) ?></td>
+                                <td>
+                                  <form method="post" action="/admin_delete_participant.php" style="display:inline;" onsubmit="return confirm('Wirklich löschen?');">
+                                    <?= Csrf::inputField() ?>
+                                    <input type="hidden" name="participant_id" value="<?= e((string)($c['id'] ?? '')) ?>">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Löschen</button>
+                                  </form>
+                                </td>
                               </tr>
                             <?php endforeach; ?>
                             </tbody>
@@ -1093,6 +1244,17 @@ final class AdminController
 
         <script>
           (function(){
+            // Auto-redirect after success message (1.5 second delay)
+            const hasSuccess = !!document.querySelector('.alert-success');
+            if (hasSuccess) {
+              setTimeout(() => {
+                location.replace('/admin_dashboard.php');
+              }, 1500);
+            }
+          })();
+
+          // Section navigation
+          (function(){
             const sel = document.getElementById('adminSectionSelect');
             const sections = Array.from(document.querySelectorAll('.admin-section'));
 
@@ -1114,6 +1276,44 @@ final class AdminController
             if (sel) sel.addEventListener('change', () => show(sel.value));
             window.addEventListener('hashchange', init);
             init();
+          })();
+
+          // Inline companion name editing
+          (function(){
+            document.addEventListener('click', function(e){
+              // Edit button clicked
+              if (e.target.closest('.edit-companion-btn')) {
+                const btn = e.target.closest('.edit-companion-btn');
+                const companionId = btn.dataset.companionId;
+                const nameCell = document.getElementById('name-cell-' + companionId);
+                const display = nameCell.querySelector('.companion-name-display');
+                const form = document.getElementById('edit-form-' + companionId);
+                
+                display.classList.add('d-none');
+                btn.classList.add('d-none');
+                form.classList.remove('d-none');
+                form.classList.add('d-flex');
+                
+                // Focus the input field
+                const input = form.querySelector('input[name="new_name"]');
+                input.focus();
+              }
+              
+              // Cancel button clicked
+              if (e.target.closest('.cancel-edit-btn')) {
+                const btn = e.target.closest('.cancel-edit-btn');
+                const companionId = btn.dataset.companionId;
+                const nameCell = document.getElementById('name-cell-' + companionId);
+                const display = nameCell.querySelector('.companion-name-display');
+                const form = document.getElementById('edit-form-' + companionId);
+                const editBtn = nameCell.querySelector('.edit-companion-btn');
+                
+                form.classList.add('d-none');
+                form.classList.remove('d-flex');
+                display.classList.remove('d-none');
+                editBtn.classList.remove('d-none');
+              }
+            });
           })();
         </script>
         <?php

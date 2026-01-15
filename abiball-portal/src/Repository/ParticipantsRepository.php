@@ -426,4 +426,148 @@ final class ParticipantsRepository
 
         return $newId;
     }
+
+    /**
+     * Aktualisiert den login_code für eine beliebige Person (Main, Admin, oder Begleiter)
+     * 
+     * @param string $id Die participant ID
+     * @param string $newLoginCode Das neue gehashte Passwort
+     * @throws InvalidArgumentException wenn $id oder $newLoginCode leer sind
+     * @throws RuntimeException wenn die Person nicht gefunden wird
+     */
+    public static function updateLoginCodeForId(string $id, string $newLoginCode): void
+    {
+        $id = trim($id);
+        $newLoginCode = trim($newLoginCode);
+
+        if ($id === '') throw new InvalidArgumentException('id missing');
+        if ($newLoginCode === '') throw new InvalidArgumentException('newLoginCode missing');
+
+        $path = Config::participantsCsvPath();
+
+        CsvRepository::updateAssocAtomic($path, static function (array $header, array $rows) use ($id, $newLoginCode): array {
+            $header = self::ensureParticipantsHeader($header);
+
+            $updated = false;
+            foreach ($rows as &$r) {
+                $rId = trim((string)($r['id'] ?? ''));
+                if ($rId !== $id) continue;
+
+                $r['login_code'] = $newLoginCode;
+                $updated = true;
+                break;
+            }
+            unset($r);
+
+            if (!$updated) {
+                throw new RuntimeException('Participant not found for id=' . $id);
+            }
+
+            return [$header, $rows];
+        }, ';');
+    }
+
+    /**
+     * Löscht eine Person aus dem System (Hauptgast oder Begleiter)
+     * Löscht auch alle zugehörigen Begleiter wenn ein Hauptgast gelöscht wird
+     * 
+     * @param string $id Die ID des Hauptgastes oder Begleiters
+     * @throws RuntimeException wenn die Person nicht gefunden wird
+     */
+    public static function deleteParticipantById(string $id): void
+    {
+        $id = trim($id);
+        if ($id === '') throw new InvalidArgumentException('id missing');
+
+        $path = Config::participantsCsvPath();
+
+        CsvRepository::updateAssocAtomic($path, static function (array $header, array $rows) use ($id): array {
+            $header = self::ensureParticipantsHeader($header);
+
+            // Zunächst prüfen: Ist das ein Hauptgast oder Begleiter?
+            $isMain = false;
+            $mainId = '';
+            $deleted = false;
+
+            foreach ($rows as $r) {
+                $rId = trim((string)($r['id'] ?? ''));
+                if ($rId !== $id) continue;
+
+                $isMain = CsvRepository::parseBool((string)($r['is_main'] ?? ''));
+                $mainId = trim((string)($r['main_id'] ?? ''));
+                break;
+            }
+
+            if (!isset($rows[array_key_first(array_filter($rows, function ($r) use ($id) {
+                return trim((string)($r['id'] ?? '')) === $id;
+            }))])) {
+                throw new RuntimeException('Participant not found for id=' . $id);
+            }
+
+            // Jetzt löschen
+            if ($isMain) {
+                // Wenn Hauptgast, dann alle Begleiter auch löschen
+                $rows = array_filter($rows, function ($r) use ($id, $mainId) {
+                    $rId = trim((string)($r['id'] ?? ''));
+                    $rMid = trim((string)($r['main_id'] ?? ''));
+                    
+                    // Lösche das Element selbst
+                    if ($rId === $id) return false;
+                    
+                    // Lösche alle Begleiter dieses Hauptgastes
+                    if ($rMid === $id) return false;
+                    
+                    return true;
+                });
+            } else {
+                // Wenn Begleiter, nur diesen löschen
+                $rows = array_filter($rows, function ($r) use ($id) {
+                    $rId = trim((string)($r['id'] ?? ''));
+                    return $rId !== $id;
+                });
+            }
+
+            return [$header, array_values($rows)];
+        }, ';');
+    }
+
+    /**
+     * Ändert den Namen einer Person (Hauptgast oder Begleiter)
+     * 
+     * @param string $id Die ID der Person
+     * @param string $newName Der neue Name
+     * @throws InvalidArgumentException wenn $id oder $newName leer sind
+     * @throws RuntimeException wenn die Person nicht gefunden wird
+     */
+    public static function updateParticipantName(string $id, string $newName): void
+    {
+        $id = trim($id);
+        $newName = self::normalizeName($newName);
+
+        if ($id === '') throw new InvalidArgumentException('id missing');
+        if ($newName === '') throw new InvalidArgumentException('Name missing');
+
+        $path = Config::participantsCsvPath();
+
+        CsvRepository::updateAssocAtomic($path, static function (array $header, array $rows) use ($id, $newName): array {
+            $header = self::ensureParticipantsHeader($header);
+
+            $updated = false;
+            foreach ($rows as &$r) {
+                $rId = trim((string)($r['id'] ?? ''));
+                if ($rId !== $id) continue;
+
+                $r['name'] = $newName;
+                $updated = true;
+                break;
+            }
+            unset($r);
+
+            if (!$updated) {
+                throw new RuntimeException('Participant not found for id=' . $id);
+            }
+
+            return [$header, $rows];
+        }, ';');
+    }
 }

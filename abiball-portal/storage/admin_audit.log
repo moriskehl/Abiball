@@ -1,1 +1,8 @@
 {"ts":"2026-01-14T08:37:25+01:00","admin":{"id":"ADMIN00","name":"Admin"},"ip":"::1","action":"create_main_guest","data":{"id":"ABI03S","name":"Hans","login_code_set":true}}
+{"ts":"2026-01-15T10:22:21+01:00","admin":{"id":"ADMIN00","name":"Admin"},"ip":"::1","action":"update_paid","data":{"main_id":"WGI01S","old":0,"new":2}}
+{"ts":"2026-01-15T10:23:08+01:00","admin":{"id":"ADMIN00","name":"Admin"},"ip":"::1","action":"update_paid","data":{"main_id":"WGI01S","old":2,"new":0}}
+{"ts":"2026-01-15T10:24:04+01:00","admin":{"id":"ADMIN00","name":"Admin"},"ip":"::1","action":"update_paid","data":{"main_id":"00L","old":0,"new":2}}
+{"ts":"2026-01-15T10:24:42+01:00","admin":{"id":"ADMIN00","name":"Admin"},"ip":"::1","action":"update_paid","data":{"main_id":"00L","old":2,"new":0}}
+{"ts":"2026-01-15T10:46:05+01:00","admin":{"id":"ADMIN00","name":"Admin"},"ip":"::1","action":"edit_participant_name","data":{"participant_id":"ABI00S","new_name":"Max Mustermann"}}
+{"ts":"2026-01-15T10:56:52+01:00","admin":{"id":"ADMIN00","name":"Admin"},"ip":"::1","action":"edit_participant_name","data":{"participant_id":"ABI01B1","new_name":"Bob Ross"}}
+{"ts":"2026-01-15T10:57:30+01:00","admin":{"id":"ADMIN00","name":"Admin"},"ip":"::1","action":"delete_participant","data":{"participant_id":"ABI01B2"}}

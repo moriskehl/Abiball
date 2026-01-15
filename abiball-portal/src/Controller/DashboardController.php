@@ -10,6 +10,7 @@ require_once __DIR__ . '/../Http/Response.php';
 require_once __DIR__ . '/../Service/ParticipantService.php';
 require_once __DIR__ . '/../Service/PricingService.php';
 require_once __DIR__ . '/../Service/SeatingService.php';
+require_once __DIR__ . '/../Service/PasswordService.php';
 require_once __DIR__ . '/../Repository/ParticipantsRepository.php';
 require_once __DIR__ . '/../View/Layout.php';
 require_once __DIR__ . '/../View/Helpers.php';
@@ -396,44 +397,15 @@ final class DashboardController
         $new1 = trim(Request::postString('new_password'));
         $new2 = trim(Request::postString('new_password2'));
 
-        if ($new1 === '' || $new2 === '' || $current === '') {
-            Response::redirect('/dashboard.php?pw_err=empty');
-        }
-        if ($new1 !== $new2) {
-            Response::redirect('/dashboard.php?pw_err=match');
-        }
-        if (mb_strlen($new1) < 6 || mb_strlen($new1) > 64) {
-            Response::redirect('/dashboard.php?pw_err=len');
-        }
+        // Delegate to PasswordService for validation and password change
+        $result = PasswordService::changePassword($mainId, $current, $new1, $new2);
 
-        $mainRow = ParticipantsRepository::mainRowForMainId($mainId);
-        if (!$mainRow) {
-            Response::redirect('/dashboard.php?pw_err=main');
-        }
-
-        $stored = (string)($mainRow['login_code'] ?? '');
-        if ($stored === '') {
-            Response::redirect('/dashboard.php?pw_err=old');
-        }
-
-        $isHashed = str_starts_with($stored, '$2y$') || str_starts_with($stored, '$argon2');
-        $currentValid = $isHashed ? password_verify($current, $stored) : hash_equals($stored, $current);
-
-        if (!$currentValid) {
-            Response::redirect('/dashboard.php?pw_err=old');
-        }
-
-        $newHashed = password_hash($new1, PASSWORD_DEFAULT);
-        if ($newHashed === false) {
-            Response::redirect('/dashboard.php?pw_err=save');
-        }
-
-        try {
-            ParticipantsRepository::updateLoginCodeForMainId($mainId, $newHashed);
+        if ($result['success']) {
             $_SESSION['show_pw_prompt'] = 0;
             Response::redirect('/dashboard.php?pw_ok=1');
-        } catch (Throwable $e) {
-            Response::redirect('/dashboard.php?pw_err=save');
+        } else {
+            $error = $result['error'] ?? 'unknown';
+            Response::redirect('/dashboard.php?pw_err=' . urlencode($error));
         }
     }
 }

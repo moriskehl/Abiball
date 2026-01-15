@@ -1,12 +1,11 @@
 id;name;is_main;main_id;login_code;role;amount_paid;password_changed;;;amount_subsided
 ADMIN00;Admin;1;ADMIN00;2NmPGH46kq!~oAawd%N;ADMIN;;;;;
 ADMIN01;Bahaa;1;ADMIN01;3$yTg!9kLzVQeD#7h2a;ADMIN;;;;;
-ABI00S;"Max Mustermann";1;ABI00S;$2y$12$L.oZEgDHnHvDHFzDanidDen4MyMjUCZHKDpNtybxBrT4zpPGwwFPG;USER;34;;;;
+ABI00S;"Max Mustermann";1;ABI00S;$2y$12$ITFEeca9/Do7pPlVGhtSrOOKUARkcI0wf.Ud/93OfOUgMga8cFd0C;USER;34;;;;
 ABI00B1;"Erika Mustermann";0;ABI00S;test;USER;;;;;
 ABI00B2;"Hans Mustermann";0;ABI00S;test;USER;;;;;
-ABI01S;"Julia Schmitt";1;ABI01S;$2y$12$/rRU8RN8MwjGwlz/dMZDaeQbVm0odtvsGtcuAJRmgJkrH6tqFR4..;USER;34;0;;;
-ABI01B1;"Peter Schmitt";0;ABI01S;test;USER;;;;;
-ABI01B2;"Anna Schmitt";0;ABI01S;test;USER;;;;;
+ABI01S;"Julia Schmitt";1;ABI01S;$2y$12$qWe2ZQqB.4/fa/0Sbx4XWO99GwNOGBJJw11v7YNx2Db7A8QuE58Se;USER;34;0;;;
+ABI01B1;"Bob Ross";0;ABI01S;test;USER;;;;;
 ABI01B3;"Katrin Schmitt";0;ABI01S;test;USER;;;;;
 ABI01B4;"Lukas Schmitt";0;ABI01S;test;USER;;;;;
 ABI01B5;"Laura Schmitt";0;ABI01S;test;USER;;;;;
