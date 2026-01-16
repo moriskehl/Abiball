@@ -9,7 +9,7 @@ final class ParticipantsRepository
 {
     /**
      * Erwartete CSV-Header:
-     * id;name;is_main;main_id;login_code;role;amount_paid;amount_subsided
+     * id;name;is_main;main_id;login_code;role;amount_paid;password_changed;ticket_validated;validation_time;validation_person;;amount_subsided
      *
      * @return array<int, array<string,mixed>>
      */
@@ -33,6 +33,11 @@ final class ParticipantsRepository
 
             $rawSub = trim((string)($r['amount_subsided'] ?? ''));
             $r['amount_subsided_int'] = is_numeric($rawSub) ? (int)round((float)$rawSub) : 0;
+
+            // Entwertungs-Status
+            $r['ticket_validated'] = trim((string)($r['ticket_validated'] ?? ''));
+            $r['validation_time'] = trim((string)($r['validation_time'] ?? ''));
+            $r['validation_person'] = trim((string)($r['validation_person'] ?? ''));
         }
         unset($r);
 
@@ -569,5 +574,39 @@ final class ParticipantsRepository
 
             return [$header, $rows];
         }, ';');
+    }
+
+    /**
+     * Prüft ob ein Ticket validiert wurde
+     */
+    public static function isTicketValidated(string $id): bool
+    {
+        $p = self::findById($id);
+        if (!$p) return false;
+        
+        $status = trim((string)($p['ticket_validated'] ?? ''));
+        return $status !== '' && $status !== '0';
+    }
+
+    /**
+     * Gibt Validierungszeit eines Tickets zurück
+     */
+    public static function getValidationTime(string $id): string
+    {
+        $p = self::findById($id);
+        if (!$p) return '';
+        
+        return trim((string)($p['validation_time'] ?? ''));
+    }
+
+    /**
+     * Gibt Door-Person-ID zurück, die Ticket validiert hat
+     */
+    public static function getValidationPerson(string $id): string
+    {
+        $p = self::findById($id);
+        if (!$p) return '';
+        
+        return trim((string)($p['validation_person'] ?? ''));
     }
 }

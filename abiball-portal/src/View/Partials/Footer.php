@@ -33,6 +33,7 @@ require_once __DIR__ . '/../Helpers.php';
 
     <?php if (basename($_SERVER['PHP_SELF']) === 'login.php'): ?>
       <a class="text-muted" href="/admin_login.php">Admin</a>
+      <a class="text-muted" href="/door_login.php">Einlass</a>
     <?php endif; ?>
 
     <a class="text-muted" href="/zahlung.php">Zahlung</a>

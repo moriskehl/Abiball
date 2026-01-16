@@ -76,8 +76,6 @@ final class AuthController
                     <a class="btn btn-outline-secondary" href="/" style="border-radius: 12px;">Zur Landing Page</a>
                   </div>
 
-                  <hr class="my-4">
-
                   <div class="text-muted small" style="line-height: 1.6;">
                     Hinweis: Der Login-Code wird vom Organisationsteam vergeben. Bitte prüfe Groß-/Kleinschreibung und Sonderzeichen.
                   </div>
