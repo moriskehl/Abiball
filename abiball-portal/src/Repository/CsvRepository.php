@@ -130,6 +130,21 @@ final class CsvRepository
     }
 
     /**
+     * Schützt einen Wert vor CSV-Injection (Formula Injection).
+     * Formelzeichen am Anfang werden mit einem Apostroph escaped.
+     * 
+     * @see https://owasp.org/www-community/attacks/CSV_Injection
+     */
+    public static function sanitizeCsvValue(string $value): string
+    {
+        // Formelzeichen die in Excel/LibreOffice Formeln einleiten können
+        if (preg_match('/^[=+\-@\t\r\n]/', $value)) {
+            return "'" . $value;
+        }
+        return $value;
+    }
+
+    /**
      * Atomar schreiben: temp-Datei im gleichen Ordner → rename().
      *
      * @param array<int,string> $header
@@ -156,11 +171,17 @@ final class CsvRepository
         // Header (Reihenfolge bleibt stabil)
         fputcsv($h, $header, $delimiter, '"', '\\');
 
-        // Rows in Header-Reihenfolge schreiben
+        // Rows in Header-Reihenfolge schreiben (mit CSV-Injection-Schutz)
         foreach ($rows as $r) {
             $line = [];
             foreach ($header as $col) {
-                $line[] = array_key_exists($col, $r) ? (string)($r[$col] ?? '') : '';
+                $val = array_key_exists($col, $r) ? (string)($r[$col] ?? '') : '';
+                // CSV-Injection-Schutz für Benutzereingaben (Namen, Notizen, etc.)
+                // Aber nicht für System-Felder wie IDs, Hashes, etc.
+                if (!in_array($col, ['id', 'main_id', 'login_code', 'password_changed'], true)) {
+                    $val = self::sanitizeCsvValue($val);
+                }
+                $line[] = $val;
             }
             fputcsv($h, $line, $delimiter, '"', '\\');
         }

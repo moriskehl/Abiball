@@ -11,6 +11,7 @@ require_once __DIR__ . '/../Http/Response.php';
 require_once __DIR__ . '/../Repository/ParticipantsRepository.php';
 require_once __DIR__ . '/../Repository/PricingOverridesRepository.php';
 require_once __DIR__ . '/../Repository/AdminAuditLogRepository.php';
+require_once __DIR__ . '/../Repository/FoodOrderRepository.php';
 require_once __DIR__ . '/../Service/PricingService.php';
 require_once __DIR__ . '/../Service/SeatingService.php';
 require_once __DIR__ . '/../Service/AdminPasswordService.php';
@@ -36,7 +37,7 @@ final class AdminController
         Bootstrap::init();
 
         if (AdminContext::isAdmin()) {
-            Response::redirect('/admin_dashboard.php');
+            Response::redirect('/admin/admin_dashboard.php');
         }
 
         Layout::header('Admin – Login');
@@ -60,7 +61,7 @@ final class AdminController
                   <div class="alert alert-danger mb-4"><?= e($error) ?></div>
                 <?php endif; ?>
 
-                <form method="post" action="/admin_login.php" autocomplete="on">
+                <form method="post" action="/admin/admin_login.php" autocomplete="on">
                   <?= Csrf::inputField() ?>
 
                   <div class="mb-3">
@@ -93,7 +94,7 @@ final class AdminController
         Bootstrap::init();
 
         if (AdminContext::isAdmin()) {
-            Response::redirect('/admin_dashboard.php');
+            Response::redirect('/admin/admin_dashboard.php');
         }
 
         $ipKey = 'admin_login_' . Request::ip();
@@ -127,13 +128,32 @@ final class AdminController
             return;
         }
 
-        if (!hash_equals($stored, $password)) {
+        $input = $password;
+
+        // SECURITY: Support hashed and plaintext (for migration), prefer hashed
+        $isHashed = str_starts_with($stored, '$2y$') || str_starts_with($stored, '$argon2');
+        $ok = $isHashed ? password_verify($input, $stored) : hash_equals($stored, $input);
+
+        if (!$ok) {
             self::showLoginForm('Admin-Code ist falsch.', $identifier);
             return;
         }
 
+        // SECURITY: Auto-migrate plaintext to hashed on successful login
+        if (!$isHashed) {
+            $newHash = password_hash($input, PASSWORD_DEFAULT);
+            if ($newHash !== false) {
+                try {
+                    $adminId = (string)($admin['id'] ?? '');
+                    ParticipantsRepository::updateLoginCodeForMainId($adminId, $newHash);
+                } catch (Throwable $e) {
+                    // Silent fail - login was successful, hash migration is optional
+                }
+            }
+        }
+
         AdminContext::loginAsAdmin($admin);
-        Response::redirect('/admin_dashboard.php');
+        Response::redirect('/admin/admin_dashboard.php');
     }
 
     public static function logout(): void
@@ -150,19 +170,19 @@ final class AdminController
         AdminContext::requireAdmin();
 
         if (!Csrf::validate(Request::postString('_csrf'))) {
-            Response::redirect('/admin_dashboard.php?err=csrf#edit');
+            Response::redirect('/admin/admin_dashboard.php?err=csrf#edit');
         }
 
         $mainId  = trim(Request::postString('main_id'));
         $paidRaw = trim(Request::postString('amount_paid'));
 
         if ($mainId === '') {
-            Response::redirect('/admin_dashboard.php?err=main#edit');
+            Response::redirect('/admin/admin_dashboard.php?err=main#edit');
        
         }
 
         if ($paidRaw === '' || !preg_match('/^\d+$/', $paidRaw)) {
-            Response::redirect('/admin_dashboard.php?err=paid#edit');
+            Response::redirect('/admin/admin_dashboard.php?err=paid#edit');
         }
 
         $paid = (int)$paidRaw;
@@ -179,9 +199,9 @@ final class AdminController
                 'new' => $paid,
             ]);
 
-            Response::redirect('/admin_dashboard.php?ok=1#edit');
+            Response::redirect('/admin/admin_dashboard.php?ok=1#edit');
         } catch (Throwable $e) {
-            Response::redirect('/admin_dashboard.php?err=save#edit');
+            Response::redirect('/admin/admin_dashboard.php?err=save#edit');
         }
     }
 
@@ -190,7 +210,7 @@ final class AdminController
         AdminContext::requireAdmin();
 
         if (!Csrf::validate(Request::postString('_csrf'))) {
-            Response::redirect('/admin_dashboard.php?err=csrf#ovr');
+            Response::redirect('/admin/admin_dashboard.php?err=csrf#ovr');
         }
 
         $id = trim(Request::postString('override_id'));
@@ -198,11 +218,11 @@ final class AdminController
         $reason = trim(Request::postString('reason'));
 
         if ($id === '' || !preg_match('/^[A-Za-z0-9_-]+$/', $id)) {
-            Response::redirect('/admin_dashboard.php?err=override_id#ovr');
+            Response::redirect('/admin/admin_dashboard.php?err=override_id#ovr');
         }
 
         if ($priceRaw === '' || !preg_match('/^\d+$/', $priceRaw)) {
-            Response::redirect('/admin_dashboard.php?err=override_price#ovr');
+            Response::redirect('/admin/admin_dashboard.php?err=override_price#ovr');
         }
 
         $price = (int)$priceRaw;
@@ -220,9 +240,9 @@ final class AdminController
                 'new' => ['ticket_price' => $price, 'reason' => $reason],
             ]);
 
-            Response::redirect('/admin_dashboard.php?ok_override=1#ovr');
+            Response::redirect('/admin/admin_dashboard.php?ok_override=1#ovr');
         } catch (Throwable $e) {
-            Response::redirect('/admin_dashboard.php?err=override_save#ovr');
+            Response::redirect('/admin/admin_dashboard.php?err=override_save#ovr');
         }
     }
 
@@ -231,12 +251,12 @@ final class AdminController
         AdminContext::requireAdmin();
 
         if (!Csrf::validate(Request::postString('_csrf'))) {
-            Response::redirect('/admin_dashboard.php?err=csrf#ovr');
+            Response::redirect('/admin/admin_dashboard.php?err=csrf#ovr');
         }
 
         $id = trim(Request::postString('override_id'));
         if ($id === '') {
-            Response::redirect('/admin_dashboard.php?err=override_id#ovr');
+            Response::redirect('/admin/admin_dashboard.php?err=override_id#ovr');
         }
 
         $before = PricingOverridesRepository::mapById();
@@ -250,9 +270,9 @@ final class AdminController
                 'old' => $old,
             ]);
 
-            Response::redirect('/admin_dashboard.php?ok_override=1#ovr');
+            Response::redirect('/admin/admin_dashboard.php?ok_override=1#ovr');
         } catch (Throwable $e) {
-            Response::redirect('/admin_dashboard.php?err=override_delete#ovr');
+            Response::redirect('/admin/admin_dashboard.php?err=override_delete#ovr');
         }
     }
 
@@ -261,7 +281,7 @@ final class AdminController
         AdminContext::requireAdmin();
 
         if (!Csrf::validate(Request::postString('_csrf'))) {
-            Response::redirect('/admin_dashboard.php?err=csrf#create');
+            Response::redirect('/admin/admin_dashboard.php?err=csrf#create');
         }
 
         $id = trim(Request::postString('id'));
@@ -277,9 +297,9 @@ final class AdminController
                 'login_code_set' => ($login !== ''),
             ]);
 
-            Response::redirect('/admin_dashboard.php?ok_create=1#create');
+            Response::redirect('/admin/admin_dashboard.php?ok_create=1#create');
         } catch (Throwable $e) {
-            Response::redirect('/admin_dashboard.php?err=create_main#create');
+            Response::redirect('/admin/admin_dashboard.php?err=create_main#create');
         }
     }
 
@@ -288,7 +308,7 @@ final class AdminController
         AdminContext::requireAdmin();
 
         if (!Csrf::validate(Request::postString('_csrf'))) {
-            Response::redirect('/admin_dashboard.php?err=csrf#create');
+            Response::redirect('/admin/admin_dashboard.php?err=csrf#create');
         }
 
         $mainId = trim(Request::postString('main_id'));
@@ -305,9 +325,9 @@ final class AdminController
                 'login_code_set' => ($login !== ''),
             ]);
 
-            Response::redirect('/admin_dashboard.php?ok_create=1#create');
+            Response::redirect('/admin/admin_dashboard.php?ok_create=1#create');
         } catch (Throwable $e) {
-            Response::redirect('/admin_dashboard.php?err=create_companion#create');
+            Response::redirect('/admin/admin_dashboard.php?err=create_companion#create');
         }
     }
 
@@ -337,8 +357,8 @@ final class AdminController
 
         $faviconDataUri = '';
         $publicDir = realpath(__DIR__ . '/../../public') ?: (__DIR__ . '/../../public');
-        $favPng = $publicDir . '/favicon.png';
-        $favIco = $publicDir . '/favicon.ico';
+        $favPng = $publicDir . '/images/favicon.png';
+        $favIco = $publicDir . '/images/favicon.ico';
 
         if (is_file($favPng)) {
             $b = file_get_contents($favPng);
@@ -447,11 +467,11 @@ final class AdminController
         AdminContext::requireAdmin();
 
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
-            Response::redirect('/admin_dashboard.php');
+            Response::redirect('/admin/admin_dashboard.php');
         }
 
         if (!Csrf::validate(Request::postString('_csrf'))) {
-            Response::redirect('/admin_dashboard.php?err=csrf');
+            Response::redirect('/admin/admin_dashboard.php?err=csrf');
         }
 
         $adminId = AdminContext::adminId();
@@ -466,10 +486,10 @@ final class AdminController
             AdminAuditLogRepository::append('admin_change_password', [
                 'admin_id' => $adminId,
             ]);
-            Response::redirect('/admin_dashboard.php?ok=admin_pw_changed');
+            Response::redirect('/admin/admin_dashboard.php?ok=admin_pw_changed');
         } else {
             $error = $result['error'] ?? 'unknown';
-            Response::redirect('/admin_dashboard.php?err=' . urlencode($error));
+            Response::redirect('/admin/admin_dashboard.php?err=' . urlencode($error));
         }
     }
 
@@ -478,11 +498,11 @@ final class AdminController
         AdminContext::requireAdmin();
 
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
-            Response::redirect('/admin_dashboard.php');
+            Response::redirect('/admin/admin_dashboard.php');
         }
 
         if (!Csrf::validate(Request::postString('_csrf'))) {
-            Response::redirect('/admin_dashboard.php?err=csrf#edit');
+            Response::redirect('/admin/admin_dashboard.php?err=csrf#edit');
         }
 
         $participantId = trim(Request::postString('participant_id'));
@@ -493,10 +513,10 @@ final class AdminController
             AdminAuditLogRepository::append('delete_participant', [
                 'participant_id' => $participantId,
             ]);
-            Response::redirect('/admin_dashboard.php?ok=delete_participant#edit');
+            Response::redirect('/admin/admin_dashboard.php?ok=delete_participant#edit');
         } else {
             $error = $result['error'] ?? 'unknown';
-            Response::redirect('/admin_dashboard.php?err=' . urlencode($error) . '#edit');
+            Response::redirect('/admin/admin_dashboard.php?err=' . urlencode($error) . '#edit');
         }
     }
 
@@ -505,11 +525,11 @@ final class AdminController
         AdminContext::requireAdmin();
 
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
-            Response::redirect('/admin_dashboard.php');
+            Response::redirect('/admin/admin_dashboard.php');
         }
 
         if (!Csrf::validate(Request::postString('_csrf'))) {
-            Response::redirect('/admin_dashboard.php?err=csrf#edit');
+            Response::redirect('/admin/admin_dashboard.php?err=csrf#edit');
         }
 
         $participantId = trim(Request::postString('participant_id'));
@@ -522,10 +542,10 @@ final class AdminController
                 'participant_id' => $participantId,
                 'new_name' => $newName,
             ]);
-            Response::redirect('/admin_dashboard.php?ok=edit_participant_name#edit');
+            Response::redirect('/admin/admin_dashboard.php?ok=edit_participant_name#edit');
         } else {
             $error = $result['error'] ?? 'unknown';
-            Response::redirect('/admin_dashboard.php?err=' . urlencode($error) . '#edit');
+            Response::redirect('/admin/admin_dashboard.php?err=' . urlencode($error) . '#edit');
         }
     }
 
@@ -534,11 +554,11 @@ final class AdminController
         AdminContext::requireAdmin();
 
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
-            Response::redirect('/admin_dashboard.php');
+            Response::redirect('/admin/admin_dashboard.php');
         }
 
         if (!Csrf::validate(Request::postString('_csrf'))) {
-            Response::redirect('/admin_dashboard.php?err=csrf#edit');
+            Response::redirect('/admin/admin_dashboard.php?err=csrf#edit');
         }
 
         $participantId = trim(Request::postString('participant_id'));
@@ -550,10 +570,10 @@ final class AdminController
             AdminAuditLogRepository::append('change_participant_password', [
                 'participant_id' => $participantId,
             ]);
-            Response::redirect('/admin_dashboard.php?ok=change_participant_password#edit');
+            Response::redirect('/admin/admin_dashboard.php?ok=change_participant_password#edit');
         } else {
             $error = $result['error'] ?? 'unknown';
-            Response::redirect('/admin_dashboard.php?err=' . urlencode($error) . '#edit');
+            Response::redirect('/admin/admin_dashboard.php?err=' . urlencode($error) . '#edit');
         }
     }
 
@@ -667,7 +687,7 @@ final class AdminController
         $okOverride = Request::getString('ok_override');
         $okCreate = Request::getString('ok_create');
 
-        Layout::header('Admin – Dashboard');
+        Layout::header('Admin – Dashboard', '', '', true);
         ?>
         <main class="bg-starfield admin-dashboard">
           <div class="container py-4">
@@ -679,15 +699,22 @@ final class AdminController
               </div>
 
               <div class="d-flex gap-2 flex-wrap">
-                <a class="btn btn-outline-primary btn-sm" href="/admin_main_logins_pdf.php" target="_blank" rel="noopener">
+                <a class="btn btn-outline-primary btn-sm" href="/admin/admin_main_logins_pdf.php" target="_blank" rel="noopener">
                   PDF: Login-Codes
                 </a>
-                <a class="btn btn-outline-danger btn-sm" href="/admin_logout.php">Logout</a>
+                <a class="btn btn-outline-danger btn-sm" href="/admin/admin_logout.php">Logout</a>
               </div>
             </div>
 
             <?php if ($ok !== ''): ?>
-              <div class="alert alert-success">Gespeichert.</div>
+              <div class="alert alert-success">
+                <?php
+                echo match ($ok) {
+                    'food_paid' => 'Essensbestellung als bezahlt markiert.',
+                    default => 'Gespeichert.'
+                };
+                ?>
+              </div>
             <?php endif; ?>
 
             <?php if ($okOverride !== ''): ?>
@@ -712,6 +739,10 @@ final class AdminController
                     'override_delete' => 'Override löschen fehlgeschlagen.',
                     'create_main' => 'Hauptgast anlegen fehlgeschlagen (ID ungültig oder existiert).',
                     'create_companion' => 'Begleiter anlegen fehlgeschlagen (main_id nicht gefunden/ungültig).',
+                    'food_missing_data' => 'Bestellnummer oder Betrag fehlt.',
+                    'food_order_not_found' => 'Essensbestellung nicht gefunden.',
+                    'food_invalid_status' => 'Bestellung kann nicht mehr geändert werden (Status ungültig).',
+                    'food_update_failed' => 'Essensbestellung aktualisieren fehlgeschlagen.',
                     default => 'Fehler.'
                 };
                 ?>
@@ -753,6 +784,7 @@ final class AdminController
                         <option value="ovr">Pricing Overrides</option>
                         <option value="edit" selected>Teilnehmer & Paid bearbeiten</option>
                         <option value="seating">Sitzgruppen & Notizen</option>
+                        <option value="food">Essensbestellungen</option>
                         <option value="logs">Änderungsprotokoll</option>
                       </select>
                       <div class="text-muted small mt-2">
@@ -840,7 +872,7 @@ final class AdminController
                     <div class="col-12 col-lg-6">
                       <div class="admin-panel p-3">
                         <div class="fw-semibold mb-2">Neuer Hauptgast</div>
-                        <form method="post" action="/admin_create_main_guest.php" class="row g-2">
+                        <form method="post" action="/admin/admin_create_main_guest.php" class="row g-2">
                           <?= Csrf::inputField() ?>
                           <div class="col-12">
                             <input class="form-control" name="id" placeholder="ID z.B. WGW00S" required>
@@ -861,7 +893,7 @@ final class AdminController
                     <div class="col-12 col-lg-6">
                       <div class="admin-panel p-3">
                         <div class="fw-semibold mb-2">Neue Begleitperson</div>
-                        <form method="post" action="/admin_create_companion.php" class="row g-2">
+                        <form method="post" action="/admin/admin_create_companion.php" class="row g-2">
                           <?= Csrf::inputField() ?>
                           <div class="col-12">
                             <input class="form-control" name="main_id" placeholder="main_id z.B. WGW00S" required>
@@ -908,7 +940,7 @@ final class AdminController
                       <tbody>
 
                         <tr>
-                          <form method="post" action="/admin_override_save.php">
+                          <form method="post" action="/admin/admin_override_save.php">
                             <?= Csrf::inputField() ?>
                             <td><input class="form-control form-control-sm" name="override_id" placeholder="z.B. ABI00S"></td>
                             <td><input class="form-control form-control-sm" name="ticket_price" inputmode="numeric" pattern="\d+" placeholder="z.B. 0"></td>
@@ -919,7 +951,7 @@ final class AdminController
 
                         <?php foreach ($overrides as $id => $ov): ?>
                           <tr>
-                            <form method="post" action="/admin_override_save.php">
+                            <form method="post" action="/admin/admin_override_save.php">
                               <?= Csrf::inputField() ?>
                               <td>
                                 <input type="hidden" name="override_id" value="<?= e($id) ?>">
@@ -936,7 +968,7 @@ final class AdminController
                                 <button class="btn btn-sm btn-save" type="submit">Speichern</button>
                             </form>
 
-                            <form method="post" action="/admin_override_delete.php" onsubmit="return confirm('Override wirklich löschen?');">
+                            <form method="post" action="/admin/admin_override_delete.php" onsubmit="return confirm('Override wirklich löschen?');">
                               <?= Csrf::inputField() ?>
                               <input type="hidden" name="override_id" value="<?= e($id) ?>">
                               <button class="btn btn-sm btn-outline-danger" type="submit">Löschen</button>
@@ -954,11 +986,11 @@ final class AdminController
             </section>
 
             <section class="admin-section" data-section="edit" id="edit">
-              <form class="card admin-card mb-3" method="get" action="/admin_dashboard.php">
+              <form class="card admin-card mb-3" method="get" action="/admin/admin_dashboard.php">
                 <div class="card-body p-4 d-flex gap-2 flex-wrap">
                   <input class="form-control" name="q" placeholder="Suche nach Name, ID, main_id ..." value="<?= e($q) ?>">
                   <button class="btn btn-primary" type="submit">Suchen</button>
-                  <a class="btn btn-outline-secondary" href="/admin_dashboard.php#edit">Zurücksetzen</a>
+                  <a class="btn btn-outline-secondary" href="/admin/admin_dashboard.php#edit">Zurücksetzen</a>
                 </div>
               </form>
 
@@ -1016,7 +1048,7 @@ final class AdminController
                           <tbody>
                             <tr>
                               <td>
-                                <form method="post" action="/admin_edit_participant_name.php" class="d-flex gap-2">
+                                <form method="post" action="/admin/admin_edit_participant_name.php" class="d-flex gap-2">
                                   <?= Csrf::inputField() ?>
                                   <input type="hidden" name="participant_id" value="<?= e((string)($main['id'] ?? '')) ?>">
                                   <input type="text" class="form-control form-control-sm" name="new_name" value="<?= e((string)($main['name'] ?? '')) ?>" required style="max-width: 200px;">
@@ -1031,7 +1063,7 @@ final class AdminController
                                       $isHashed = str_starts_with($loginCode, '$2y$') || str_starts_with($loginCode, '$argon2');
                                     ?>
                                     <?php if ($isHashed): ?>
-                                      <span class="text-muted" style="font-size: 0.85rem;" title="Passwort wurde bereits vom Benutzer geändert">🔒 [gehasht]</span>
+                                      <span class="text-muted" style="font-size: 0.85rem;" title="Passwort wurde bereits vom Benutzer geändert">[gehasht]</span>
                                     <?php else: ?>
                                       <code class="text-nowrap" style="font-size: 0.9rem;"><?= e($loginCode) ?></code>
                                     <?php endif; ?>
@@ -1042,7 +1074,7 @@ final class AdminController
                                       </svg>
                                     </button>
                                   </div>
-                                  <form method="post" action="/admin_change_participant_password.php" class="password-edit-form d-none d-flex gap-2 mt-2" id="password-form-<?= e($main['id']) ?>">
+                                  <form method="post" action="/admin/admin_change_participant_password.php" class="password-edit-form d-none d-flex gap-2 mt-2" id="password-form-<?= e($main['id']) ?>">
                                     <?= Csrf::inputField() ?>
                                     <input type="hidden" name="participant_id" value="<?= e((string)($main['id'] ?? '')) ?>">
                                     <input type="text" class="form-control form-control-sm" name="new_password" placeholder="Neues Passwort" required style="max-width: 200px;">
@@ -1062,7 +1094,7 @@ final class AdminController
                                 <?php endif; ?>
                               </td>
                               <td>
-                                <form class="d-flex gap-2" method="post" action="/admin_update_paid.php">
+                                <form class="d-flex gap-2" method="post" action="/admin/admin_update_paid.php">
                                   <?= Csrf::inputField() ?>
                                   <input type="hidden" name="main_id" value="<?= e($mainId) ?>">
                                   <input class="form-control form-control-sm" name="amount_paid" inputmode="numeric" pattern="\d+"
@@ -1071,7 +1103,7 @@ final class AdminController
                                 </form>
                               </td>
                               <td>
-                                <form method="post" action="/admin_delete_participant.php" style="display:inline;" onsubmit="return confirm('Wirklich löschen? (inkl. alle Begleiter)');">
+                                <form method="post" action="/admin/admin_delete_participant.php" style="display:inline;" onsubmit="return confirm('Wirklich löschen? (inkl. alle Begleiter)');">
                                   <?= Csrf::inputField() ?>
                                   <input type="hidden" name="participant_id" value="<?= e((string)($main['id'] ?? '')) ?>">
                                   <button class="btn btn-sm btn-outline-danger" type="submit">Löschen</button>
@@ -1105,7 +1137,7 @@ final class AdminController
                                         <path d="M10.293 2.293a1 1 0 0 1 1.414 0l2 2a1 1 0 0 1 0 1.414l-8 8"/>
                                       </svg>
                                     </button>
-                                    <form method="post" action="/admin_edit_participant_name.php" class="companion-edit-form d-none d-flex gap-2 mt-2" id="edit-form-<?= e($c['id']) ?>">
+                                    <form method="post" action="/admin/admin_edit_participant_name.php" class="companion-edit-form d-none d-flex gap-2 mt-2" id="edit-form-<?= e($c['id']) ?>">
                                       <?= Csrf::inputField() ?>
                                       <input type="hidden" name="participant_id" value="<?= e((string)($c['id'])) ?>">
                                       <input type="text" class="form-control form-control-sm" name="new_name" placeholder="<?= e((string)($c['name'] ?? '')) ?>" required style="max-width: 200px;">
@@ -1122,7 +1154,7 @@ final class AdminController
                                         $isCompanionHashed = str_starts_with($companionLoginCode, '$2y$') || str_starts_with($companionLoginCode, '$argon2');
                                       ?>
                                       <?php if ($isCompanionHashed): ?>
-                                        <span class="text-muted" style="font-size: 0.85rem;" title="Passwort wurde bereits vom Benutzer geändert">🔒 [gehasht]</span>
+                                        <span class="text-muted" style="font-size: 0.85rem;" title="Passwort wurde bereits vom Benutzer geändert">[gehasht]</span>
                                       <?php else: ?>
                                         <code class="text-nowrap" style="font-size: 0.9rem;"><?= e($companionLoginCode) ?></code>
                                       <?php endif; ?>
@@ -1133,7 +1165,7 @@ final class AdminController
                                         </svg>
                                       </button>
                                     </div>
-                                    <form method="post" action="/admin_change_participant_password.php" class="password-edit-form d-none d-flex gap-2 mt-2" id="password-form-<?= e($c['id']) ?>">
+                                    <form method="post" action="/admin/admin_change_participant_password.php" class="password-edit-form d-none d-flex gap-2 mt-2" id="password-form-<?= e($c['id']) ?>">
                                       <?= Csrf::inputField() ?>
                                       <input type="hidden" name="participant_id" value="<?= e((string)($c['id'])) ?>">
                                       <input type="text" class="form-control form-control-sm" name="new_password" placeholder="Neues Passwort" required style="max-width: 200px;">
@@ -1144,7 +1176,7 @@ final class AdminController
                                 </td>
                                 <td class="text-nowrap"><?= e((string)($c['id'] ?? '')) ?></td>
                                 <td>
-                                  <form method="post" action="/admin_delete_participant.php" style="display:inline;" onsubmit="return confirm('Wirklich löschen?');">
+                                  <form method="post" action="/admin/admin_delete_participant.php" style="display:inline;" onsubmit="return confirm('Wirklich löschen?');">
                                     <?= Csrf::inputField() ?>
                                     <input type="hidden" name="participant_id" value="<?= e((string)($c['id'] ?? '')) ?>">
                                     <button class="btn btn-sm btn-outline-danger" type="submit">Löschen</button>
@@ -1210,7 +1242,7 @@ final class AdminController
                               <span class="text-muted">·</span> <?= e((string)($main['name'] ?? '')) ?>
                             <?php endif; ?>
                           </div>
-                          <a class="btn btn-sm btn-outline-secondary" href="/seating.php?mid=<?= e($mainId) ?>" target="_blank" rel="noopener" style="border-radius:12px;">
+                          <a class="btn btn-sm btn-outline-secondary" href="/seating/seating.php?mid=<?= e($mainId) ?>" target="_blank" rel="noopener" style="border-radius:12px;">
                             Öffnen
                           </a>
                         </div>
@@ -1321,6 +1353,188 @@ final class AdminController
               </div>
             </section>
 
+            <!-- Food Orders Section -->
+            <?php
+            // Lade Essensbestellungen für die Food-Section
+            $foodOrders = FoodOrderRepository::getAllOrders();
+            $foodStats = FoodOrderRepository::getStatistics();
+            $foodQuery = Request::getString('fq');
+            
+            // Filter anwenden
+            if ($foodQuery !== '') {
+                $fqLower = mb_strtolower($foodQuery, 'UTF-8');
+                $foodOrders = array_values(array_filter($foodOrders, function($order) use ($fqLower) {
+                    $orderId = mb_strtolower($order['order_id'] ?? '', 'UTF-8');
+                    $mainId = mb_strtolower($order['main_id'] ?? '', 'UTF-8');
+                    return str_contains($orderId, $fqLower) || str_contains($mainId, $fqLower);
+                }));
+            }
+            
+            // Nach Erstellungsdatum sortieren (neueste zuerst)
+            usort($foodOrders, fn($a, $b) => strtotime($b['created_at'] ?? '0') - strtotime($a['created_at'] ?? '0'));
+            ?>
+            <section class="admin-section" data-section="food" id="food">
+              <!-- Statistiken oben -->
+              <div class="row g-3 mb-3">
+                <div class="col-6 col-md-3">
+                  <div class="card admin-card h-100">
+                    <div class="card-body p-3 text-center">
+                      <div class="text-muted small">Offen</div>
+                      <div class="fw-semibold fs-4"><?= (int)$foodStats['open'] ?></div>
+                      <div class="text-muted small"><?= number_format($foodStats['total_open'], 2) ?> €</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="card admin-card h-100">
+                    <div class="card-body p-3 text-center">
+                      <div class="text-muted small">Bezahlt</div>
+                      <div class="fw-semibold fs-4 text-info"><?= (int)$foodStats['paid'] ?></div>
+                      <div class="text-muted small"><?= number_format($foodStats['total_paid'], 2) ?> €</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="card admin-card h-100">
+                    <div class="card-body p-3 text-center">
+                      <div class="text-muted small">Eingelöst</div>
+                      <div class="fw-semibold fs-4 text-success"><?= (int)$foodStats['redeemed'] ?></div>
+                      <div class="text-muted small"><?= number_format($foodStats['total_redeemed'], 2) ?> €</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="card admin-card h-100">
+                    <div class="card-body p-3 text-center">
+                      <div class="text-muted small">Storniert</div>
+                      <div class="fw-semibold fs-4 text-danger"><?= (int)$foodStats['cancelled'] ?></div>
+                      <div class="text-muted small"><?= number_format($foodStats['total_cancelled'], 2) ?> €</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Suchformular -->
+              <form class="card admin-card mb-3" method="get" action="/admin/admin_dashboard.php#food" onsubmit="this.action='/admin/admin_dashboard.php#food';">
+                <div class="card-body p-4 d-flex gap-2 flex-wrap">
+                  <input class="form-control" name="fq" placeholder="Suche nach Bestellnr., main_id ..." value="<?= e($foodQuery) ?>">
+                  <button class="btn btn-primary" type="submit">Suchen</button>
+                  <a class="btn btn-outline-secondary" href="/admin/admin_dashboard.php#food">Zurücksetzen</a>
+                </div>
+              </form>
+
+              <?php if (count($foodOrders) === 0): ?>
+                <div class="alert alert-warning">Keine Essensbestellungen gefunden.</div>
+              <?php else: ?>
+                <?php foreach ($foodOrders as $order): ?>
+                  <?php
+                  $orderId = $order['order_id'] ?? '';
+                  $orderMainId = $order['main_id'] ?? '';
+                  $orderItems = $order['items'] ?? [];
+                  $orderTotal = (float)($order['total_price'] ?? 0);
+                  $orderPaid = (float)($order['paid_amount'] ?? 0);
+                  $orderStatus = $order['status'] ?? 'open';
+                  $orderCreated = $order['created_at'] ?? '';
+                  $orderRedeemed = $order['redeemed_at'] ?? '';
+                  $orderRedeemedBy = $order['redeemed_by'] ?? '';
+                  
+                  // Participant Name finden
+                  $orderParticipant = null;
+                  foreach ($all as $p) {
+                      if (($p['main_id'] ?? $p['id'] ?? '') === $orderMainId || ($p['id'] ?? '') === $orderMainId) {
+                          $orderParticipant = $p;
+                          break;
+                      }
+                  }
+                  $orderParticipantName = $orderParticipant['name'] ?? $orderMainId;
+                  
+                  $statusLabels = [
+                      'open' => ['Offen', 'bg-warning text-dark'],
+                      'paid' => ['Bezahlt', 'bg-info text-dark'],
+                      'redeemed' => ['Eingelöst', 'bg-success'],
+                      'cancelled' => ['Storniert', 'bg-danger']
+                  ];
+                  $statusLabel = $statusLabels[$orderStatus][0] ?? $orderStatus;
+                  $statusClass = $statusLabels[$orderStatus][1] ?? 'bg-secondary';
+                  ?>
+                  <div class="card admin-card mb-3">
+                    <div class="card-body p-4">
+                      <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
+                        <div>
+                          <div class="text-muted small">Bestellnr.</div>
+                          <div class="fw-semibold"><?= e($orderId) ?></div>
+                        </div>
+                        <div>
+                          <div class="text-muted small">Hauptgast</div>
+                          <div class="fw-semibold"><?= e($orderParticipantName) ?> <span class="text-muted">·</span> <?= e($orderMainId) ?></div>
+                        </div>
+                        <div>
+                          <div class="text-muted small">Status</div>
+                          <span class="badge <?= $statusClass ?>"><?= e($statusLabel) ?></span>
+                        </div>
+                        <div>
+                          <div class="text-muted small">Erstellt</div>
+                          <div><?= e($orderCreated ? date('d.m.Y H:i', strtotime($orderCreated)) : '-') ?></div>
+                        </div>
+                      </div>
+
+                      <!-- Items -->
+                      <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle mb-0 admin-table">
+                          <thead>
+                            <tr>
+                              <th>Artikel</th>
+                              <th style="width:80px;">Menge</th>
+                              <th style="width:100px;">Preis</th>
+                              <th style="width:100px;">Summe</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <?php foreach ($orderItems as $item): ?>
+                              <tr>
+                                <td><?= e($item['name'] ?? '') ?></td>
+                                <td><?= (int)($item['quantity'] ?? 0) ?></td>
+                                <td><?= number_format((float)($item['price'] ?? 0), 2) ?> €</td>
+                                <td><?= number_format((float)($item['subtotal'] ?? 0), 2) ?> €</td>
+                              </tr>
+                            <?php endforeach; ?>
+                          </tbody>
+                          <tfoot>
+                            <tr class="fw-semibold">
+                              <td colspan="3">Gesamt</td>
+                              <td><?= number_format($orderTotal, 2) ?> €</td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+
+                      <?php if ($orderStatus === 'redeemed' && $orderRedeemed): ?>
+                        <div class="text-muted small mt-2">
+                          Eingelöst am <?= e(date('d.m.Y H:i', strtotime($orderRedeemed))) ?> von <?= e($orderRedeemedBy) ?>
+                        </div>
+                      <?php endif; ?>
+
+                      <!-- Aktionen -->
+                      <div class="d-flex gap-2 flex-wrap mt-3 align-items-center">
+                        <?php if ($orderStatus === 'open'): ?>
+                          <form class="d-flex gap-2 align-items-center" method="post" action="/admin/admin_food_order_update_paid.php">
+                            <?= Csrf::inputField() ?>
+                            <input type="hidden" name="order_id" value="<?= e($orderId) ?>">
+                            <label class="text-muted small text-nowrap mb-0">Bezahlt:</label>
+                            <input class="form-control form-control-sm" style="width:100px;" name="paid_amount" inputmode="numeric" step="0.01" value="<?= number_format($orderTotal, 2, '.', '') ?>">
+                            <span class="text-muted">€</span>
+                            <button class="btn btn-sm btn-success" type="submit">Als bezahlt markieren</button>
+                          </form>
+                        <?php elseif ($orderStatus === 'paid' || $orderStatus === 'redeemed'): ?>
+                          <a href="/food_bon/pdf.php?order_id=<?= urlencode($orderId) ?>" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">Bon anzeigen</a>
+                        <?php endif; ?>
+                      </div>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
+              <?php endif; ?>
+            </section>
+
           </div>
         </main>
 
@@ -1330,7 +1544,7 @@ final class AdminController
             const hasSuccess = !!document.querySelector('.alert-success');
             if (hasSuccess) {
               setTimeout(() => {
-                location.replace('/admin_dashboard.php');
+                location.replace('/admin/admin_dashboard.php');
               }, 1500);
             }
           })();
@@ -1349,7 +1563,7 @@ final class AdminController
 
             function init(){
               const hash = (location.hash || '').replace('#','').trim();
-              const valid = ['create','ovr','edit','seating','logs'];
+              const valid = ['create','ovr','edit','seating','food','logs'];
               const start = valid.includes(hash) ? hash : (sel ? sel.value : 'edit');
               if (sel) sel.value = start;
               show(start);

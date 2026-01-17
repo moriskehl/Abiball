@@ -1,0 +1,17 @@
+# Block all web access to storage directory
+# Prevents accidental exposure of CSV data and secrets
+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+
+<IfModule mod_access_compat.c>
+    Order allow,deny
+    Deny from all
+</IfModule>
+
+# Additional protection for common file types
+<FilesMatch "\.(csv|json|txt|sql|php|sh)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

@@ -61,7 +61,7 @@ if (is_array($override)) {
 // Logo (Data-URI)
 // --------------------
 $logoDataUri = '';
-$logoPngPath = realpath(__DIR__ . '/../favicon.png'); // public/favicon.png
+$logoPngPath = realpath(__DIR__ . '/../images/favicon.png'); // public/images/favicon.png
 if ($logoPngPath && is_file($logoPngPath)) {
     $bin = file_get_contents($logoPngPath);
     if ($bin !== false) {

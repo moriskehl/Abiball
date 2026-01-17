@@ -155,9 +155,9 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
     <div class="navbar-left">
       <a class="navbar-brand d-flex align-items-center" href="/">
         <img class="navbar-logo"
-             src="/favicon.png"
-             data-logo-light="/favicon.png"
-             data-logo-dark="/favicon-dark.png"
+             src="/images/favicon.png"
+             data-logo-light="/images/favicon.png"
+             data-logo-dark="/images/favicon-dark.png"
              width="60" height="60" alt="Logo">
       </a>
     </div>
@@ -193,11 +193,15 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
         </li>
 
         <li class="nav-item">
-          <a class="nav-link" href="/Location.php">Location</a>
+          <a class="nav-link" href="/location/location.php">Location</a>
         </li>
 
         <li class="nav-item">
           <a class="nav-link" href="/zahlung.php">Zahlung</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="/faq.php">FAQ</a>
         </li>
 
         <!-- Desktop: show initials + toggle inside menu -->

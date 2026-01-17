@@ -1,0 +1,26 @@
+# robots.txt für Abiball Portal
+
+User-agent: *
+Allow: /
+Disallow: /admin_*
+Disallow: /door/
+Disallow: /storage/
+Disallow: /var/
+Disallow: /vendor/
+Disallow: /src/
+Disallow: /dashboard.php
+Disallow: /seating/
+Disallow: /ticket/
+
+# Erlaubt für Suchmaschinen
+Allow: /
+Allow: /login.php
+Allow: /location/
+Allow: /zahlung.php
+Allow: /impressum.php
+
+# Sitemap (erstellen wir im nächsten Schritt)
+Sitemap: https://example.com/sitemap.xml
+
+# Crawl-Delay für schonenden Umgang mit Server
+Crawl-delay: 10

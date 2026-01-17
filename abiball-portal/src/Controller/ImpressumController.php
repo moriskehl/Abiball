@@ -16,9 +16,9 @@ final class ImpressumController
         <main class="bg-starfield">
           <div class="container py-5" style="max-width: 1000px;">
 
-            <div class="text-center mx-auto mb-5" style="max-width: 820px;">
+            <div class="text-center mx-auto mb-5" style="max-width: 820px; padding-top: 18px; padding-bottom: 24px;">
               <h1 class="h-serif mb-3"
-                  style="font-size: clamp(36px, 5vw, 72px); font-weight: 300; line-height: 1.0;">
+                  style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
                 Impressum
               </h1>
               <p class="text-muted" style="font-size: 1.05rem; line-height: 1.7;">

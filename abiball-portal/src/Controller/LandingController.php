@@ -86,12 +86,65 @@ final class LandingController
 
         <main class="bg-starfield">
           <div class="container py-5" style="max-width: 1100px;">
-            <div class="text-center mx-auto" style="max-width: 820px; padding-top: 32px; padding-bottom: 32px;">
+            <div class="text-center mx-auto" style="max-width: 820px; padding-top: 24px; padding-bottom: 28px;">
 
-              <h1 class="h-serif mb-3" style="font-size: clamp(44px, 6vw, 92px); font-weight: 300; line-height: .95;">
+              <h1 class="h-serif mb-3" style="font-size: clamp(42px, 5.5vw, 86px); font-weight: 300; line-height: .95;">
                 Abiball<br>
                 <span style="font-style: italic;">Ein Abend der Eleganz</span>
               </h1>
+
+              <!-- Countdown Timer -->
+              <div class="countdown-container mb-4" style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+                <div class="countdown-box" style="min-width: 80px; padding: 12px 16px; border-radius: 12px; background: rgba(201,162,39,.08); border: 1px solid rgba(201,162,39,.2);">
+                  <div id="countdown-days" style="font-size: 2rem; font-weight: 600; color: var(--gold); line-height: 1;">--</div>
+                  <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text); opacity: 0.6; margin-top: 4px;">Tage</div>
+                </div>
+                <div class="countdown-box" style="min-width: 80px; padding: 12px 16px; border-radius: 12px; background: rgba(201,162,39,.08); border: 1px solid rgba(201,162,39,.2);">
+                  <div id="countdown-hours" style="font-size: 2rem; font-weight: 600; color: var(--gold); line-height: 1;">--</div>
+                  <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text); opacity: 0.6; margin-top: 4px;">Stunden</div>
+                </div>
+                <div class="countdown-box" style="min-width: 80px; padding: 12px 16px; border-radius: 12px; background: rgba(201,162,39,.08); border: 1px solid rgba(201,162,39,.2);">
+                  <div id="countdown-minutes" style="font-size: 2rem; font-weight: 600; color: var(--gold); line-height: 1;">--</div>
+                  <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text); opacity: 0.6; margin-top: 4px;">Minuten</div>
+                </div>
+                <div class="countdown-box" style="min-width: 80px; padding: 12px 16px; border-radius: 12px; background: rgba(201,162,39,.08); border: 1px solid rgba(201,162,39,.2);">
+                  <div id="countdown-seconds" style="font-size: 2rem; font-weight: 600; color: var(--gold); line-height: 1;">--</div>
+                  <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text); opacity: 0.6; margin-top: 4px;">Sekunden</div>
+                </div>
+              </div>
+
+              <script>
+                (function() {
+                  // Event-Datum: 10.07.2026 um 17:00 Uhr
+                  const eventDate = new Date('2026-07-10T17:00:00').getTime();
+                  
+                  function updateCountdown() {
+                    const now = new Date().getTime();
+                    const distance = eventDate - now;
+                    
+                    if (distance < 0) {
+                      document.getElementById('countdown-days').textContent = '0';
+                      document.getElementById('countdown-hours').textContent = '0';
+                      document.getElementById('countdown-minutes').textContent = '0';
+                      document.getElementById('countdown-seconds').textContent = '0';
+                      return;
+                    }
+                    
+                    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                    
+                    document.getElementById('countdown-days').textContent = days;
+                    document.getElementById('countdown-hours').textContent = hours;
+                    document.getElementById('countdown-minutes').textContent = minutes;
+                    document.getElementById('countdown-seconds').textContent = seconds;
+                  }
+                  
+                  updateCountdown();
+                  setInterval(updateCountdown, 1000);
+                })();
+              </script>
 
               <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.7;">
                 Alle wichtigen Informationen rund um Tickets, Sitzplätze und organisatorische Hinweise findest du hier im Portal.
@@ -160,7 +213,7 @@ final class LandingController
 
                   <!-- Ort -->
                   <div class="col-12 col-md-4">
-                    <a href="/Location.php" class="d-block text-decoration-none" style="color:inherit;">
+                    <a href="/location/location.php" class="d-block text-decoration-none" style="color:inherit;">
                       <div class="landing-info-item">
                         <div class="landing-info-icon">
                           <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="var(--primary)" viewBox="0 0 24 24">
@@ -188,8 +241,9 @@ final class LandingController
 
                 <div style="border-radius: 18px; overflow: hidden; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.03);">
                   <img
-                    src="/saal.jpeg"
+                    src="/images/saal.jpeg"
                     alt="Saalplan"
+                    loading="lazy"
                     style="display:block; width:100%; height:auto; max-width:100%;"
                   >
                 </div>

@@ -13,11 +13,15 @@ final class AuthContext
     private const K_PARTICIPANT_ID   = 'participant_id';     // = mainId
     private const K_PARTICIPANT_NAME = 'participant_name';
     private const K_TICKET_COUNT     = 'ticket_count';
+    private const K_LAST_ACTIVITY    = '_last_activity';     // SECURITY: Session timeout tracking
 
     // Backwards-Compatibility Keys (werden teils noch verwendet)
     private const K_MAIN_ID  = 'main_id';
     private const K_GUEST_ID = 'guest_id';
     private const K_GUEST_NAME = 'guest_name';
+
+    // SECURITY: Session timeout in seconds (1 hour)
+    private const SESSION_TIMEOUT = 3600;
 
     private static function init(): void
     {
@@ -36,7 +40,39 @@ final class AuthContext
     public static function isLoggedIn(): bool
     {
         self::init();
+        
+        // SECURITY: Check for session timeout
+        if (!self::checkTimeout()) {
+            return false;
+        }
+        
         return !empty($_SESSION[self::K_PARTICIPANT_ID]) || !empty($_SESSION[self::K_MAIN_ID]);
+    }
+
+    /**
+     * SECURITY: Check and update session timeout
+     */
+    private static function checkTimeout(): bool
+    {
+        $lastActivity = $_SESSION[self::K_LAST_ACTIVITY] ?? null;
+        
+        if ($lastActivity === null) {
+            // First activity in this session
+            $_SESSION[self::K_LAST_ACTIVITY] = time();
+            return true;
+        }
+        
+        $elapsed = time() - (int)$lastActivity;
+        
+        if ($elapsed > self::SESSION_TIMEOUT) {
+            // Timeout! End session
+            self::logout('/login.php');
+            return false;
+        }
+        
+        // Update activity timestamp
+        $_SESSION[self::K_LAST_ACTIVITY] = time();
+        return true;
     }
 
     /**
@@ -118,6 +154,7 @@ final class AuthContext
         $_SESSION[self::K_PARTICIPANT_ID]   = $mainId;
         $_SESSION[self::K_PARTICIPANT_NAME] = (string)($mainUserRow['name'] ?? '');
         $_SESSION[self::K_TICKET_COUNT]     = $ticketCount;
+        $_SESSION[self::K_LAST_ACTIVITY]    = time();  // SECURITY: Initialize timeout tracker
 
         // alte Keys
         $_SESSION[self::K_MAIN_ID]    = $mainId;

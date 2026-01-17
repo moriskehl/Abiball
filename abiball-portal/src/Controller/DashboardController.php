@@ -12,6 +12,7 @@ require_once __DIR__ . '/../Service/PricingService.php';
 require_once __DIR__ . '/../Service/SeatingService.php';
 require_once __DIR__ . '/../Service/PasswordService.php';
 require_once __DIR__ . '/../Repository/ParticipantsRepository.php';
+require_once __DIR__ . '/../Repository/FoodOrderRepository.php';
 require_once __DIR__ . '/../View/Layout.php';
 require_once __DIR__ . '/../View/Helpers.php';
 require_once __DIR__ . '/../Auth/AuthContext.php';
@@ -49,6 +50,10 @@ final class DashboardController
 
         $seatingGroups = $seating['groups'] ?? [];
         if (!is_array($seatingGroups)) $seatingGroups = [];
+
+        // Essensbestellungen laden
+        $foodOrders = FoodOrderRepository::findByMainId($mainId);
+        usort($foodOrders, fn($a, $b) => strtotime($b['created_at'] ?? '0') - strtotime($a['created_at'] ?? '0'));
 
         $idToName = [];
         if (is_array($main) && !empty($main['id'])) {
@@ -155,7 +160,7 @@ final class DashboardController
                       </div>
 
                       <div class="collapse mt-3" id="<?= e($collapseId) ?>">
-                        <form method="post" action="/dashboard_notes_save.php">
+                        <form method="post" action="/dashboard/dashboard_notes_save.php">
                           <?= Csrf::inputField() ?>
                           <input type="hidden" name="pid" value="<?= e($pid) ?>">
                           <label class="form-label mb-1">Notiz (im Portal)</label>
@@ -224,7 +229,7 @@ final class DashboardController
                             </div>
 
                             <div class="collapse mt-3" id="<?= e($collapseId) ?>">
-                              <form method="post" action="/dashboard_notes_save.php">
+                              <form method="post" action="/dashboard/dashboard_notes_save.php">
                                 <?= Csrf::inputField() ?>
                                 <input type="hidden" name="pid" value="<?= e($pid) ?>">
                                 <label class="form-label mb-1">Notiz (im Portal)</label>
@@ -237,6 +242,62 @@ final class DashboardController
                         <?php endforeach; ?>
                       </div>
                     <?php endif; ?>
+
+                    <!-- Wichtiger Hinweis -->
+                    <div class="alert mt-4 mb-0" style="background: rgba(201,162,39,.10); border: 1px solid rgba(201,162,39,.35); border-radius: 14px;">
+                      <div class="d-flex align-items-start gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="var(--gold)" viewBox="0 0 16 16" style="flex-shrink: 0; margin-top: 2px;">
+                          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                          <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                        </svg>
+                        <div>
+                          <div class="fw-semibold mb-2">Änderungen bitte per E-Mail mitteilen</div>
+                          <div class="small" style="line-height: 1.7;">
+                            <strong>Vor der Überweisung</strong> bei Bedarf melden:
+                            <a href="mailto:moris.kehl@gmail.com" style="color: var(--primary); text-decoration: none; font-weight: 600;">
+                              moris.kehl@gmail.com
+                            </a>
+                          </div>
+                          <ul class="small mt-2 mb-0" style="line-height: 1.6; padding-left: 1.2rem;">
+                            <li>Begleitpersonen an-/abmelden</li>
+                            <li>Rechtschreibfehler korrigieren</li>
+                            <li><strong>Befreiung:</strong> Kinder unter 4 Jahren & behinderte Personen (bitte melden)</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Passwort ändern (Desktop: hier in linker Spalte) -->
+                <div class="card mb-3 d-none d-lg-block">
+                  <div class="card-body p-4">
+                    <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: .5rem;">Sicherheit</div>
+                    <div class="h6 mb-0">Passwort ändern</div>
+
+                    <?php if ($showPwPrompt): ?>
+                      <div class="text-muted mt-2" style="font-size:.95rem;">Erste Anmeldung: Möchtest du deinen Login-Code jetzt ändern?</div>
+                    <?php endif; ?>
+
+                    <form class="mt-3" method="post" action="/dashboard/dashboard_password_change.php">
+                      <?= Csrf::inputField() ?>
+                      <div class="row g-2" style="font-size: 0.875rem;">
+                        <div class="col-12">
+                          <label class="form-label">Aktuelles Passwort</label>
+                          <input class="form-control" type="password" name="current_password" required autocomplete="current-password">
+                        </div>
+                        <div class="col-12 col-md-6">
+                          <label class="form-label">Neues Passwort</label>
+                          <input class="form-control" type="password" name="new_password" required autocomplete="new-password">
+                        </div>
+                        <div class="col-12 col-md-6">
+                          <label class="form-label">Neues Passwort wiederholen</label>
+                          <input class="form-control" type="password" name="new_password2" required autocomplete="new-password">
+                        </div>
+                      </div>
+
+                      <button class="btn btn-save mt-3" type="submit">Speichern</button>
+                    </form>
                   </div>
                 </div>
 
@@ -271,38 +332,6 @@ final class DashboardController
                   </div>
                 </div>
 
-                <!-- Passwort ändern -->
-                <div class="card mb-3">
-                  <div class="card-body p-4">
-                    <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: .5rem;">Sicherheit</div>
-                    <div class="h6 mb-0">Passwort ändern</div>
-
-                    <?php if ($showPwPrompt): ?>
-                      <div class="text-muted mt-2" style="font-size:.95rem;">Erste Anmeldung: Möchtest du deinen Login-Code jetzt ändern?</div>
-                    <?php endif; ?>
-
-                    <form class="mt-3" method="post" action="/dashboard_password_change.php">
-                      <?= Csrf::inputField() ?>
-                      <div class="row g-2" style="font-size: 0.875rem;">
-                        <div class="col-12">
-                          <label class="form-label">Aktuelles Passwort</label>
-                          <input class="form-control" type="password" name="current_password" required autocomplete="current-password">
-                        </div>
-                        <div class="col-12 col-md-6">
-                          <label class="form-label">Neues Passwort</label>
-                          <input class="form-control" type="password" name="new_password" required autocomplete="new-password">
-                        </div>
-                        <div class="col-12 col-md-6">
-                          <label class="form-label">Neues Passwort wiederholen</label>
-                          <input class="form-control" type="password" name="new_password2" required autocomplete="new-password">
-                        </div>
-                      </div>
-
-                      <button class="btn btn-save mt-3" type="submit">Speichern</button>
-                    </form>
-                  </div>
-                </div>
-
                 <!-- Sitzgruppen (Anzeige) -->
                 <div class="card mb-3">
                   <div class="card-body p-4">
@@ -311,7 +340,7 @@ final class DashboardController
                         <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: .5rem;">Sitzordnung</div>
                         <div class="h6 mb-0">Aktuelle Sitzgruppen</div>
                       </div>
-                      <a class="btn btn-outline-secondary btn-soft btn-sm" href="/seating.php">Bearbeiten</a>
+                      <a class="btn btn-outline-secondary btn-soft btn-sm" href="/seating/seating.php">Verwalten</a>
                     </div>
 
                     <?php if (empty($seatingGroups)): ?>
@@ -359,17 +388,121 @@ final class DashboardController
                   </div>
                 </div>
 
+                <!-- Essensbestellungen -->
+                <div class="card mb-3">
+                  <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                      <div>
+                        <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: .5rem;">Verpflegung</div>
+                        <div class="h6 mb-0">Essensbestellungen</div>
+                      </div>
+                      <a class="btn btn-outline-secondary btn-soft btn-sm" href="/food/food_order.php">Verwalten</a>
+                    </div>
+
+                    <?php if (empty($foodOrders)): ?>
+                      <div class="text-muted">Keine Essensbestellungen vorhanden.</div>
+                    <?php else: ?>
+                      <div class="d-flex flex-column gap-3">
+                        <?php foreach ($foodOrders as $foodOrder): ?>
+                          <?php
+                            $foId = $foodOrder['order_id'] ?? '';
+                            $foStatus = $foodOrder['status'] ?? 'unknown';
+                            $foTotal = (float)($foodOrder['total_price'] ?? 0);
+                            $foItems = $foodOrder['items'] ?? [];
+                            $foCreated = $foodOrder['created_at'] ?? '';
+                            
+                            $statusLabels = [
+                                'open' => ['Offen', 'bg-warning text-dark'],
+                                'paid' => ['Bezahlt', 'bg-info text-dark'],
+                                'redeemed' => ['Eingeloest', 'bg-success'],
+                                'cancelled' => ['Storniert', 'bg-danger']
+                            ];
+                            $statusLabel = $statusLabels[$foStatus][0] ?? $foStatus;
+                            $statusClass = $statusLabels[$foStatus][1] ?? 'bg-secondary';
+                          ?>
+                          <div class="border rounded-3 p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                              <div class="fw-semibold"><?= e($foId) ?></div>
+                              <span class="badge <?= $statusClass ?>"><?= e($statusLabel) ?></span>
+                            </div>
+
+                            <?php if (!empty($foItems)): ?>
+                              <div class="d-flex flex-column gap-1 mb-2">
+                                <?php foreach ($foItems as $foItem): ?>
+                                  <div class="d-flex justify-content-between align-items-center small">
+                                    <span><?= e((string)($foItem['quantity'] ?? 1)) ?>x <?= e($foItem['name'] ?? '') ?></span>
+                                    <span class="text-muted"><?= number_format((float)($foItem['subtotal'] ?? 0), 2, ',', '.') ?> EUR</span>
+                                  </div>
+                                <?php endforeach; ?>
+                              </div>
+                            <?php endif; ?>
+
+                            <div class="d-flex justify-content-between align-items-center small border-top pt-2">
+                              <span class="fw-semibold">Gesamt</span>
+                              <span class="fw-semibold"><?= number_format($foTotal, 2, ',', '.') ?> EUR</span>
+                            </div>
+
+                            <?php if ($foStatus === 'paid' || $foStatus === 'redeemed'): ?>
+                              <div class="mt-2">
+                                <a href="/food_bon/pdf.php?order_id=<?= urlencode($foId) ?>" class="btn btn-sm btn-outline-primary" target="_blank">Bon (PDF)</a>
+                              </div>
+                            <?php endif; ?>
+
+                            <?php if ($foCreated): ?>
+                              <div class="text-muted small mt-2">
+                                Erstellt: <?= e(date('d.m.Y H:i', strtotime($foCreated))) ?>
+                              </div>
+                            <?php endif; ?>
+                          </div>
+                        <?php endforeach; ?>
+                      </div>
+                    <?php endif; ?>
+                  </div>
+                </div>
+
                 <div class="card">
                   <div class="card-body p-4">
                     <div class="section-label mb-3">Aktionen</div>
                     <div class="d-flex gap-2 flex-wrap">
-                      <a class="btn btn-outline-secondary btn-soft" href="/seating.php">Sitzgruppen</a>
-                      <a class="btn btn-outline-secondary btn-soft" href="/location.php">Location</a>
+                      <a class="btn btn-outline-secondary btn-soft" href="/seating/seating.php">Sitzgruppen</a>
+                      <a class="btn btn-outline-secondary btn-soft" href="/food/food_order.php">Essensbestellung</a>
                       <a class="btn btn-outline-secondary btn-soft" href="/zahlung.php">Zahlung</a>
                     </div>
                   </div>
                 </div>
 
+              </div>
+            </div>
+
+            <!-- Passwort ändern (Mobil: ganz unten) -->
+            <div class="card mt-3 d-lg-none">
+              <div class="card-body p-4">
+                <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: .5rem;">Sicherheit</div>
+                <div class="h6 mb-0">Passwort ändern</div>
+
+                <?php if ($showPwPrompt): ?>
+                  <div class="text-muted mt-2" style="font-size:.95rem;">Erste Anmeldung: Möchtest du deinen Login-Code jetzt ändern?</div>
+                <?php endif; ?>
+
+                <form class="mt-3" method="post" action="/dashboard/dashboard_password_change.php">
+                  <?= Csrf::inputField() ?>
+                  <div class="row g-2" style="font-size: 0.875rem;">
+                    <div class="col-12">
+                      <label class="form-label">Aktuelles Passwort</label>
+                      <input class="form-control" type="password" name="current_password" required autocomplete="current-password">
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label">Neues Passwort</label>
+                      <input class="form-control" type="password" name="new_password" required autocomplete="new-password">
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label">Neues Passwort wiederholen</label>
+                      <input class="form-control" type="password" name="new_password2" required autocomplete="new-password">
+                    </div>
+                  </div>
+
+                  <button class="btn btn-save mt-3" type="submit">Speichern</button>
+                </form>
               </div>
             </div>
 

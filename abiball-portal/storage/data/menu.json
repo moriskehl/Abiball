@@ -1,0 +1,54 @@
+{
+  "categories": [
+    {
+      "id": "seminar",
+      "name": "Preisliste – Seminarräume",
+      "items": [
+        {"id": "butterbrezel", "name": "Butterbrezel", "price": 2.60, "available": true},
+        {"id": "brezel", "name": "Brezel", "price": 1.90, "available": true},
+        {"id": "gebaeckplatte", "name": "Gebäckplatte", "price": 13.90, "available": true},
+        {"id": "suess_stueckle", "name": "Süßen Stückle (groß)", "price": 3.20, "available": true},
+        {"id": "blechkuchen", "name": "Blech-Kuchen", "price": 4.50, "available": true},
+        {"id": "broetchen_halb", "name": "Halbe belegte Brötchen", "price": 4.20, "available": true},
+        {"id": "broetchen_lachs", "name": "Halbe belegte Brötchen mit geräuchertem Lachs", "price": 4.90, "available": true},
+        {"id": "maultaschen", "name": "Maultaschen mit Kartoffelsalat", "price": 13.50, "available": true},
+        {"id": "tagessuppe", "name": "Tagessuppe", "price": 6.00, "available": true},
+        {"id": "frikadelle", "name": "Frikadelle im Brötchen", "price": 6.50, "available": true},
+        {"id": "schnitzel_broetchen", "name": "Schnitzel im Brötchen", "price": 6.50, "available": true}
+      ]
+    },
+    {
+      "id": "fingerfood",
+      "name": "Fingerfoodbuffet",
+      "description": "Preis pro Stück: 3,80 € (mit Fisch: 4,90 €)",
+      "items": [
+        {"id": "ff_garnelen", "name": "Chorizogarnelen Pop'n'Roll", "price": 4.90, "available": true, "fish": true},
+        {"id": "ff_tomate_mozza", "name": "Tomate–Mozzarella-Spießchen", "price": 3.80, "available": true},
+        {"id": "ff_kichererbse", "name": "Kichererbsenbällchen", "price": 3.80, "available": true},
+        {"id": "ff_camembert", "name": "Petit Entree Camembert-Knusperchen", "price": 3.80, "available": true},
+        {"id": "ff_schnitzel", "name": "Schnitzelspieße mit Paprika-Konfetti", "price": 3.80, "available": true},
+        {"id": "ff_schinken_kaese", "name": "Schinken, Käse, Salami auf Baguettebrot", "price": 3.80, "available": true},
+        {"id": "ff_sausage", "name": "Sausage-Rolls", "price": 3.80, "available": true},
+        {"id": "ff_mac_cheese", "name": "Gebackene Mac-'n'-Cheese", "price": 3.80, "available": true},
+        {"id": "ff_lachs_galette", "name": "Mit Lachs gefüllte Galette-Röllchen", "price": 4.90, "available": true, "fish": true},
+        {"id": "ff_calzone", "name": "Fixe Käse-Speck-Calzönchen", "price": 3.80, "available": true},
+        {"id": "ff_feta", "name": "Feta-Spieße mit gerösteter Paprika und Oliven", "price": 3.80, "available": true},
+        {"id": "ff_brotpralinen", "name": "Brotpralinen mit Käsefüllung und Schinkenmantel", "price": 3.80, "available": true},
+        {"id": "ff_hawaii", "name": "Schnelle Schnitten im Hawaii-Style", "price": 3.80, "available": true},
+        {"id": "ff_flammkuchen", "name": "Flammkuchen-Schnecken", "price": 3.80, "available": true},
+        {"id": "ff_hack_pies", "name": "Kleine Hack-Pies mit Aioli", "price": 3.80, "available": true},
+        {"id": "ff_kartoffel_sticks", "name": "Bergkäse-Kartoffel-Sticks", "price": 3.80, "available": true},
+        {"id": "ff_fischstaebchen", "name": "Fischstäbchen-Wrap mit Krautsalat", "price": 4.90, "available": true, "fish": true},
+        {"id": "ff_puten_mango", "name": "Puten-Mango-Spieße", "price": 3.80, "available": true},
+        {"id": "ff_putenbaellchen", "name": "Putenbällchen–Tomaten–Mozzarella-Spießchen", "price": 3.80, "available": true},
+        {"id": "ff_kartoffel_spiess", "name": "Zweierlei Kartoffel-Spießchen", "price": 3.80, "available": true},
+        {"id": "ff_schinken_hoernchen", "name": "Schinken–Käse-Hörnchen", "price": 3.80, "available": true},
+        {"id": "ff_piccolinis", "name": "Partypizzas (Piccolinis)", "price": 3.80, "available": true},
+        {"id": "ff_kaesekuechlein", "name": "Käseküchlein", "price": 3.80, "available": true},
+        {"id": "ff_obstspiesse", "name": "Obstspieße", "price": 3.80, "available": true},
+        {"id": "ff_kuerbis", "name": "Kürbis-Schnecken mit Apfel (süß)", "price": 3.80, "available": true},
+        {"id": "ff_crepes", "name": "Süße Crêpes-Spieße mit Schokocreme und Früchten", "price": 3.80, "available": true}
+      ]
+    }
+  ]
+}

@@ -10,7 +10,7 @@ final class AdminAuditLogRepository
 {
     private static function filePath(): string
     {
-        $path = __DIR__ . '/../../storage/admin_audit.log';
+        $path = __DIR__ . '/../../storage/logs/admin_audit.log';
         $dir = dirname($path);
         if (!is_dir($dir)) {
             @mkdir($dir, 0775, true);

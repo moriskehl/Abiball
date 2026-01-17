@@ -55,8 +55,8 @@ final class LocationController
         <main class="bg-starfield">
           <div class="container py-5" style="max-width: 1100px;">
 
-            <div class="text-center mx-auto" style="max-width: 820px; padding-top: 18px; padding-bottom: 26px;">
-              <h1 class="h-serif mb-3" style="font-size: clamp(34px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
+            <div class="text-center mx-auto" style="max-width: 820px; padding-top: 18px; padding-bottom: 24px;">
+              <h1 class="h-serif mb-3" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
                 Location<br>
                 <span style="font-style: italic;"><?= htmlspecialchars($venueName) ?></span>
               </h1>
@@ -86,8 +86,7 @@ final class LocationController
                     </div>
                   </div>
 
-                  <span class="badge rounded-pill"
-                        style="background: rgba(201,162,39,.12); border: 1px solid rgba(201,162,39,.28); color: var(--primary);">
+                  <span class="badge badge-gold rounded-pill">
                     Abiball 2026
                   </span>
                 </div>

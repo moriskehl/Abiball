@@ -66,8 +66,8 @@ final class ZahlungController
         <main class="bg-starfield">
           <div class="container py-5 px-3 px-sm-4" style="max-width: 1100px;">
 
-            <div class="text-center mx-auto" style="max-width: 820px; padding-top: 18px; padding-bottom: 26px;">
-              <h1 class="h-serif mb-3" style="font-size: clamp(34px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
+            <div class="text-center mx-auto" style="max-width: 820px; padding-top: 18px; padding-bottom: 24px;">
+              <h1 class="h-serif mb-3" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
                 Zahlung<br>
                 <span style="font-style: italic;">Überweisung</span>
               </h1>
@@ -126,17 +126,15 @@ final class ZahlungController
                 </div>
 
                 <div class="h-serif" style="font-size: 1.6rem; font-weight: 300; line-height: 1.2;">
-                  Neue Begleitpersonen bitte vor der Zahlung anmelden
+                  Änderungen bitte vor der Zahlung per E-Mail mitteilen
                 </div>
 
                 <p class="text-muted mt-3 mb-3"
                    style="max-width: 760px; margin-left:auto; margin-right:auto; line-height: 1.7;">
-                  Wenn du noch neue Begleitpersonen anmelden möchtest oder als ehemaliger Schüler
-                  bzw. Freund eines Schülers ebenfalls teilnehmen willst, melde dich bitte
-                  <strong>vor der Überweisung</strong> per E-Mail bei:
+                  <strong>Vor der Überweisung</strong> bitte per E-Mail melden bei:
                 </p>
 
-                <div class="p-soft d-inline-block"
+                <div class="p-soft d-inline-block mb-3"
                      style="
                        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
                                     'Liberation Mono','Courier New', monospace;
@@ -146,6 +144,18 @@ final class ZahlungController
                     moris.kehl@gmail.com
                   </a>
                 </div>
+
+                <ul class="text-muted" style="max-width: 760px; margin-left:auto; margin-right:auto; line-height: 1.8; text-align: left;">
+                  <li><strong>Begleitpersonen anmelden oder abmelden</strong></li>
+                  <li><strong>Rechtschreibfehler in Namen korrigieren</strong></li>
+                  <li><strong>Ticketpreisbefreiung:</strong> Kinder unter 4 Jahren und behinderte Personen sind vom Ticketpreis befreit (bitte per E-Mail melden)</li>
+                  <li>Ehemalige Schüler oder Freunde von Schülern können ebenfalls teilnehmen</li>
+                </ul>
+
+                <p class="text-muted mt-3 mb-0"
+                   style="max-width: 760px; margin-left:auto; margin-right:auto; line-height: 1.7; font-size: 0.95rem;">
+                  Alle Änderungen werden schnellstmöglich bearbeitet.
+                </p>
 
               </div>
             </div>
@@ -170,12 +180,22 @@ final class ZahlungController
 
                     <?php if ($amountDue !== null): ?>
                       <div class="mt-2 text-muted" style="font-size: 1.05rem;">
-                        Fällig:
+                        <strong>Tickets:</strong>
                         <span class="fw-semibold"><?= number_format((float)$amountDue, 2, ',', '.') ?> €</span>
                         <span class="text-muted"> · Bezahlt: <?= number_format((float)($amountPaid ?? 0), 2, ',', '.') ?> €</span>
                         <span class="text-muted"> · Offen: <?= number_format((float)($amountOpen ?? 0), 2, ',', '.') ?> €</span>
                       </div>
                     <?php endif; ?>
+
+                    <div class="alert alert-light mt-3 mb-0">
+                      <strong>Essensbestellungen separat bezahlen:</strong><br>
+                      <small class="text-muted">
+                        Essensbestellungen werden separat abgerechnet. Gehe zur 
+                        <a href="/food/food_order.php" class="alert-link">Essensbestellungsseite</a>, 
+                        erstelle deine Bestellung und überweise den Betrag mit dem dort angegebenen Verwendungszweck:
+                        <br><code class="text-muted">Essensbestellung | Name: [Dein Name] | ID: [Deine ID]</code>
+                      </small>
+                    </div>
                   </div>
 
                   <span class="badge rounded-pill px-4 py-2 zahl-pill" style="height: fit-content;">
@@ -231,7 +251,7 @@ final class ZahlungController
                     <ul class="text-muted mb-0" style="line-height: 1.7;">
                       <li>Verwendungszweck muss korrekt sein.</li>
                       <li>Ohne korrekten Verwendungszweck keine automatische Zuordnung.</li>
-                      <li>Bearbeitungszeit: 1–2 Werktage.</li>
+                      <li>Bearbeitungszeit: <strong>1–2 Werktage.</strong></li>
                     </ul>
                   </div>
                 </div>

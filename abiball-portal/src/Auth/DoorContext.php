@@ -12,6 +12,10 @@ final class DoorContext
     private const K_DOOR_ID = 'door_id';
     private const K_DOOR_NAME = 'door_name';
     private const K_DOOR_LOGIN_TIME = 'door_login_time';
+    private const K_LAST_ACTIVITY = '_door_last_activity';  // SECURITY: Session timeout tracking
+
+    // SECURITY: Session timeout in seconds (30 minutes for door personnel)
+    private const SESSION_TIMEOUT = 1800;
 
     private static function init(): void
     {
@@ -63,6 +67,7 @@ final class DoorContext
         $_SESSION[self::K_DOOR_ID] = $doorId;
         $_SESSION[self::K_DOOR_NAME] = $doorName;
         $_SESSION[self::K_DOOR_LOGIN_TIME] = time();
+        $_SESSION[self::K_LAST_ACTIVITY] = time();  // SECURITY: Initialize timeout tracker
 
         // Session-Timeout: 30 Minuten
         ini_set('session.gc_maxlifetime', '1800');
@@ -87,21 +92,28 @@ final class DoorContext
             return false;
         }
 
-        $loginTime = self::loginTime();
-        if ($loginTime === 0) {
-            return false;
+        $lastActivity = $_SESSION[self::K_LAST_ACTIVITY] ?? null;
+        
+        if ($lastActivity === null) {
+            // First activity in this session
+            $_SESSION[self::K_LAST_ACTIVITY] = time();
+            return true;
         }
-
-        // 30 Minuten = 1800 Sekunden
-        if (time() - $loginTime > 1800) {
+        
+        $elapsed = time() - (int)$lastActivity;
+        
+        if ($elapsed > self::SESSION_TIMEOUT) {
+            // Timeout! End session
             self::logout();
             return false;
         }
-
+        
+        // Update activity timestamp
+        $_SESSION[self::K_LAST_ACTIVITY] = time();
         return true;
     }
 
-    public static function requireDoor(string $redirectTo = '/door_login.php'): void
+    public static function requireDoor(string $redirectTo = '/door/door_login.php'): void
     {
         if (!self::isDoor()) {
             Response::redirect($redirectTo);

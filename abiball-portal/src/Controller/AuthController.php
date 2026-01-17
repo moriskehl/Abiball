@@ -28,8 +28,8 @@ final class AuthController
         <main class="bg-starfield">
           <div class="container py-5" style="max-width: 1100px;">
 
-            <div class="text-center mx-auto" style="max-width: 760px; padding-top: 14px; padding-bottom: 18px;">
-              <h1 class="h-serif mb-3" style="font-size: clamp(34px, 4.2vw, 56px); font-weight: 300; line-height: 1.05;">
+            <div class="text-center mx-auto" style="max-width: 760px; padding-top: 18px; padding-bottom: 24px;">
+              <h1 class="h-serif mb-3" style="font-size: clamp(36px, 4.5vw, 58px); font-weight: 300; line-height: 1.05;">
                 Gästelogin
               </h1>
 
@@ -73,7 +73,7 @@ final class AuthController
 
                   <div class="d-flex gap-2 flex-wrap">
                     <button class="btn btn-save" type="submit">Einloggen</button>
-                    <a class="btn btn-outline-secondary" href="/" style="border-radius: 12px;">Zur Landing Page</a>
+                    <a class="btn btn-outline-secondary" href="/">Zur Landing Page</a>
                   </div>
 
                   <div class="text-muted small" style="line-height: 1.6;">

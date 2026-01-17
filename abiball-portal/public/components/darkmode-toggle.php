@@ -37,7 +37,7 @@ declare(strict_types=1);
 (function () {
   const html = document.documentElement;
 
-  const FAV_LIGHT = "/favicon.png";
+  const FAV_LIGHT = "/images/favicon.png";
   const FAV_DARK  = "/favicon-dark.png";
 
   function setStoredTheme(v){ try{ localStorage.setItem('theme', v); }catch(e){} }

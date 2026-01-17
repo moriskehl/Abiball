@@ -298,7 +298,7 @@ final class SeatingController
             </div>
 
             <form class="mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2"
-                  method="post" action="/seating_save.php" id="saveForm">
+                  method="post" action="/seating/seating_save.php" id="saveForm">
               <?= Csrf::inputField() ?>
               <input type="hidden" name="payload" id="payload">
 
@@ -625,7 +625,7 @@ final class SeatingController
         AuthContext::requireLogin('/login.php');
 
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
-            header('Location: /seating.php');
+            header('Location: /seating/seating.php');
             exit;
         }
 
@@ -642,6 +642,14 @@ final class SeatingController
         }
 
         $payload = (string)($_POST['payload'] ?? '');
+
+        // SECURITY: Enforce maximum payload size (1MB)
+        if (strlen($payload) > 1048576) {
+            http_response_code(413);
+            echo 'Payload zu groß.';
+            exit;
+        }
+
         $data = json_decode($payload, true);
         if (!is_array($data) || !isset($data['groups']) || !is_array($data['groups'])) {
             http_response_code(400);
@@ -714,7 +722,7 @@ final class SeatingController
 
         SeatingService::saveAll($mainId, $clean, $groupNotes, $personNotes);
 
-        header('Location: /seating.php');
+        header('Location: /seating/seating.php');
         exit;
     }
 }

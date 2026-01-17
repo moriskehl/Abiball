@@ -11,6 +11,10 @@ final class AdminContext
     private const K_IS_ADMIN   = 'is_admin';
     private const K_ADMIN_ID   = 'admin_id';
     private const K_ADMIN_NAME = 'admin_name';
+    private const K_LAST_ACTIVITY = '_admin_last_activity';  // SECURITY: Session timeout tracking
+
+    // SECURITY: Session timeout in seconds (2 hours for admin)
+    private const SESSION_TIMEOUT = 7200;
 
     private static function init(): void
     {
@@ -27,7 +31,39 @@ final class AdminContext
     public static function isAdmin(): bool
     {
         self::init();
+        
+        // SECURITY: Check for session timeout
+        if (!self::checkTimeout()) {
+            return false;
+        }
+        
         return !empty($_SESSION[self::K_IS_ADMIN]) && $_SESSION[self::K_IS_ADMIN] === true;
+    }
+
+    /**
+     * SECURITY: Check and update session timeout
+     */
+    private static function checkTimeout(): bool
+    {
+        $lastActivity = $_SESSION[self::K_LAST_ACTIVITY] ?? null;
+        
+        if ($lastActivity === null) {
+            // First activity in this session
+            $_SESSION[self::K_LAST_ACTIVITY] = time();
+            return true;
+        }
+        
+        $elapsed = time() - (int)$lastActivity;
+        
+        if ($elapsed > self::SESSION_TIMEOUT) {
+            // Timeout! End session
+            self::logout('/admin_login.php');
+            return false;
+        }
+        
+        // Update activity timestamp
+        $_SESSION[self::K_LAST_ACTIVITY] = time();
+        return true;
     }
 
     public static function adminId(): string
@@ -58,6 +94,7 @@ final class AdminContext
         $_SESSION[self::K_IS_ADMIN]   = true;
         $_SESSION[self::K_ADMIN_ID]   = (string)($adminRow['id'] ?? '');
         $_SESSION[self::K_ADMIN_NAME] = (string)($adminRow['name'] ?? 'Admin');
+        $_SESSION[self::K_LAST_ACTIVITY] = time();  // SECURITY: Initialize timeout tracker
     }
 
     public static function logout(string $redirectTo = '/admin_login.php'): void

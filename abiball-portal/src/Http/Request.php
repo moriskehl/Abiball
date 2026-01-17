@@ -10,10 +10,10 @@ final class Request
         return is_string($v) ? trim($v) : '';
     }
 
-    public static function getString(string $key): string
+    public static function getString(string $key, string $default = ''): string
     {
-        $v = $_GET[$key] ?? '';
-        return is_string($v) ? trim($v) : '';
+        $v = $_GET[$key] ?? $default;
+        return is_string($v) ? trim($v) : $default;
     }
 
     public static function method(): string
