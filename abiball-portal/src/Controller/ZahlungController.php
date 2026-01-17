@@ -1,7 +1,12 @@
 <?php
 declare(strict_types=1);
 
-// src/Controller/ZahlungController.php
+/**
+ * ZahlungController - Zahlungsinformationen für den Abiball
+ * 
+ * Zeigt Bankdaten, Verwendungszweck und Zahlungsstatus an.
+ */
+
 require_once __DIR__ . '/../Bootstrap.php';
 require_once __DIR__ . '/../View/Layout.php';
 require_once __DIR__ . '/../Repository/ParticipantsRepository.php';
@@ -10,20 +15,21 @@ require_once __DIR__ . '/../Auth/AuthContext.php';
 
 final class ZahlungController
 {
+    /**
+     * Zeigt die Zahlungsseite mit Bankdaten und Verwendungszweck.
+     */
     public static function show(): void
     {
         Bootstrap::init();
 
-        // Robust: Login-Status über mainId (statt nur isLoggedIn)
+        // Login-Status prüfen
         $participantId = trim(AuthContext::mainId());
         $isLoggedIn    = ($participantId !== '');
 
         $name    = trim(AuthContext::name());
         $tickets = AuthContext::ticketCount();
 
-        // -------------------------------------------------------
-        // Beträge berechnen (Overrides berücksichtigt)
-        // -------------------------------------------------------
+        // Beträge berechnen (inkl. Preisüberschreibungen)
         $amountDue  = null;
         $amountPaid = null;
         $amountOpen = null;
@@ -36,17 +42,13 @@ final class ZahlungController
             $amountOpen = max(0, $amountDue - (int)$amountPaid);
         }
 
-        // -------------------------------------------------------
-        // Orga-Daten
-        // -------------------------------------------------------
+        // Bankverbindungs-Daten
         $recipient = 'Bahaa Albasha';
         $iban      = 'DE76 6035 0130 1002 6462 65';
         $bic       = 'BBKRDE6BXXX';
         $bankName  = 'Kreissparkasse Böblingen';
 
-        // -------------------------------------------------------
-        // Verwendungszweck
-        // -------------------------------------------------------
+        // Verwendungszweck je nach Login-Status generieren
         if ($participantId !== '' && $name !== '' && $tickets > 0) {
             $purpose =
                 'Abiball 2026'

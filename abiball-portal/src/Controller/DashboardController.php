@@ -1,7 +1,11 @@
 <?php
 declare(strict_types=1);
 
-// src/Controller/DashboardController.php
+/**
+ * DashboardController - Das Haupt-Dashboard für eingeloggte Gäste
+ * 
+ * Zeigt Ticket, Begleitpersonen, Sitzplatzwünsche und Essensbestellungen an.
+ */
 
 require_once __DIR__ . '/../Bootstrap.php';
 require_once __DIR__ . '/../Security/Csrf.php';
@@ -19,13 +23,16 @@ require_once __DIR__ . '/../Auth/AuthContext.php';
 
 final class DashboardController
 {
+    /**
+     * Rendert das Dashboard mit allen Teilnehmer-Informationen.
+     */
     public static function show(): void
     {
         Bootstrap::init();
 
         AuthContext::requireLogin('/login.php');
 
-        // Prompt nur einmal zeigen
+        // Passwort-Hinweis nur einmal pro Session anzeigen
         $showPwPrompt = !empty($_SESSION['show_pw_prompt']);
         $_SESSION['show_pw_prompt'] = 0;
 
@@ -51,7 +58,7 @@ final class DashboardController
         $seatingGroups = $seating['groups'] ?? [];
         if (!is_array($seatingGroups)) $seatingGroups = [];
 
-        // Essensbestellungen laden
+        // Essensbestellungen laden und nach Datum sortieren
         $foodOrders = FoodOrderRepository::findByMainId($mainId);
         usort($foodOrders, fn($a, $b) => strtotime($b['created_at'] ?? '0') - strtotime($a['created_at'] ?? '0'));
 
@@ -512,6 +519,9 @@ final class DashboardController
         Layout::footer();
     }
 
+    /**
+     * Verarbeitet die Passwortänderung des eingeloggten Benutzers.
+     */
     public static function changePassword(): void
     {
         Bootstrap::init();

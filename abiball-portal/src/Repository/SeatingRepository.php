@@ -1,7 +1,13 @@
 <?php
 declare(strict_types=1);
 
-// src/Repository/SeatingRepository.php
+/**
+ * SeatingRepository - Verwaltung der Sitzplatz-Wuensche
+ * 
+ * Speichert pro Hauptgast individuelle Sitzgruppen-Praeferenzen
+ * in einer JSON-Datei.
+ */
+
 require_once __DIR__ . '/../Bootstrap.php';
 
 final class SeatingRepository
@@ -11,7 +17,11 @@ final class SeatingRepository
         return __DIR__ . '/../../storage/data/seating_groups.json';
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * Laedt alle Sitzgruppen-Daten aus der JSON-Datei.
+     * 
+     * @return array<string,mixed>
+     */
     private static function loadAll(): array
     {
         $path = self::filePath();
@@ -22,19 +32,25 @@ final class SeatingRepository
         return is_array($data) ? $data : [];
     }
 
+    /**
+     * Speichert alle Sitzgruppen-Daten atomisch.
+     */
     private static function saveAll(array $all): void
     {
         $path = self::filePath();
         $dir = dirname($path);
         if (!is_dir($dir)) mkdir($dir, 0775, true);
 
-        // atomisch schreiben
         $tmp = $path . '.tmp';
         file_put_contents($tmp, json_encode($all, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         rename($tmp, $path);
     }
 
-    /** @return array{groups: array<string,array{name:string,members:array<int,string>>>} */
+    /**
+     * Laedt die Sitzgruppen eines Hauptgastes.
+     * 
+     * @return array{groups: array<string,array{name:string,members:array<int,string>}>}
+     */
     public static function loadForMainId(string $mainId): array
     {
         $mainId = trim((string)$mainId);
@@ -65,8 +81,8 @@ final class SeatingRepository
         return ['groups' => $clean];
     }
 
-    /**
-     * @param array<string,array{name:string,members:array<int,string>>> $groups
+    /**     * Speichert die Sitzgruppen eines Hauptgastes.
+     *      * @param array<string,array{name:string,members:array<int,string>>> $groups
      */
     public static function saveForMainId(string $mainId, array $groups): void
     {

@@ -1,7 +1,8 @@
 <?php
+/**
+ * Admin Login - Anmeldung für Administratoren
+ */
 declare(strict_types=1);
-
-// public/admin_login.php
 
 require_once __DIR__ . '/../../src/Bootstrap.php';
 require_once __DIR__ . '/../../src/Controller/AdminController.php';

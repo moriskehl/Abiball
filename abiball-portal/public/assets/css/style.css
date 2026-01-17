@@ -1,5 +1,3 @@
-/* /public/assets/css/style.css */
-
 /* =========================================================
    Abiball Portal – Premium Theme (Black / White / Gold)
    - Bootstrap 5 friendly
@@ -1635,6 +1633,7 @@ html.dark .btn.btn-outline-secondary.btn-soft:focus-visible{
 }
 
 .modal.show{
+  display: flex !important;
   z-index: 1060 !important;
   pointer-events: auto !important;
 }
@@ -1745,41 +1744,6 @@ html.dark .btn.btn-outline-secondary.btn-soft:focus-visible{
   pointer-events: auto !important;
 }
 
-.modal-body .form-label{
-  color: var(--text);
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-  pointer-events: auto !important;
-}
-
-.modal-body .form-control{
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 0.55rem 0.75rem;
-  pointer-events: auto !important;
-}
-
-.modal-body .form-control:focus{
-  background: var(--surface);
-  color: var(--text);
-  border-color: var(--primary);
-  box-shadow: var(--focus);
-  outline: none;
-}
-
-.modal-body .form-control::placeholder{
-  color: var(--muted);
-}
-
-.modal-footer{
-  border-top: 1px solid var(--border) !important;
-  background: transparent;
-  padding: 1.5rem;
-  gap: 0.5rem;
-}
-
 /* Dark mode modals */
 html.dark .modal-content{
   background: var(--surface) !important;
@@ -1823,27 +1787,9 @@ html.dark .modal-backdrop{
   background-color: rgba(0, 0, 0, 0.6);
 }
 
-/* Ensure modals are clickable and visible */
-.modal.show{
-  display: flex !important;
-  pointer-events: auto;
-}
-
-.modal.show .modal-dialog{
-  pointer-events: auto;
-}
-
-.modal.show .modal-content{
-  pointer-events: auto;
-}
-
 /* Remove any overflow hidden from parent containers for modals */
 body.modal-open{
   overflow: hidden;
-}
-
-body.modal-open .modal{
-  display: flex;
 }
 
 /* Base: stacks/wraps naturally */

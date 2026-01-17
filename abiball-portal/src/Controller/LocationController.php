@@ -1,17 +1,25 @@
 <?php
 declare(strict_types=1);
 
-// src/Controller/LocationController.php
+/**
+ * LocationController - Standort und Anfahrt zur Veranstaltung
+ * 
+ * Zeigt die Adresse der Stadthalle Leonberg mit interaktiver Karte (Leaflet/OpenStreetMap).
+ */
+
 require_once __DIR__ . '/../Bootstrap.php';
 require_once __DIR__ . '/../View/Layout.php';
 
 final class LocationController
 {
+    /**
+     * Zeigt die Location-Seite mit Adresse und interaktiver Karte.
+     */
     public static function show(): void
     {
         Bootstrap::init();
 
-        // ✅ Fix: Ort ist fix die Stadthalle Leonberg (kein Geocoding, kein Cache)
+        // Feste Koordinaten der Stadthalle Leonberg
         $venueName = 'Stadthalle Leonberg';
         $address   = 'Römerstraße 110, 71229 Leonberg';
 
@@ -19,7 +27,7 @@ final class LocationController
         $lat = 48.795269;
         $lon = 9.0147972;
 
-        // Navigation-Links
+        // Links für verschiedene Navigations-Apps generieren
         $latEnc  = rawurlencode((string)$lat);
         $lonEnc  = rawurlencode((string)$lon);
         $addrEnc = rawurlencode($address);
@@ -29,7 +37,11 @@ final class LocationController
         $waze      = "https://waze.com/ul?ll={$latEnc}%2C{$lonEnc}&navigate=yes";
         $osmLink   = "https://www.openstreetmap.org/?mlat={$latEnc}&mlon={$lonEnc}#map=17/{$latEnc}/{$lonEnc}";
 
-        Layout::header('Abiball – Location');
+        Layout::header(
+            'Abiball 2026 – Location & Anfahrt',
+            'Alle Infos zur Stadthalle Leonberg: Adresse, Anfahrt und interaktive Karte für den Abiball 2026.'
+        );
+        Layout::breadcrumbStructuredData(['Startseite' => '/', 'Location' => '/location/location.php']);
         ?>
 
         <!-- Leaflet CSS -->
@@ -172,7 +184,7 @@ final class LocationController
 
           L.marker([lat, lon]).addTo(map).bindPopup(<?= json_encode($venueName) ?>);
 
-          // Stabil bei Bootstrap/Fonts: erzwingt korrektes Rendering nach Layout
+          // Korrektes Rendering nach dem Laden der Seite sicherstellen
           setTimeout(() => map.invalidateSize(), 80);
         })();
         </script>

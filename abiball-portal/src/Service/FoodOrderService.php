@@ -1,20 +1,26 @@
 <?php
 declare(strict_types=1);
 
-// src/Service/FoodOrderService.php
+/**
+ * FoodOrderService - Geschäftslogik für Essensbestellungen
+ * 
+ * Verarbeitet das Erstellen, Stornieren und Einlösen von Bestellungen.
+ */
+
 require_once __DIR__ . '/../Repository/FoodOrderRepository.php';
 require_once __DIR__ . '/../Repository/MenuRepository.php';
 
 final class FoodOrderService
 {
+    /**
+     * Erstellt eine neue Essensbestellung für einen Teilnehmer.
+     */
     public static function createOrder(string $mainId, array $items): array
     {
-        // Validierung
         if (empty($items)) {
             return ['success' => false, 'error' => 'empty'];
         }
 
-        // Items validieren und Preis berechnen
         $validatedItems = [];
         $totalPrice = 0.0;
 
@@ -55,6 +61,10 @@ final class FoodOrderService
         }
     }
 
+    /**
+     * Storniert eine offene Bestellung.
+     * Nur der Besitzer kann seine eigenen, noch nicht bezahlten Bestellungen stornieren.
+     */
     public static function cancelOrder(string $orderId, string $mainId): bool
     {
         $order = FoodOrderRepository::findByOrderId($orderId);
@@ -63,12 +73,10 @@ final class FoodOrderService
             return false;
         }
 
-        // Nur eigene Bestellungen stornieren
         if ($order['main_id'] !== $mainId) {
             return false;
         }
 
-        // Nur offene Bestellungen stornieren
         if ($order['status'] !== 'open') {
             return false;
         }
@@ -76,6 +84,10 @@ final class FoodOrderService
         return FoodOrderRepository::cancel($orderId);
     }
 
+    /**
+     * Prüft, ob eine Bestellung eingelöst werden kann.
+     * Nur bezahlte Bestellungen sind einlösbar.
+     */
     public static function canRedeem(string $orderId): bool
     {
         $order = FoodOrderRepository::findByOrderId($orderId);
@@ -84,7 +96,6 @@ final class FoodOrderService
             return false;
         }
 
-        // Muss bezahlt sein
         if ($order['status'] !== 'paid') {
             return false;
         }
@@ -92,6 +103,9 @@ final class FoodOrderService
         return true;
     }
 
+    /**
+     * Berechnet den Gesamtpreis für eine Liste von Menü-Items.
+     */
     public static function calculateTotal(array $items): float
     {
         $total = 0.0;
@@ -112,6 +126,9 @@ final class FoodOrderService
         return $total;
     }
 
+    /**
+     * Formatiert Bestellpositionen als lesbaren Text für Anzeige oder Druck.
+     */
     public static function formatOrderItems(array $items): string
     {
         $lines = [];

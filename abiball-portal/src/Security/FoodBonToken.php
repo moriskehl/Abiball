@@ -1,17 +1,29 @@
 <?php
 declare(strict_types=1);
 
-// src/Security/FoodBonToken.php
+/**
+ * FoodBonToken - Signiert und verifiziert Essens-Bon-QR-Codes
+ * 
+ * Ähnlich wie TicketToken, aber für Essensbestellungen.
+ * Nutzt ein leicht abgewandeltes Secret für zusätzliche Sicherheit.
+ */
+
 require_once __DIR__ . '/../Config.php';
 
 final class FoodBonToken
 {
+    /**
+     * Generiert das Secret für Essens-Bons.
+     */
     private static function getSecret(): string
     {
-        // Nutze das gleiche Secret wie für Tickets
         return Config::ticketQrSecret() . '_foodbon';
     }
 
+    /**
+     * Erstellt einen signierten Token aus einer Bestell-ID.
+     * Format: "orderId.signatur"
+     */
     public static function generate(string $orderId): string
     {
         $orderId = trim($orderId);
@@ -19,6 +31,11 @@ final class FoodBonToken
         return $orderId . '.' . $signature;
     }
 
+    /**
+     * Validiert einen Token und extrahiert die Bestell-ID.
+     * 
+     * @return array|null Array mit 'order_id' oder null wenn ungültig
+     */
     public static function validate(string $token): ?array
     {
         try {
@@ -30,16 +47,13 @@ final class FoodBonToken
             [$orderId, $signature] = $parts;
             $orderId = trim($orderId);
 
-            // Signatur prüfen
             $expectedSignature = hash_hmac('sha256', $orderId, self::getSecret());
 
             if (!hash_equals($expectedSignature, $signature)) {
                 return null;
             }
 
-            return [
-                'order_id' => $orderId
-            ];
+            return ['order_id' => $orderId];
 
         } catch (Throwable $e) {
             return null;
@@ -47,7 +61,7 @@ final class FoodBonToken
     }
 
     /**
-     * Einfache Signatur-Verifizierung (wie TicketToken::verify)
+     * Prüft ob eine Signatur zu einer Bestell-ID passt.
      */
     public static function verify(string $orderId, ?string $sig): bool
     {
@@ -60,7 +74,7 @@ final class FoodBonToken
     }
 
     /**
-     * Signatur für eine Order-ID generieren
+     * Erstellt eine Signatur für eine Bestell-ID.
      */
     public static function sign(string $orderId): string
     {

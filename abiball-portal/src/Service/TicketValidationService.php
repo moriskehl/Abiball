@@ -1,7 +1,12 @@
 <?php
 declare(strict_types=1);
 
-// src/Service/TicketValidationService.php
+/**
+ * TicketValidationService - Ticketentwertung am Einlass
+ * 
+ * Prüft Tickets auf Gültigkeit, Bezahlstatus und verhindert Mehrfachnutzung.
+ * Protokolliert alle Entwertungen für spätere Nachverfolgung.
+ */
 
 require_once __DIR__ . '/../Config.php';
 require_once __DIR__ . '/../Repository/ParticipantsRepository.php';
@@ -10,9 +15,8 @@ require_once __DIR__ . '/PricingService.php';
 final class TicketValidationService
 {
     /**
-     * Validiert und entwertet ein Ticket
-     * 
-     * @return array{success: bool, message: string, person_name?: string, person_id?: string, main_name?: string, valid_until?: string}
+     * Validiert ein Ticket und entwertet es bei Erfolg.
+     * Prüft Existenz, Bezahlung und ob das Ticket bereits verwendet wurde.
      */
     public static function validateAndInvalidateTicket(string $pid, string $doorPersonId): array
     {
@@ -24,7 +28,6 @@ final class TicketValidationService
             ];
         }
 
-        // Person laden
         $person = ParticipantsRepository::findById($pid);
         if (!$person) {
             return [
@@ -33,7 +36,7 @@ final class TicketValidationService
             ];
         }
 
-        // Prüfe ob bereits entwertet
+        // Doppelte Entwertung verhindern
         $validatedStatus = trim((string)($person['ticket_validated'] ?? ''));
         if ($validatedStatus !== '' && $validatedStatus !== '0') {
             $validationTime = (string)($person['validation_time'] ?? '');
@@ -46,7 +49,6 @@ final class TicketValidationService
             ];
         }
 
-        // Hauptgast laden
         $mainId = trim((string)($person['main_id'] ?? ''));
         if ($mainId === '') {
             return [
@@ -64,7 +66,7 @@ final class TicketValidationService
             ];
         }
 
-        // Zahlung prüfen
+        // Ohne vollständige Bezahlung kein Einlass
         $paid = (int)ParticipantsRepository::amountPaidForMainId($mainId);
         $dueInfo = PricingService::amountDueForMainId($mainId);
         $due = (int)($dueInfo['amount_due'] ?? 0);
@@ -80,7 +82,6 @@ final class TicketValidationService
             ];
         }
 
-        // Ticket entwertet als gültig markieren
         $validationTime = date('Y-m-d H:i:s');
         if (self::markTicketAsValidated($pid, $validationTime, $doorPersonId)) {
             self::auditLog($pid, $mainId, $doorPersonId, 'VALIDATED');
@@ -102,7 +103,7 @@ final class TicketValidationService
     }
 
     /**
-     * Markiert Ticket als entwertet in der CSV
+     * Schreibt die Entwertung direkt in die Teilnehmer-CSV.
      */
     private static function markTicketAsValidated(string $pid, string $validationTime, string $doorPersonId): bool
     {
@@ -112,7 +113,6 @@ final class TicketValidationService
             return false;
         }
 
-        // Header + Daten
         if (empty($rows)) {
             return false;
         }
@@ -120,7 +120,6 @@ final class TicketValidationService
         $header = array_shift($rows);
         $headerArray = str_getcsv($header, ';');
 
-        // Finde Spalten-Indizes
         $idIdx = array_search('id', $headerArray, true);
         $validatedIdx = array_search('ticket_validated', $headerArray, true);
         $validationTimeIdx = array_search('validation_time', $headerArray, true);
@@ -134,7 +133,6 @@ final class TicketValidationService
         foreach ($rows as &$row) {
             $fields = str_getcsv($row, ';');
             if ($fields[$idIdx] === $pid) {
-                // Markiere als entwertet
                 if ($validatedIdx !== false) {
                     $fields[$validatedIdx] = '1';
                 }
@@ -154,13 +152,12 @@ final class TicketValidationService
             return false;
         }
 
-        // Schreibe zurück
         $content = $header . "\n" . implode("\n", $rows) . "\n";
         return file_put_contents($csvPath, $content) !== false;
     }
 
     /**
-     * Audit-Log für Entwertungen
+     * Protokolliert Entwertungen für spätere Nachverfolgung und Statistiken.
      */
     private static function auditLog(string $ticketId, string $mainId, string $doorPersonId, string $action): void
     {

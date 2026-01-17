@@ -1,7 +1,8 @@
 <?php
+/**
+ * Türkontrolle Login - Anmeldung für das Einlasspersonal
+ */
 declare(strict_types=1);
-
-// public/door/door_login.php
 
 require_once __DIR__ . '/../../src/Bootstrap.php';
 require_once __DIR__ . '/../../src/Auth/DoorContext.php';

@@ -1,5 +1,10 @@
 <?php
-// src/View/Partials/Navbar.php
+/**
+ * Navbar Partial - Hauptnavigation für alle Seiten
+ * 
+ * Responsive Navigation mit Logo, Links, Darkmode-Toggle und
+ * Benutzer-Avatar wenn eingeloggt. Passt sich für Mobile an.
+ */
 
 require_once __DIR__ . '/../../Auth/AuthContext.php';
 
@@ -42,16 +47,16 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
     mix-blend-mode: normal;
   }
 
-  /* NEW: right cluster on mobile (initials + toggle) */
+  /* Rechte Elemente auf Mobile (Initialen + Toggle) */
   .navbar-right-mobile{
     display:flex;
     align-items:center;
     gap:.35rem;
     margin-left:auto;
-    margin-right:.35rem; /* small gap before hamburger */
+    margin-right:.35rem;
   }
 
-  /* Keep toggle in-between logo and hamburger as before (centered slot removed) */
+  /* Toggle-Container zwischen Logo und Hamburger */
   .navbar-toggle-slot{
     display:none;
     align-items:center;
@@ -74,10 +79,10 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
   }
 
   @media (max-width: 991.98px){
-    /* On mobile: show toggle outside menu and show initials outside menu */
+    /* Mobile: Toggle und Initialen außerhalb des Menüs anzeigen */
     .navbar-toggle-slot{ display:flex; }
 
-    /* Hide the in-menu toggle on mobile */
+    /* In-Menu Toggle auf Mobile ausblenden */
     .navbar-toggle-inmenu{ display:none !important; }
 
     .navbar .container{
@@ -142,7 +147,7 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
   }
 
   @media (min-width: 992px){
-    /* Desktop: hide the outside-mobile cluster, show everything in-menu */
+    /* Desktop: Mobile-Elemente ausblenden, alles im Menü anzeigen */
     .navbar-right-mobile{ display:none; }
     .navbar-toggle-slot{ display:none; }
   }
@@ -151,7 +156,7 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
 <nav class="navbar navbar-expand-lg sticky-top">
   <div class="container py-2">
 
-    <!-- Left cluster -->
+    <!-- Logo links -->
     <div class="navbar-left">
       <a class="navbar-brand d-flex align-items-center" href="/">
         <img class="navbar-logo"
@@ -162,7 +167,7 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
       </a>
     </div>
 
-    <!-- Mobile right cluster (outside hamburger menu): initials + toggle -->
+    <!-- Mobile: Initialen und Darkmode-Toggle rechts vom Hamburger -->
     <div class="navbar-right-mobile">
       <?php if ($isLoggedIn): ?>
         <a href="/dashboard.php"
@@ -179,7 +184,7 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
       </div>
     </div>
 
-    <!-- Hamburger -->
+    <!-- Hamburger-Menü für Mobile -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
             aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -204,7 +209,7 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
           <a class="nav-link" href="/faq.php">FAQ</a>
         </li>
 
-        <!-- Desktop: show initials + toggle inside menu -->
+        <!-- Desktop: Initialen und Toggle im Menü -->
         <?php if ($isLoggedIn): ?>
           <li class="nav-item ms-lg-2 d-none d-lg-flex">
             <a href="/dashboard.php"

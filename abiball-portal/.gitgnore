@@ -1,4 +1,0 @@
-/storage/data/*.csv
-/storage/data/*.json
-/storage/data/*.lock
-.env

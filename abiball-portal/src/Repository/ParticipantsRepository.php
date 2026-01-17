@@ -1,16 +1,21 @@
 <?php
 declare(strict_types=1);
 
-// src/Repository/ParticipantsRepository.php
+/**
+ * ParticipantsRepository - Verwaltung aller Gäste und ihrer Daten
+ * 
+ * Zuständig für das Laden, Speichern und Aktualisieren von Teilnehmern
+ * aus der zentralen CSV-Datei. Unterscheidet zwischen Hauptgästen und Begleitern.
+ */
+
 require_once __DIR__ . '/../Config.php';
 require_once __DIR__ . '/CsvRepository.php';
 
 final class ParticipantsRepository
 {
     /**
-     * Erwartete CSV-Header:
-     * id;name;is_main;main_id;login_code;role;amount_paid;password_changed;ticket_validated;validation_time;validation_person;;amount_subsided
-     *
+     * Lädt alle Teilnehmer aus der CSV und normalisiert die Daten.
+     * 
      * @return array<int, array<string,mixed>>
      */
     public static function all(): array
@@ -34,7 +39,6 @@ final class ParticipantsRepository
             $rawSub = trim((string)($r['amount_subsided'] ?? ''));
             $r['amount_subsided_int'] = is_numeric($rawSub) ? (int)round((float)$rawSub) : 0;
 
-            // Entwertungs-Status
             $r['ticket_validated'] = trim((string)($r['ticket_validated'] ?? ''));
             $r['validation_time'] = trim((string)($r['validation_time'] ?? ''));
             $r['validation_person'] = trim((string)($r['validation_person'] ?? ''));
@@ -44,6 +48,9 @@ final class ParticipantsRepository
         return $rows;
     }
 
+    /**
+     * Findet einen Teilnehmer anhand seiner ID.
+     */
     public static function findById(string $id): ?array
     {
         $id = trim($id);
@@ -55,6 +62,9 @@ final class ParticipantsRepository
         return null;
     }
 
+    /**
+     * Sucht einen Hauptgast per ID oder Name (case-insensitive).
+     */
     public static function findMainByIdOrName(string $identifier): ?array
     {
         $identifier = trim($identifier);
@@ -76,6 +86,9 @@ final class ParticipantsRepository
         return null;
     }
 
+    /**
+     * Sucht einen Admin per ID oder Name (case-insensitive).
+     */
     public static function findAdminByIdOrName(string $identifier): ?array
     {
         $identifier = trim($identifier);
@@ -98,6 +111,8 @@ final class ParticipantsRepository
     }
 
     /**
+     * Gibt Hauptgast und alle Begleiter einer main_id zurueck.
+     * 
      * @return array{main: ?array, companions: array<int,array>}
      */
     public static function getGroupByMainId(string $mainId): array
@@ -118,6 +133,9 @@ final class ParticipantsRepository
         return ['main' => $main, 'companions' => $companions];
     }
 
+    /**
+     * Gibt den bereits bezahlten Betrag eines Hauptgastes zurueck.
+     */
     public static function amountPaidForMainId(string $mainId): int
     {
         $g = self::getGroupByMainId($mainId);
@@ -126,6 +144,9 @@ final class ParticipantsRepository
         return (int)($main['amount_paid_int'] ?? 0);
     }
 
+    /**
+     * Zaehlt alle Tickets einer Gruppe (Hauptgast + Begleiter).
+     */
     public static function ticketCountForMainId(string $mainId): int
     {
         $g = self::getGroupByMainId($mainId);
@@ -137,6 +158,9 @@ final class ParticipantsRepository
         return max(1, $count);
     }
 
+    /**
+     * Ermittelt die main_id aus einer Zeile (Fallback auf id bei leerem main_id).
+     */
     public static function resolveMainIdFromRow(array $row): string
     {
         $mid = trim((string)($row['main_id'] ?? ''));
@@ -146,7 +170,7 @@ final class ParticipantsRepository
     }
 
     /**
-     * Für Dashboard/Auth: liefert die Hauptgast-Zeile einer main_id (is_main=true).
+     * Findet die Hauptgast-Zeile zu einer main_id.
      */
     public static function mainRowForMainId(string $mainId): ?array
     {
@@ -161,7 +185,7 @@ final class ParticipantsRepository
     }
 
     /**
-     * Update: amount_paid beim Hauptgast (pro main_id).
+     * Aktualisiert den bezahlten Betrag beim Hauptgast.
      */
     public static function updateAmountPaidForMainId(string $mainId, int $amountPaid): void
     {
@@ -197,10 +221,8 @@ final class ParticipantsRepository
     }
 
     /**
-     * Update: login_code beim Hauptgast (pro main_id).
-     * WICHTIG: Begleiter behalten ihren eigenen login_code (falls vorhanden),
-     * damit nichts „kaputt“ geht. Wenn du willst, kannst du optional alle der Gruppe
-     * mitziehen – hier bewusst NICHT.
+     * Aktualisiert den Login-Code des Hauptgastes.
+     * Begleiter behalten ihren eigenen Code, um Konflikte zu vermeiden.
      */
     public static function updateLoginCodeForMainId(string $mainId, string $newLoginCode): void
     {
@@ -238,8 +260,8 @@ final class ParticipantsRepository
     }
 
     /**
-     * True, wenn der Hauptgast bereits ein „gehashtes“ Passwort hat.
-     * (Heuristik: bcrypt startet üblicherweise mit $2y$ / $2a$ / $2b$)
+     * Prueft, ob der Hauptgast sein Passwort bereits geaendert hat.
+     * Erkennt bcrypt-Hashes anhand des typischen Praefix.
      */
     public static function isPasswordChangedForMainId(string $mainId): bool
     {
@@ -259,6 +281,8 @@ final class ParticipantsRepository
     }
 
     /**
+     * Gruppiert alle Teilnehmer nach main_id.
+     * 
      * @return array<string, array<int,array>>
      */
     public static function groupAllByMainIdRobust(): array
@@ -276,10 +300,9 @@ final class ParticipantsRepository
         return $groups;
     }
 
-    /* =========================
-     * CREATE (Hauptgast/Begleiter)
-     * ========================= */
-
+    /**
+     * Stellt sicher, dass alle benoetigten Spalten im Header vorhanden sind.
+     */
     private static function ensureParticipantsHeader(array $header): array
     {
         $need = ['id','name','is_main','main_id','login_code','role','amount_paid','amount_subsided'];
@@ -291,6 +314,9 @@ final class ParticipantsRepository
         return $header;
     }
 
+    /**
+     * Validiert das ID-Format (nur alphanumerisch, Unterstriche und Bindestriche).
+     */
     private static function assertIdFormat(string $id): void
     {
         if ($id === '' || !preg_match('/^[A-Za-z0-9_-]+$/', $id)) {
@@ -298,12 +324,18 @@ final class ParticipantsRepository
         }
     }
 
+    /**
+     * Normalisiert die Rolle auf Grossbuchstaben, Standard ist USER.
+     */
     private static function normalizeRole(string $role): string
     {
         $r = strtoupper(trim($role));
         return $r !== '' ? $r : 'USER';
     }
 
+    /**
+     * Bereinigt Namen von Whitespace und Anfuehrungszeichen.
+     */
     private static function normalizeName(string $name): string
     {
         $name = trim($name);
@@ -311,6 +343,9 @@ final class ParticipantsRepository
         return $name;
     }
 
+    /**
+     * Generiert die naechste freie Begleiter-ID basierend auf der main_id.
+     */
     private static function nextCompanionId(string $mainId, array $rows): string
     {
         $prefix = (string)preg_replace('/S$/i', '', $mainId);
@@ -331,6 +366,9 @@ final class ParticipantsRepository
         return $prefix . 'B' . (string)($max + 1);
     }
 
+    /**
+     * Erstellt einen neuen Hauptgast (ID muss mit S enden).
+     */
     public static function createMainGuest(string $id, string $name, string $loginCode, string $role = 'USER'): void
     {
         $id = trim($id);
@@ -373,7 +411,9 @@ final class ParticipantsRepository
     }
 
     /**
-     * @return string neue Begleiter-ID
+     * Erstellt einen neuen Begleiter fuer einen Hauptgast.
+     * 
+     * @return string Die generierte Begleiter-ID
      */
     public static function createCompanion(string $mainId, string $name, string $loginCode = ''): string
     {
@@ -412,7 +452,7 @@ final class ParticipantsRepository
             $newId = self::nextCompanionId($mainId, $rows);
             self::assertIdFormat($newId);
 
-            // login_code fallback = Hauptgast login_code
+            // Falls kein eigener Login-Code angegeben, vom Hauptgast uebernehmen
             $finalLogin = ($loginCode !== '') ? $loginCode : $mainLogin;
 
             $rows[] = [
@@ -433,12 +473,7 @@ final class ParticipantsRepository
     }
 
     /**
-     * Aktualisiert den login_code für eine beliebige Person (Main, Admin, oder Begleiter)
-     * 
-     * @param string $id Die participant ID
-     * @param string $newLoginCode Das neue gehashte Passwort
-     * @throws InvalidArgumentException wenn $id oder $newLoginCode leer sind
-     * @throws RuntimeException wenn die Person nicht gefunden wird
+     * Aktualisiert den Login-Code einer beliebigen Person.
      */
     public static function updateLoginCodeForId(string $id, string $newLoginCode): void
     {
@@ -473,11 +508,7 @@ final class ParticipantsRepository
     }
 
     /**
-     * Löscht eine Person aus dem System (Hauptgast oder Begleiter)
-     * Löscht auch alle zugehörigen Begleiter wenn ein Hauptgast gelöscht wird
-     * 
-     * @param string $id Die ID des Hauptgastes oder Begleiters
-     * @throws RuntimeException wenn die Person nicht gefunden wird
+     * Loescht eine Person und bei Hauptgaesten auch alle zugehoerigen Begleiter.
      */
     public static function deleteParticipantById(string $id): void
     {
@@ -489,7 +520,7 @@ final class ParticipantsRepository
         CsvRepository::updateAssocAtomic($path, static function (array $header, array $rows) use ($id): array {
             $header = self::ensureParticipantsHeader($header);
 
-            // Zunächst prüfen: Ist das ein Hauptgast oder Begleiter?
+
             $isMain = false;
             $mainId = '';
             $deleted = false;
@@ -509,23 +540,18 @@ final class ParticipantsRepository
                 throw new RuntimeException('Participant not found for id=' . $id);
             }
 
-            // Jetzt löschen
             if ($isMain) {
-                // Wenn Hauptgast, dann alle Begleiter auch löschen
+                // Bei Hauptgaesten werden auch alle Begleiter entfernt
                 $rows = array_filter($rows, function ($r) use ($id, $mainId) {
                     $rId = trim((string)($r['id'] ?? ''));
                     $rMid = trim((string)($r['main_id'] ?? ''));
                     
-                    // Lösche das Element selbst
                     if ($rId === $id) return false;
-                    
-                    // Lösche alle Begleiter dieses Hauptgastes
                     if ($rMid === $id) return false;
                     
                     return true;
                 });
             } else {
-                // Wenn Begleiter, nur diesen löschen
                 $rows = array_filter($rows, function ($r) use ($id) {
                     $rId = trim((string)($r['id'] ?? ''));
                     return $rId !== $id;
@@ -537,12 +563,7 @@ final class ParticipantsRepository
     }
 
     /**
-     * Ändert den Namen einer Person (Hauptgast oder Begleiter)
-     * 
-     * @param string $id Die ID der Person
-     * @param string $newName Der neue Name
-     * @throws InvalidArgumentException wenn $id oder $newName leer sind
-     * @throws RuntimeException wenn die Person nicht gefunden wird
+     * Aendert den Namen einer Person.
      */
     public static function updateParticipantName(string $id, string $newName): void
     {
@@ -577,7 +598,7 @@ final class ParticipantsRepository
     }
 
     /**
-     * Prüft ob ein Ticket validiert wurde
+     * Prueft, ob ein Ticket bereits am Einlass entwertet wurde.
      */
     public static function isTicketValidated(string $id): bool
     {
@@ -589,7 +610,7 @@ final class ParticipantsRepository
     }
 
     /**
-     * Gibt Validierungszeit eines Tickets zurück
+     * Gibt den Zeitpunkt der Ticket-Entwertung zurueck.
      */
     public static function getValidationTime(string $id): string
     {
@@ -600,7 +621,7 @@ final class ParticipantsRepository
     }
 
     /**
-     * Gibt Door-Person-ID zurück, die Ticket validiert hat
+     * Gibt die Person zurueck, die das Ticket am Einlass entwertet hat.
      */
     public static function getValidationPerson(string $id): string
     {

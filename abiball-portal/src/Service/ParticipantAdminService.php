@@ -1,22 +1,20 @@
 <?php
 declare(strict_types=1);
 
-// src/Service/ParticipantAdminService.php
+/**
+ * ParticipantAdminService - Admin-Operationen für Teilnehmerverwaltung
+ * 
+ * Ermöglicht Administratoren das Löschen, Umbenennen und
+ * Passwort-Zurücksetzen von Gästen und Begleitpersonen.
+ */
 
 require_once __DIR__ . '/../Repository/ParticipantsRepository.php';
 
-/**
- * Service für Admin-Operationen auf Teilnehmern
- * Dient der Verwaltung von Gästen und Begleitern durch Administratoren
- */
 final class ParticipantAdminService
 {
     /**
-     * Löscht einen Teilnehmer oder Begleiter
-     * Wenn ein Hauptgast gelöscht wird, werden auch alle seine Begleiter gelöscht
-     * 
-     * @param string $participantId Die ID des zu löschenden Teilnehmers
-     * @return array ['success' => bool, 'error' => string|null]
+     * Löscht einen Teilnehmer oder Begleiter.
+     * Bei Hauptgästen werden auch alle Begleitpersonen entfernt.
      */
     public static function deleteParticipant(string $participantId): array
     {
@@ -26,7 +24,6 @@ final class ParticipantAdminService
             return ['success' => false, 'error' => 'empty_id'];
         }
 
-        // Prüfen ob Participant existiert
         $participant = ParticipantsRepository::findById($participantId);
         if (!$participant) {
             return ['success' => false, 'error' => 'not_found'];
@@ -42,11 +39,7 @@ final class ParticipantAdminService
     }
 
     /**
-     * Ändert den Namen eines Teilnehmers
-     * 
-     * @param string $participantId Die ID des Teilnehmers
-     * @param string $newName Der neue Name
-     * @return array ['success' => bool, 'error' => string|null]
+     * Ändert den Namen eines Teilnehmers.
      */
     public static function editParticipantName(string $participantId, string $newName): array
     {
@@ -61,12 +54,10 @@ final class ParticipantAdminService
             return ['success' => false, 'error' => 'empty_name'];
         }
 
-        // Validierung: Länge des Namens
         if (strlen($newName) > 255) {
             return ['success' => false, 'error' => 'name_too_long'];
         }
 
-        // Prüfen ob Participant existiert
         $participant = ParticipantsRepository::findById($participantId);
         if (!$participant) {
             return ['success' => false, 'error' => 'not_found'];
@@ -82,12 +73,8 @@ final class ParticipantAdminService
     }
 
     /**
-     * Ändert das Login-Passwort eines Teilnehmers
-     * Admins können ein neues Klartext-Passwort setzen, das beim nächsten Login automatisch gehasht wird
-     * 
-     * @param string $participantId Die ID des Teilnehmers
-     * @param string $newPassword Das neue Passwort (Klartext)
-     * @return array ['success' => bool, 'error' => string|null]
+     * Setzt das Login-Passwort eines Teilnehmers zurück.
+     * Das Passwort wird als Klartext gespeichert und beim nächsten Login automatisch gehasht.
      */
     public static function changeParticipantPassword(string $participantId, string $newPassword): array
     {
@@ -102,25 +89,20 @@ final class ParticipantAdminService
             return ['success' => false, 'error' => 'empty_password'];
         }
 
-        // Validierung: Länge des Passworts (mindestens 4 Zeichen)
         if (strlen($newPassword) < 4) {
             return ['success' => false, 'error' => 'password_too_short'];
         }
 
-        // Validierung: Maximale Länge
         if (strlen($newPassword) > 255) {
             return ['success' => false, 'error' => 'password_too_long'];
         }
 
-        // Prüfen ob Participant existiert
         $participant = ParticipantsRepository::findById($participantId);
         if (!$participant) {
             return ['success' => false, 'error' => 'not_found'];
         }
 
         try {
-            // Das neue Passwort wird als Klartext gespeichert
-            // Es wird beim nächsten Login automatisch gehasht (durch AuthController)
             ParticipantsRepository::updateLoginCodeForId($participantId, $newPassword);
             return ['success' => true, 'error' => null];
         } catch (Throwable $e) {

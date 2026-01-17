@@ -1,13 +1,21 @@
 <?php
 declare(strict_types=1);
 
-// src/Controller/LandingController.php
+/**
+ * LandingController - Die Startseite des Abiball-Portals
+ * 
+ * Zeigt die öffentliche Landing Page mit Countdown, Event-Infos und SEO-Daten.
+ */
+
 require_once __DIR__ . '/../Bootstrap.php';
 require_once __DIR__ . '/../View/Layout.php';
 require_once __DIR__ . '/../Auth/AuthContext.php';
 
 final class LandingController
 {
+    /**
+     * Rendert die Startseite mit Countdown und Event-Informationen.
+     */
     public static function show(): void
     {
         Bootstrap::init();
@@ -15,7 +23,17 @@ final class LandingController
         $mainId     = trim(AuthContext::mainId());
         $isLoggedIn = ($mainId !== '');
 
-        Layout::header('Abiball');
+        Layout::header(
+            'Abiball 2026 BSZ Leonberg - Ein Abend der Eleganz',
+            'Der offizielle Abiball 2026 des BSZ Leonberg am 3. Juli 2026 in der Spitalkirche. Tickets, Sitzplatzreservierung und alle wichtigen Informationen.',
+            '/images/saal.jpeg'
+        );
+        
+        // Strukturierte Daten für Google-Suche (Rich Results & Sitelinks)
+        Layout::websiteStructuredData();
+        Layout::siteNavigationStructuredData();
+        Layout::eventStructuredData();
+        Layout::organizationStructuredData();
         ?>
         <style>
           /* CTA responsive */

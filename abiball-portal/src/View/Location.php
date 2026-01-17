@@ -1,11 +1,16 @@
 <?php
 declare(strict_types=1);
 
-/*
-  Erwartete Variablen aus dem Controller:
-  $venueName, $address, $lat, $lon,
-  $waze, $googleMap, $appleMap, $osmEmbed, $osmLink
-*/
+/**
+ * Location View - Darstellung der Veranstaltungsort-Seite
+ * 
+ * Zeigt Adresse, Karteneinbettung und Navigationslinks zu verschiedenen
+ * Kartendiensten (Waze, Google Maps, Apple Maps, OpenStreetMap).
+ * 
+ * Erwartete Variablen aus dem Controller:
+ * $venueName, $address, $lat, $lon,
+ * $waze, $googleMap, $appleMap, $osmEmbed, $osmLink
+ */
 ?>
 
 <main class="bg-starfield">

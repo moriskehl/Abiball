@@ -1,7 +1,12 @@
 <?php
 declare(strict_types=1);
 
-// src/Repository/AdminAuditLogRepository.php
+/**
+ * AdminAuditLogRepository - Protokollierung von Admin-Aktionen
+ * 
+ * Schreibt alle administrativen Aktionen in eine Log-Datei,
+ * um Aenderungen nachvollziehbar zu machen.
+ */
 
 require_once __DIR__ . '/../Auth/AdminContext.php';
 require_once __DIR__ . '/../Http/Request.php';
@@ -18,7 +23,11 @@ final class AdminAuditLogRepository
         return $path;
     }
 
-    /** @param array<string,mixed> $data */
+    /**
+     * Fuegt einen neuen Log-Eintrag hinzu.
+     * 
+     * @param array<string,mixed> $data
+     */
     public static function append(string $action, array $data = []): void
     {
         $adminId = null;
@@ -43,7 +52,11 @@ final class AdminAuditLogRepository
         @file_put_contents(self::filePath(), $line . "\n", FILE_APPEND | LOCK_EX);
     }
 
-    /** @return array<int, array<string,mixed>> */
+    /**
+     * Gibt die letzten Log-Eintraege zurueck (neueste zuerst).
+     * 
+     * @return array<int, array<string,mixed>>
+     */
     public static function latest(int $limit = 200): array
     {
         $file = self::filePath();
@@ -60,6 +73,6 @@ final class AdminAuditLogRepository
             if (is_array($row)) $out[] = $row;
         }
 
-        return array_reverse($out); // newest first
+        return array_reverse($out);
     }
 }

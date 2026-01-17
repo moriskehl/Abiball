@@ -1,7 +1,12 @@
 <?php
 declare(strict_types=1);
 
-// src/Controller/FaqController.php
+/**
+ * FaqController - Häufig gestellte Fragen (FAQ)
+ * 
+ * Zeigt kategorisierte FAQs mit Suchfunktion und strukturierten Daten für Google.
+ */
+
 require_once __DIR__ . '/../Bootstrap.php';
 require_once __DIR__ . '/../View/Layout.php';
 require_once __DIR__ . '/../View/Helpers.php';
@@ -9,7 +14,8 @@ require_once __DIR__ . '/../View/Helpers.php';
 final class FaqController
 {
     /**
-     * FAQ-Daten - hier können Fragen und Antworten bearbeitet werden
+     * Liefert alle FAQ-Kategorien mit Fragen und Antworten.
+     * Hier können neue Fragen einfach hinzugefügt werden.
      */
     private static function getFaqData(): array
     {
@@ -187,6 +193,9 @@ final class FaqController
         ];
     }
 
+    /**
+     * Zeigt die FAQ-Seite mit Suchfunktion und Accordion-Darstellung.
+     */
     public static function show(): void
     {
         Bootstrap::init();
@@ -194,10 +203,24 @@ final class FaqController
         $faqData = self::getFaqData();
 
         Layout::header('FAQ – Häufige Fragen', 'Häufig gestellte Fragen zum Abiball 2026 BSZ Leonberg. Finde Antworten zu Tickets, Zahlung, Sitzplätzen und mehr.');
+        
+        // Strukturierte Daten für Google Rich Results
+        $allFaqs = [];
+        foreach ($faqData as $category) {
+            foreach ($category['questions'] as $q) {
+                $allFaqs[] = $q;
+            }
+        }
+        Layout::faqStructuredData($allFaqs);
+        Layout::breadcrumbStructuredData(['Startseite' => '/', 'FAQ' => '/faq.php']);
+        
         self::renderView($faqData);
         Layout::footer();
     }
 
+    /**
+     * Rendert die FAQ-Ansicht mit Kategorien und Suchfunktion.
+     */
     private static function renderView(array $faqData): void
     {
         ?>
@@ -331,9 +354,9 @@ final class FaqController
   <div class="container py-5" style="max-width: 900px;">
 
     <div class="text-center mb-5">
-      <div class="text-muted small mb-2" style="letter-spacing: .22em; text-transform: uppercase;">Hilfe & Support</div>
       <h1 class="h-serif mb-3" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
-        Häufige Fragen
+        <span style="font-size: 70%;">Hilfe & Support</span><br>
+        <span style="font-style: italic;">Häufige Fragen</span>
       </h1>
       <p class="text-muted mt-3" style="max-width: 600px; margin: 0 auto; font-size: 1.05rem; line-height: 1.7;">
         Hier findest du Antworten auf die häufigsten Fragen rund um den Abiball 2026.

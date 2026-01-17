@@ -1,7 +1,9 @@
 <?php
+/**
+ * Datenschutz - Informationen zur Datenverarbeitung
+ */
 declare(strict_types=1);
 
-// public/datenschutz.php
 require_once __DIR__ . '/../src/Bootstrap.php';
 require_once __DIR__ . '/../src/View/Layout.php';
 

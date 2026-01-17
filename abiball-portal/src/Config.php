@@ -1,51 +1,83 @@
 <?php
 declare(strict_types=1);
 
-// src/Config.php
+/**
+ * Config - Zentrale Konfiguration der Anwendung
+ * 
+ * Enthält alle Pfade zu Datendateien, Umgebungserkennung und Secret-Management.
+ * Keine Instanziierung nötig - alle Methoden sind statisch.
+ */
 final class Config
 {
-    /* ================= Paths ================= */
+    // =========================================================================
+    // Dateipfade
+    // =========================================================================
 
+    /**
+     * Pfad zur Teilnehmer-CSV mit allen Gästen und Login-Codes.
+     */
     public static function participantsCsvPath(): string
     {
         return __DIR__ . '/../storage/data/participants.csv';
     }
 
+    /**
+     * Pfad zur CSV mit manuellen Preis-Überschreibungen.
+     */
     public static function pricingOverridesCsvPath(): string
     {
         return __DIR__ . '/../storage/data/pricing_overrides.csv';
     }
 
+    /**
+     * Pfad zur Sitzgruppen-JSON eines Teilnehmers.
+     */
     public static function seatingJsonPath(string $mainId): string
     {
         $safe = preg_replace('/[^A-Za-z0-9_-]/', '_', $mainId) ?: 'unknown';
         return __DIR__ . '/../storage/seating/' . $safe . '.json';
     }
 
-    /* ================= Environment ================= */
+    // =========================================================================
+    // Umgebungserkennung
+    // =========================================================================
 
+    /**
+     * Prüft ob die Anwendung im Entwicklungsmodus läuft.
+     * Erkennt localhost automatisch als Dev-Umgebung.
+     */
     public static function isDev(): bool
     {
         $env = strtolower((string)(getenv('APP_ENV') ?: ''));
         if ($env === 'dev')  return true;
         if ($env === 'prod') return false;
 
+        // Ohne explizite Umgebung: localhost = Dev
         $host = (string)($_SERVER['HTTP_HOST'] ?? '');
         return ($host === '' || $host === 'localhost' || str_starts_with($host, '127.'));
     }
 
-    /* ================= HTTPS ================= */
+    // =========================================================================
+    // HTTPS-Erkennung
+    // =========================================================================
 
+    /**
+     * Erkennt ob die Verbindung über HTTPS läuft.
+     * Berücksichtigt auch Reverse-Proxies und Cloudflare.
+     */
     public static function isHttps(): bool
     {
+        // Direktes HTTPS
         if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {
             return true;
         }
 
+        // Port 443
         if ((int)($_SERVER['SERVER_PORT'] ?? 0) === 443) {
             return true;
         }
 
+        // Hinter Reverse-Proxy (nginx, Apache)
         if (
             isset($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
             strtolower((string)$_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https'
@@ -53,6 +85,7 @@ final class Config
             return true;
         }
 
+        // Hinter Cloudflare
         if (
             isset($_SERVER['HTTP_CF_VISITOR']) &&
             str_contains((string)$_SERVER['HTTP_CF_VISITOR'], '"scheme":"https"')
@@ -63,6 +96,9 @@ final class Config
         return false;
     }
 
+    /**
+     * Gibt die Basis-URL der Anwendung zurück (ohne trailing slash).
+     */
     public static function baseUrl(): string
     {
         $env = trim((string)(getenv('APP_BASE_URL') ?: ''));
@@ -76,17 +112,25 @@ final class Config
         return $scheme . '://' . $host;
     }
 
-    /* ================= Secrets ================= */
+    // =========================================================================
+    // Secrets
+    // =========================================================================
 
+    /**
+     * Lädt das Secret für QR-Code-Signaturen.
+     * Sucht in: 1) ENV-Variable, 2) Secret-Datei, 3) Dev-Fallback.
+     * 
+     * @throws RuntimeException wenn kein Secret gefunden wird (nur in Produktion)
+     */
     public static function ticketQrSecret(): string
     {
-        // 1) ENV (optional)
+        // Aus Umgebungsvariable
         $env = (string)(getenv('TICKET_QR_SECRET') ?: '');
         if ($env !== '') {
             return $env;
         }
 
-        // 2) Secret-Datei im storage
+        // Aus Secret-Datei
         $path = __DIR__ . '/../storage/secrets/ticket_qr_secret.php';
         if (is_file($path)) {
             $secret = require $path;
@@ -95,7 +139,7 @@ final class Config
             }
         }
 
-        // 3) Dev-Fallback
+        // Nur in Dev-Umgebung: Fallback-Secret
         if (self::isDev()) {
             return 'dev-only-secret-change-me';
         }

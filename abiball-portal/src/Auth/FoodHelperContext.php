@@ -1,59 +1,86 @@
 <?php
 declare(strict_types=1);
 
-// src/Auth/FoodHelperContext.php
+/**
+ * FoodHelperContext - Verwaltet die Session für Essens-Helfer
+ * 
+ * Für das Einlösen von Essens-Bons bei der Ausgabe.
+ * Hat einen mittleren Timeout (45 Minuten).
+ */
 
 require_once __DIR__ . '/../Bootstrap.php';
 
 final class FoodHelperContext
 {
-    // SECURITY: Session timeout in seconds (45 minutes for food helpers)
-    private const SESSION_TIMEOUT = 2700;
-    
-    private const K_HELPER_ID = 'food_helper_id';
-    private const K_HELPER_NAME = 'food_helper_name';
+    // Session-Keys
+    private const K_HELPER_ID      = 'food_helper_id';
+    private const K_HELPER_NAME    = 'food_helper_name';
     private const K_IS_FOOD_HELPER = 'is_food_helper';
-    private const K_LOGIN_TIME = 'food_helper_login_time';
-    private const K_LAST_ACTIVITY = 'food_helper_last_activity';
+    private const K_LOGIN_TIME     = 'food_helper_login_time';
+    private const K_LAST_ACTIVITY  = 'food_helper_last_activity';
 
+    // Session läuft nach 45 Minuten Inaktivität ab
+    private const SESSION_TIMEOUT = 2700;
+
+    /**
+     * Stellt sicher dass Bootstrap initialisiert ist.
+     */
     private static function init(): void
     {
         Bootstrap::init();
     }
 
+    /**
+     * Prüft ob ein Food-Helper eingeloggt ist (ohne Timeout-Check).
+     */
     public static function isFoodHelper(): bool
     {
         self::init();
         return !empty($_SESSION[self::K_IS_FOOD_HELPER]) && $_SESSION[self::K_IS_FOOD_HELPER] === true;
     }
 
+    /**
+     * Prüft ob eingeloggt UND Session nicht abgelaufen.
+     */
     public static function isLoggedIn(): bool
     {
         return self::isFoodHelper() && self::checkTimeout();
     }
 
+    /**
+     * Gibt die Helper-ID zurück.
+     */
     public static function helperId(): string
     {
         self::init();
         return (string)($_SESSION[self::K_HELPER_ID] ?? '');
     }
 
+    /**
+     * Gibt den Helper-Namen zurück.
+     */
     public static function helperName(): string
     {
         self::init();
         return (string)($_SESSION[self::K_HELPER_NAME] ?? '');
     }
 
+    /**
+     * Meldet einen Food-Helper an.
+     */
     public static function loginAsFoodHelper(string $helperId, string $helperName): void
     {
         self::init();
-        $_SESSION[self::K_HELPER_ID] = $helperId;
-        $_SESSION[self::K_HELPER_NAME] = $helperName;
+        $_SESSION[self::K_HELPER_ID]      = $helperId;
+        $_SESSION[self::K_HELPER_NAME]    = $helperName;
         $_SESSION[self::K_IS_FOOD_HELPER] = true;
-        $_SESSION[self::K_LOGIN_TIME] = time();
-        $_SESSION[self::K_LAST_ACTIVITY] = time();
+        $_SESSION[self::K_LOGIN_TIME]     = time();
+        $_SESSION[self::K_LAST_ACTIVITY]  = time();
     }
 
+    /**
+     * Meldet den Food-Helper ab.
+     */
     public static function logout(string $redirectTo = '/food/food_helper_login.php'): void
     {
         self::init();
@@ -69,7 +96,7 @@ final class FoodHelperContext
     }
 
     /**
-     * SECURITY: Check and update session timeout
+     * Prüft den Timeout und aktualisiert den Zeitstempel.
      */
     public static function checkTimeout(): bool
     {
@@ -97,6 +124,9 @@ final class FoodHelperContext
         return true;
     }
 
+    /**
+     * Leitet zur Login-Seite weiter wenn nicht eingeloggt oder Timeout.
+     */
     public static function requireFoodHelper(string $redirectTo = '/food/food_helper_login.php'): void
     {
         self::init();

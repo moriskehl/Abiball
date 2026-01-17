@@ -1,7 +1,8 @@
 <?php
+/**
+ * Türkontrolle Dashboard - QR-Scanner für Ticketkontrolle
+ */
 declare(strict_types=1);
-
-// public/door_dashboard.php
 
 require_once __DIR__ . '/../../src/Bootstrap.php';
 require_once __DIR__ . '/../../src/Auth/DoorContext.php';

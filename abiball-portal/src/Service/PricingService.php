@@ -1,6 +1,13 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * PricingService - Preisberechnung für Tickets
+ * 
+ * Ermittelt individuelle Ticketpreise unter Berücksichtigung von
+ * Sonderkonditionen (z.B. Lehrer, Ehemalige mit reduziertem Preis).
+ */
+
 require_once __DIR__ . '/../Repository/ParticipantsRepository.php';
 require_once __DIR__ . '/../Repository/PricingOverridesRepository.php';
 
@@ -9,9 +16,8 @@ final class PricingService
     public const DEFAULT_TICKET_PRICE = 17;
 
     /**
-     * Liefert Ticketpreis + (optional) Override-Reason für eine Person.
-     *
-     * @return array{price:int, reason:string}
+     * Ermittelt den Ticketpreis für einen einzelnen Teilnehmer.
+     * Prüft zunächst auf individuelle Preisüberschreibungen.
      */
     public static function ticketForParticipantId(string $participantId): array
     {
@@ -31,10 +37,7 @@ final class PricingService
     }
 
     /**
-     * Berechnet die Gesamtsumme für eine main_id (Hauptgast + Begleitpersonen).
-     * (Lehrer/Ehemalige etc. werden über pricing_overrides.csv -> 0€ abgebildet.)
-     *
-     * @return array{amount_due:int, billable_ids:array<int,string>}
+     * Berechnet den Gesamtbetrag für einen Hauptgast inkl. aller Begleitpersonen.
      */
     public static function amountDueForMainId(string $mainId): array
     {
@@ -53,7 +56,6 @@ final class PricingService
             $billableIds[] = (string)($c['id'] ?? '');
         }
 
-        // leere IDs raus
         $billableIds = array_values(array_filter($billableIds, static fn($v) => trim((string)$v) !== ''));
 
         $sum = 0;

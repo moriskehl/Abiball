@@ -1,7 +1,13 @@
 <?php
 declare(strict_types=1);
 
-// src/Repository/FoodOrderRepository.php
+/**
+ * FoodOrderRepository - Verwaltung aller Essensbestellungen
+ * 
+ * Speichert Bestellungen mit mehreren Positionen in einer CSV-Datei.
+ * Jede Position wird als eigene Zeile gespeichert, gruppiert nach OrderID.
+ */
+
 require_once __DIR__ . '/../Config.php';
 
 final class FoodOrderRepository
@@ -10,7 +16,7 @@ final class FoodOrderRepository
     private static string $lockPath = __DIR__ . '/../../storage/data/food_orders.csv.lock';
     
     /**
-     * Acquire exclusive lock for write operations
+     * Holt exklusiven Lock fuer Schreiboperationen.
      */
     private static function acquireLock(): mixed
     {
@@ -35,7 +41,7 @@ final class FoodOrderRepository
     }
     
     /**
-     * Release lock
+     * Gibt den Lock wieder frei.
      */
     private static function releaseLock($lockFile): void
     {
@@ -46,7 +52,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Create a new order with multiple items (one row per item)
+     * Erstellt eine neue Bestellung mit mehreren Positionen.
      */
     public static function create(string $mainId, array $items, float $totalPrice): string
     {
@@ -102,7 +108,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Find an order by OrderID (returns grouped order with items array)
+     * Sucht eine Bestellung anhand der OrderID.
      */
     public static function findByOrderId(string $orderId): ?array
     {
@@ -116,7 +122,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Find all orders for a MainID
+     * Gibt alle Bestellungen eines Hauptgastes zurueck.
      */
     public static function findByMainId(string $mainId): array
     {
@@ -125,7 +131,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Get all orders grouped by OrderID
+     * Laedt alle Bestellungen gruppiert nach OrderID.
      */
     public static function getAllOrders(): array
     {
@@ -134,7 +140,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Read all raw rows from CSV
+     * Liest alle Zeilen aus der CSV-Datei.
      */
     private static function readAllRows(): array
     {
@@ -186,7 +192,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Group rows by OrderID into order objects with items array
+     * Gruppiert die CSV-Zeilen zu Bestellungs-Objekten mit Positionen.
      */
     private static function groupRowsByOrderId(array $rows): array
     {
@@ -223,7 +229,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Update paid amount for an order
+     * Aktualisiert den bezahlten Betrag einer Bestellung.
      */
     public static function updatePaidAmount(string $orderId, float $amount): bool
     {
@@ -231,7 +237,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Update status for an order
+     * Setzt den Status einer Bestellung.
      */
     public static function updateStatus(string $orderId, string $status): bool
     {
@@ -239,7 +245,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Redeem an order
+     * Markiert eine Bestellung als eingeloest.
      */
     public static function redeem(string $orderId, string $helperId): bool
     {
@@ -271,7 +277,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Cancel an order
+     * Storniert eine Bestellung.
      */
     public static function cancel(string $orderId): bool
     {
@@ -279,7 +285,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Get statistics about orders
+     * Liefert Statistiken ueber alle Bestellungen.
      */
     public static function getStatistics(): array
     {
@@ -308,7 +314,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Update a field for all rows of an order
+     * Aktualisiert ein einzelnes Feld fuer alle Zeilen einer Bestellung.
      */
     private static function updateOrderField(string $orderId, string $field, $value): bool
     {
@@ -338,7 +344,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Write all rows back to CSV (unsafe - caller must hold lock)
+     * Schreibt alle Zeilen in die CSV (Aufrufer muss Lock halten).
      */
     private static function writeAllRowsUnsafe(array $rows): bool
     {
@@ -380,7 +386,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Write all rows back to CSV (public, acquires lock)
+     * Schreibt alle Zeilen in die CSV (holt sich selbst Lock).
      */
     private static function writeAllRows(array $rows): bool
     {
@@ -393,7 +399,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Generate next OrderID (unsafe - caller must hold lock)
+     * Generiert die naechste OrderID (Aufrufer muss Lock halten).
      */
     private static function generateOrderIdUnsafe(): string
     {
@@ -414,7 +420,7 @@ final class FoodOrderRepository
     }
 
     /**
-     * Generate next OrderID (public, acquires lock)
+     * Generiert die naechste OrderID (holt sich selbst Lock).
      */
     private static function generateOrderId(): string
     {

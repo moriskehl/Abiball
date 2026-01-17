@@ -1,7 +1,12 @@
 <?php
 declare(strict_types=1);
 
-// src/Controller/FoodOrderController.php
+/**
+ * FoodOrderController - Essensbestellungen für den Abiball
+ * 
+ * Ermöglicht Gästen das Bestellen, Stornieren und Anzeigen ihrer Essensbestellungen.
+ */
+
 require_once __DIR__ . '/../Bootstrap.php';
 require_once __DIR__ . '/../Security/Csrf.php';
 require_once __DIR__ . '/../Auth/AuthContext.php';
@@ -16,6 +21,9 @@ require_once __DIR__ . '/../View/Helpers.php';
 
 final class FoodOrderController
 {
+    /**
+     * Zeigt die Essensbestellungs-Seite mit Menü und bestehenden Bestellungen.
+     */
     public static function show(): void
     {
         Bootstrap::init();
@@ -32,13 +40,12 @@ final class FoodOrderController
         $orderRepo = new FoodOrderRepository();
         $myOrders = $orderRepo->findByMainId($mainId);
 
-        // Sort orders by created_at DESC
+        // Bestellungen nach Erstellungsdatum sortieren (neueste zuerst)
         usort($myOrders, fn($a, $b) => strtotime($b['created_at']) <=> strtotime($a['created_at']));
 
         $ok = Request::getString('ok');
         $err = Request::getString('err');
 
-        // Hauptgast-Name holen
         $main = ParticipantsRepository::findById($mainId);
         $mainName = $main ? ($main['name'] ?? 'Unbekannt') : 'Unbekannt';
 
@@ -47,6 +54,9 @@ final class FoodOrderController
         Layout::footer();
     }
 
+    /**
+     * Erstellt eine neue Essensbestellung mit Validierung der Artikel.
+     */
     public static function create(): void
     {
         Bootstrap::init();
@@ -64,12 +74,12 @@ final class FoodOrderController
         $mainId = AuthContext::mainId();
         $itemsRaw = $_POST['items'] ?? [];
 
-        // SECURITY: Validate that itemsRaw is an array
+        // Eingabe muss ein Array sein
         if (!is_array($itemsRaw)) {
             Response::redirect('/food/food_order.php?err=invalid');
         }
 
-        // SECURITY: Get all valid menu items first
+        // Nur gültige Menü-Artikel akzeptieren
         $menu = MenuRepository::load();
         $validItemIds = [];
         foreach ($menu['categories'] ?? [] as $category) {
@@ -78,28 +88,28 @@ final class FoodOrderController
             }
         }
 
-        // Items aufbereiten with full validation
+        // Artikel validieren und aufbereiten
         $items = [];
         foreach ($itemsRaw as $itemId => $data) {
             if (!is_array($data)) {
-                continue; // Skip invalid entries
+                continue;
             }
 
             if (!empty($data['selected'])) {
                 $id = trim((string)($data['id'] ?? ''));
                 $qty = (int)($data['quantity'] ?? 1);
 
-                // SECURITY: Only accept known menu items
+                // Nur bekannte Artikel akzeptieren
                 if (!isset($validItemIds[$id])) {
-                    continue; // Skip unknown item
+                    continue;
                 }
 
-                // SECURITY: Validate quantity (between 1 and 50)
+                // Menge muss zwischen 1 und 50 liegen
                 if ($qty < 1 || $qty > 50) {
-                    continue; // Skip invalid quantity
+                    continue;
                 }
 
-                // SECURITY: Prevent duplicate items in same order
+                // Keine Duplikate in einer Bestellung
                 $alreadyAdded = false;
                 foreach ($items as $item) {
                     if ($item['id'] === $id) {
@@ -132,6 +142,9 @@ final class FoodOrderController
         }
     }
 
+    /**
+     * Storniert eine offene Essensbestellung.
+     */
     public static function cancel(): void
     {
         Bootstrap::init();
@@ -162,6 +175,9 @@ final class FoodOrderController
         }
     }
 
+    /**
+     * Rendert die Essensbestellungs-View mit Menü und Bestellungen.
+     */
     private static function renderView(
         string $mainId,
         string $username,

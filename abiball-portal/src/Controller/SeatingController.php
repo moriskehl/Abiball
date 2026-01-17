@@ -1,7 +1,13 @@
 <?php
 declare(strict_types=1);
 
-// src/Controller/SeatingController.php
+/**
+ * SeatingController - Sitzgruppenverwaltung für Gäste
+ * 
+ * Ermöglicht das Verwalten von Sitzgruppen-Wünschen per Drag & Drop.
+ * Unterstützt bis zu 3 Gruppen pro Hauptgast.
+ */
+
 require_once __DIR__ . '/../Bootstrap.php';
 require_once __DIR__ . '/../Security/Csrf.php';
 require_once __DIR__ . '/../Auth/AuthContext.php';
@@ -12,6 +18,9 @@ require_once __DIR__ . '/../View/Helpers.php';
 
 final class SeatingController
 {
+    /**
+     * Zeigt die Sitzgruppen-Verwaltung mit Drag & Drop-Interface.
+     */
     public static function show(): void
     {
         Bootstrap::init();
@@ -73,7 +82,7 @@ final class SeatingController
             }
         }
 
-        // Unique: SG2, dann SG3, Rest -> SG1
+        // Personen eindeutig zuordnen: erst SG2, dann SG3, Rest in SG1
         $seen = [];
         $g2Clean = [];
         foreach ($g2Members as $id) {
@@ -619,6 +628,9 @@ final class SeatingController
         Layout::footer();
     }
 
+    /**
+     * Speichert die Sitzgruppen-Änderungen.
+     */
     public static function save(): void
     {
         Bootstrap::init();
@@ -643,7 +655,7 @@ final class SeatingController
 
         $payload = (string)($_POST['payload'] ?? '');
 
-        // SECURITY: Enforce maximum payload size (1MB)
+        // Maximale Payload-Größe (1 MB) zur Sicherheit begrenzen
         if (strlen($payload) > 1048576) {
             http_response_code(413);
             echo 'Payload zu groß.';

@@ -1,7 +1,8 @@
 <?php
+/**
+ * Essensausgabe Login - Anmeldung für das Servicepersonal
+ */
 declare(strict_types=1);
-
-// public/food/food_helper_login.php
 
 require_once __DIR__ . '/../../src/Bootstrap.php';
 require_once __DIR__ . '/../../src/Auth/FoodHelperContext.php';

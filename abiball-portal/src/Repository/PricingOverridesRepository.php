@@ -1,12 +1,23 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * PricingOverridesRepository - Verwaltung individueller Ticketpreise
+ * 
+ * Ermoeglicht Sonderpreise fuer einzelne Personen, z.B. bei
+ * Ermaessigungen oder Sonderfaellen.
+ */
+
 require_once __DIR__ . '/../Config.php';
 require_once __DIR__ . '/CsvRepository.php';
 
 final class PricingOverridesRepository
 {
-    /** @return array<string,array{ticket_price:int,reason:string}> */
+    /**
+     * Laedt alle Preis-Overrides als Map (ID -> Daten).
+     * 
+     * @return array<string,array{ticket_price:int,reason:string}>
+     */
     public static function mapById(): array
     {
         $path = Config::pricingOverridesCsvPath();
@@ -30,6 +41,9 @@ final class PricingOverridesRepository
         return $map;
     }
 
+    /**
+     * Gibt den Sonderpreis fuer eine Person zurueck, falls vorhanden.
+     */
     public static function getTicketPriceForId(string $id): ?int
     {
         $id = trim($id);
@@ -39,6 +53,9 @@ final class PricingOverridesRepository
         return isset($map[$id]) ? (int)$map[$id]['ticket_price'] : null;
     }
 
+    /**
+     * Gibt den Grund fuer einen Sonderpreis zurueck.
+     */
     public static function getReasonForId(string $id): ?string
     {
         $id = trim($id);
@@ -51,7 +68,11 @@ final class PricingOverridesRepository
         return $reason !== '' ? $reason : null;
     }
 
-    /** @return array{ticket_price:int,reason:string}|null */
+    /**
+     * Gibt den kompletten Override-Datensatz zurueck.
+     * 
+     * @return array{ticket_price:int,reason:string}|null
+     */
     public static function getOverrideForId(string $id): ?array
     {
         $id = trim($id);
@@ -61,6 +82,9 @@ final class PricingOverridesRepository
         return $map[$id] ?? null;
     }
 
+    /**
+     * Erstellt oder aktualisiert einen Sonderpreis fuer eine Person.
+     */
     public static function upsertOverrideForId(string $id, int $ticketPrice, string $reason): void
     {
         $id = trim($id);
@@ -103,6 +127,9 @@ final class PricingOverridesRepository
         }, ';');
     }
 
+    /**
+     * Loescht einen Sonderpreis fuer eine Person.
+     */
     public static function deleteOverrideForId(string $id): void
     {
         $id = trim($id);

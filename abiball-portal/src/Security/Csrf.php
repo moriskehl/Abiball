@@ -1,7 +1,12 @@
 <?php
 declare(strict_types=1);
 
-// src/Security/Csrf.php
+/**
+ * Csrf - Cross-Site Request Forgery Schutz
+ * 
+ * Generiert und validiert CSRF-Tokens für alle Formulare.
+ * Verhindert dass böswillige Seiten Anfragen im Namen des Users stellen.
+ */
 
 require_once __DIR__ . '/../Bootstrap.php';
 
@@ -14,6 +19,9 @@ final class Csrf
         Bootstrap::init();
     }
 
+    /**
+     * Gibt das aktuelle CSRF-Token zurück (generiert eins falls nötig).
+     */
     public static function token(): string
     {
         self::init();
@@ -29,6 +37,10 @@ final class Csrf
         return $_SESSION[self::KEY];
     }
 
+    /**
+     * Validiert ein Token gegen das Session-Token.
+     * Nutzt hash_equals um Timing-Angriffe zu verhindern.
+     */
     public static function validate(?string $token): bool
     {
         self::init();
@@ -46,25 +58,25 @@ final class Csrf
     }
 
     /**
-     * Validiert CSRF-Token aus verschiedenen Quellen (POST, Header, JSON).
-     * Nützlich für API-Endpunkte die sowohl Formulare als auch JSON akzeptieren.
+     * Validiert das Token aus verschiedenen Quellen.
+     * Prüft: POST-Parameter, X-CSRF-TOKEN Header, JSON-Body.
      */
     public static function validateRequest(): bool
     {
         self::init();
 
-        // 1. Standard POST-Parameter
+        // Aus Formular
         if (isset($_POST['_csrf'])) {
             return self::validate($_POST['_csrf']);
         }
 
-        // 2. Custom Header (für AJAX/JSON-Requests)
+        // Aus Header (für AJAX)
         $headerToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
         if ($headerToken !== null) {
             return self::validate($headerToken);
         }
 
-        // 3. JSON-Body mit _csrf Feld
+        // Aus JSON-Body
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         if (stripos($contentType, 'application/json') !== false) {
             $input = json_decode(file_get_contents('php://input'), true);
@@ -76,6 +88,9 @@ final class Csrf
         return false;
     }
 
+    /**
+     * Gibt ein verstecktes Input-Feld für Formulare zurück.
+     */
     public static function inputField(): string
     {
         $t = self::token();
@@ -87,7 +102,7 @@ final class Csrf
     }
 
     /**
-     * Gibt ein Meta-Tag aus für JavaScript-Zugriff auf das Token.
+     * Gibt ein Meta-Tag zurück für JavaScript-Zugriff.
      */
     public static function metaTag(): string
     {

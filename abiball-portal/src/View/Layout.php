@@ -1,24 +1,257 @@
 <?php
 declare(strict_types=1);
 
-// src/View/Layout.php
+/**
+ * Layout - HTML-Grundgerüst für alle Seiten
+ * 
+ * Stellt header() und footer() Methoden bereit, die das gemeinsame
+ * HTML-Gerüst mit Navigation, Meta-Tags, Scripts und strukturierten
+ * Daten (JSON-LD) für Suchmaschinen rendern.
+ */
+
 require_once __DIR__ . '/Helpers.php';
 
 final class Layout
 {
+    /**
+     * Gibt JSON-LD strukturierte Daten für das Event aus.
+     * Verbessert die Darstellung in Google-Suchergebnissen.
+     */
+    public static function eventStructuredData(): void
+    {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'bsz.app';
+        $baseUrl = $protocol . '://' . $host;
+        
+        $eventData = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Event',
+            'name' => 'Abiball 2026 - BSZ Leonberg',
+            'description' => 'Der offizielle Abiball 2026 des Beruflichen Schulzentrums Leonberg. Ein eleganter Abend zum Feiern des Abiturs mit festlichem Dinner, Musik und unvergesslichen Momenten.',
+            'startDate' => '2026-07-03T18:00:00+02:00',
+            'endDate' => '2026-07-04T02:00:00+02:00',
+            'eventStatus' => 'https://schema.org/EventScheduled',
+            'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
+            'location' => [
+                '@type' => 'Place',
+                'name' => 'Spitalkirche Leonberg',
+                'address' => [
+                    '@type' => 'PostalAddress',
+                    'streetAddress' => 'Pfarrstraße 3',
+                    'addressLocality' => 'Leonberg',
+                    'postalCode' => '71229',
+                    'addressCountry' => 'DE'
+                ]
+            ],
+            'image' => [
+                $baseUrl . '/images/saal.jpeg',
+                $baseUrl . '/images/favicon.png'
+            ],
+            'organizer' => [
+                '@type' => 'Organization',
+                'name' => 'BSZ Leonberg - Abitur 2026',
+                'url' => $baseUrl
+            ],
+            'offers' => [
+                '@type' => 'Offer',
+                'url' => $baseUrl . '/zahlung.php',
+                'price' => '70.00',
+                'priceCurrency' => 'EUR',
+                'availability' => 'https://schema.org/InStock',
+                'validFrom' => '2025-09-01'
+            ],
+            'performer' => [
+                '@type' => 'Organization',
+                'name' => 'Abiturjahrgang 2026 BSZ Leonberg'
+            ]
+        ];
+        
+        echo '<script type="application/ld+json">' . "\n";
+        echo json_encode($eventData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        echo "\n</script>\n";
+    }
+    
+    /**
+     * Gibt JSON-LD für die Website aus.
+     * Hilft Google dabei, Sitelinks in den Suchergebnissen anzuzeigen.
+     */
+    public static function websiteStructuredData(): void
+    {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'bsz.app';
+        $baseUrl = $protocol . '://' . $host;
+        
+        $websiteData = [
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            'name' => 'Abiball 2026 BSZ Leonberg',
+            'alternateName' => 'Abiball Portal',
+            'url' => $baseUrl,
+            'description' => 'Offizielles Portal für den Abiball 2026 des Beruflichen Schulzentrums Leonberg.',
+            'inLanguage' => 'de-DE',
+            'publisher' => [
+                '@type' => 'Organization',
+                'name' => 'Abiball 2026 BSZ Leonberg',
+                'logo' => [
+                    '@type' => 'ImageObject',
+                    'url' => $baseUrl . '/images/favicon.png'
+                ]
+            ]
+        ];
+        
+        echo '<script type="application/ld+json">' . "\n";
+        echo json_encode($websiteData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        echo "\n</script>\n";
+    }
+    
+    /**
+     * Gibt JSON-LD für die Seitennavigation aus.
+     * Unterstützt Google beim Anzeigen von Navigations-Sitelinks.
+     */
+    public static function siteNavigationStructuredData(): void
+    {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'bsz.app';
+        $baseUrl = $protocol . '://' . $host;
+        
+        $navItems = [
+            ['name' => 'Login', 'url' => $baseUrl . '/login.php', 'description' => 'Anmelden zum Abiball Portal'],
+            ['name' => 'Location', 'url' => $baseUrl . '/location/location.php', 'description' => 'Veranstaltungsort und Anfahrt'],
+            ['name' => 'Zahlung', 'url' => $baseUrl . '/zahlung.php', 'description' => 'Zahlungsinformationen und Bankverbindung'],
+            ['name' => 'FAQ', 'url' => $baseUrl . '/faq.php', 'description' => 'Häufig gestellte Fragen'],
+            ['name' => 'Impressum', 'url' => $baseUrl . '/impressum.php', 'description' => 'Rechtliche Angaben'],
+            ['name' => 'Datenschutz', 'url' => $baseUrl . '/datenschutz.php', 'description' => 'Datenschutzerklärung']
+        ];
+        
+        $itemListElements = [];
+        $position = 1;
+        foreach ($navItems as $item) {
+            $itemListElements[] = [
+                '@type' => 'SiteNavigationElement',
+                'position' => $position++,
+                'name' => $item['name'],
+                'description' => $item['description'],
+                'url' => $item['url']
+            ];
+        }
+        
+        $navData = [
+            '@context' => 'https://schema.org',
+            '@type' => 'ItemList',
+            'itemListElement' => $itemListElements
+        ];
+        
+        echo '<script type="application/ld+json">' . "\n";
+        echo json_encode($navData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        echo "\n</script>\n";
+    }
+    
+    /**
+     * Gibt JSON-LD für die Organisation aus.
+     * Stärkt das Branding in Suchergebnissen.
+     */
+    public static function organizationStructuredData(): void
+    {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'bsz.app';
+        $baseUrl = $protocol . '://' . $host;
+        
+        $orgData = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            'name' => 'Abiball 2026 BSZ Leonberg',
+            'url' => $baseUrl,
+            'logo' => $baseUrl . '/images/favicon.png',
+            'description' => 'Offizielles Portal für den Abiball 2026 des Beruflichen Schulzentrums Leonberg.',
+            'address' => [
+                '@type' => 'PostalAddress',
+                'addressLocality' => 'Leonberg',
+                'addressCountry' => 'DE'
+            ]
+        ];
+        
+        echo '<script type="application/ld+json">' . "\n";
+        echo json_encode($orgData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        echo "\n</script>\n";
+    }
+    
+    /**
+     * Gibt JSON-LD für die FAQ-Seite aus.
+     * Ermöglicht Rich-Snippets mit Fragen und Antworten bei Google.
+     */
+    public static function faqStructuredData(array $faqs): void
+    {
+        $faqItems = [];
+        foreach ($faqs as $faq) {
+            $faqItems[] = [
+                '@type' => 'Question',
+                'name' => $faq['question'],
+                'acceptedAnswer' => [
+                    '@type' => 'Answer',
+                    'text' => strip_tags($faq['answer'])
+                ]
+            ];
+        }
+        
+        $faqData = [
+            '@context' => 'https://schema.org',
+            '@type' => 'FAQPage',
+            'mainEntity' => $faqItems
+        ];
+        
+        echo '<script type="application/ld+json">' . "\n";
+        echo json_encode($faqData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        echo "\n</script>\n";
+    }
+    
+    /**
+     * Gibt JSON-LD für Breadcrumb-Navigation aus.
+     * Zeigt den Navigationspfad in Suchergebnissen an.
+     */
+    public static function breadcrumbStructuredData(array $breadcrumbs): void
+    {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'bsz.app';
+        $baseUrl = $protocol . '://' . $host;
+        
+        $items = [];
+        $position = 1;
+        foreach ($breadcrumbs as $name => $path) {
+            $items[] = [
+                '@type' => 'ListItem',
+                'position' => $position++,
+                'name' => $name,
+                'item' => $baseUrl . $path
+            ];
+        }
+        
+        $breadcrumbData = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => $items
+        ];
+        
+        echo '<script type="application/ld+json">' . "\n";
+        echo json_encode($breadcrumbData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        echo "\n</script>\n";
+    }
+
+    /**
+     * Rendert den HTML-Head mit Meta-Tags, CSS und öffnenden Body-Bereich.
+     */
     public static function header(string $title, string $description = '', string $ogImage = '', bool $loadChartJs = false): void
     {
-        // Default description
+        // Standard-Beschreibung falls nicht gesetzt
         if ($description === '') {
             $description = 'Abiball 2026 BSZ Leonberg - Alle wichtigen Informationen rund um Tickets, Sitzplätze und organisatorische Hinweise für den Abiball.';
         }
         
-        // Default OG Image
+        // Standard Open-Graph-Bild falls nicht gesetzt
         if ($ogImage === '') {
-            $ogImage = '/images/saal.jpeg'; // Fallback auf Saal-Bild
+            $ogImage = '/images/saal.jpeg';
         }
         
-        // Aktuelle URL ermitteln
+        // Aktuelle URL für Open-Graph-Tags ermitteln
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
@@ -54,12 +287,14 @@ final class Layout
             <meta name="apple-mobile-web-app-capable" content="yes">
             <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
             <meta name="apple-mobile-web-app-title" content="Abiball 2026">
-            <link rel="apple-touch-icon" href="/images/favicon.png">
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
             
-            <!-- Favicon -->
-            <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
+            <!-- Favicon (Google benötigt mindestens 48x48, optimal 192x192) -->
+            <link rel="icon" href="/images/favicon.ico" sizes="48x48">
+            <link rel="icon" type="image/png" sizes="192x192" href="/images/favicon.png">
             <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
             <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+            <link rel="shortcut icon" href="/images/favicon.ico">
             
             <!-- PWA Manifest -->
             <link rel="manifest" href="/manifest.webmanifest">
@@ -70,7 +305,7 @@ final class Layout
             <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
             <?php endif; ?>
 
-            <!-- Theme init before CSS to avoid flicker -->
+            <!-- Theme früh setzen um Flackern zu vermeiden -->
             <script>
                 (function () {
                     try {
@@ -94,40 +329,43 @@ final class Layout
         </head>
 
         <body class="layout-root">
-            <!-- Skip to main content (Accessibility) -->
+            <!-- Barrierefreiheit: Sprung zum Hauptinhalt -->
             <a href="#main-content" class="skip-to-content">Zum Hauptinhalt springen</a>
             
-            <!-- Global premium background (layout-level, on ALL pages) -->
+            <!-- Globaler Hintergrund-Effekt für alle Seiten -->
             <div class="global-bg" aria-hidden="true">
                 <div class="global-glow-layer"></div>
             </div>
 
         <?php
-        // Navbar partial
+        // Navigation einbinden
         $navbar = __DIR__ . '/Partials/Navbar.php';
         if (is_file($navbar)) {
             require $navbar;
         }
         ?>
 
-        <!-- Sticky-footer wrapper: grows on short pages (e.g., login) -->
+        <!-- Content-Wrapper: wächst auf kurzen Seiten, damit Footer unten bleibt -->
         <div class="page-content">
         <?php
     }
 
+    /**
+     * Rendert den Footer mit Scripts und schließenden HTML-Tags.
+     */
     public static function footer(): void
     {
         ?>
-        </div><!-- /.page-content -->
+        </div>
         <?php
-        // Footer partial
+        // Footer einbinden
         $footer = __DIR__ . '/Partials/Footer.php';
         if (is_file($footer)) {
             require $footer;
         }
         ?>
 
-        <!-- Cookie Banner -->
+        <!-- Cookie-Hinweis -->
         <div id="cookie-banner" class="cookie-banner" style="display: none;">
             <div class="cookie-banner-content">
                                 <p class="mb-3">
@@ -142,7 +380,7 @@ final class Layout
             </div>
         </div>
 
-        <!-- Zurück nach oben Button -->
+        <!-- Nach-oben-Button -->
         <button id="back-to-top" class="back-to-top" aria-label="Zurück nach oben" style="display: none;">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 4l-8 8h5v8h6v-8h5z"/>
@@ -155,13 +393,13 @@ final class Layout
             crossorigin="anonymous"
         ></script>
         
-        <!-- Form Loading States -->
+        <!-- Formular-Ladezustand -->
         <script src="/assets/js/form-loading.js"></script>
         
-        <!-- Cookie Banner & Back to Top -->
+        <!-- UI-Verbesserungen (Cookie-Banner, Nach-oben-Button) -->
         <script src="/assets/js/ui-enhancements.js"></script>
         
-        <!-- Service Worker Registration -->
+        <!-- Service Worker für PWA -->
         <script src="/assets/js/sw-register.js"></script>
         </body>
         </html>

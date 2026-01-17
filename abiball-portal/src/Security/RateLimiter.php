@@ -1,7 +1,13 @@
 <?php
 declare(strict_types=1);
 
-// src/Security/RateLimiter.php
+/**
+ * RateLimiter - Schutz vor Brute-Force-Angriffen
+ * 
+ * Begrenzt die Anzahl der Versuche pro IP-Adresse und Zeitfenster.
+ * IP-basiert (nicht Session-basiert), kann also nicht durch
+ * Löschen von Cookies umgangen werden.
+ */
 
 require_once __DIR__ . '/../Bootstrap.php';
 require_once __DIR__ . '/../Config.php';
@@ -14,20 +20,19 @@ final class RateLimiter
     }
 
     /**
-     * Holt die Client-IP (auch hinter Proxy).
+     * Ermittelt die Client-IP, auch hinter einem Reverse-Proxy.
      */
     private static function getClientIp(): string
     {
-        // Nur vertrauenswürdige Proxies berücksichtigen
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
         
-        // Falls hinter Reverse Proxy (nur im Production-Modus)
+        // Falls hinter nginx/Apache Reverse-Proxy
         if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
             $parts = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
             $ip = trim($parts[0]);
         }
         
-        // IP validieren
+        // IP-Format validieren
         if (filter_var($ip, FILTER_VALIDATE_IP) === false) {
             $ip = '0.0.0.0';
         }
@@ -36,7 +41,7 @@ final class RateLimiter
     }
 
     /**
-     * Pfad zur Rate-Limit-Datei für eine IP.
+     * Generiert den Dateipfad für die Rate-Limit-Daten.
      */
     private static function getRateLimitPath(string $key, string $ip): string
     {
@@ -45,13 +50,12 @@ final class RateLimiter
             @mkdir($dir, 0755, true);
         }
         
-        // Hash aus Key + IP für Dateiname
         $hash = hash('sha256', $key . ':' . $ip);
         return $dir . '/' . $hash . '.json';
     }
 
     /**
-     * Liest Rate-Limit-Daten aus Datei.
+     * Liest die gespeicherten Rate-Limit-Daten.
      */
     private static function readData(string $path): ?array
     {
@@ -73,7 +77,7 @@ final class RateLimiter
     }
 
     /**
-     * Schreibt Rate-Limit-Daten in Datei.
+     * Speichert die Rate-Limit-Daten.
      */
     private static function writeData(string $path, array $data): void
     {
@@ -81,8 +85,8 @@ final class RateLimiter
     }
 
     /**
-     * Bereinigt alte Rate-Limit-Dateien (älter als 1 Stunde).
-     * Wird nur gelegentlich aufgerufen.
+     * Räumt alte Rate-Limit-Dateien auf (älter als 1 Stunde).
+     * Wird nur gelegentlich ausgeführt um Performance zu schonen.
      */
     private static function cleanup(): void
     {
@@ -101,7 +105,7 @@ final class RateLimiter
             return;
         }
         
-        $expiry = time() - 3600; // 1 Stunde
+        $expiry = time() - 3600;
         foreach ($files as $file) {
             if (filemtime($file) < $expiry) {
                 @unlink($file);
@@ -110,8 +114,12 @@ final class RateLimiter
     }
 
     /**
-     * Erlaubt max. $maxAttempts innerhalb von $windowSeconds pro Key + IP.
-     * IP-basiert, kann nicht durch Session-Löschung umgangen werden.
+     * Prüft ob eine Aktion erlaubt ist.
+     * 
+     * @param string $key     Eindeutiger Schlüssel für die Aktion (z.B. "login")
+     * @param int $maxAttempts Maximale Versuche im Zeitfenster
+     * @param int $windowSeconds Zeitfenster in Sekunden
+     * @return bool true wenn erlaubt, false wenn Limit erreicht
      */
     public static function allow(
         string $key,
@@ -131,12 +139,12 @@ final class RateLimiter
             $data = ['start' => $now, 'count' => 0];
         }
 
-        // Zeitfenster abgelaufen → Reset
+        // Zeitfenster abgelaufen - zurücksetzen
         if (($now - $data['start']) > $windowSeconds) {
             $data = ['start' => $now, 'count' => 0];
         }
 
-        // Prüfen, bevor hochgezählt wird
+        // Limit erreicht?
         if ($data['count'] >= $maxAttempts) {
             self::writeData($path, $data);
             return false;
@@ -149,7 +157,7 @@ final class RateLimiter
     }
 
     /**
-     * Gibt zurück, wie viele Sekunden bis zum Reset verbleiben.
+     * Gibt zurück wie viele Sekunden bis zum Reset verbleiben.
      */
     public static function getRetryAfter(string $key, int $windowSeconds = 60): int
     {

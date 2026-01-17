@@ -1,7 +1,13 @@
 <?php
 declare(strict_types=1);
 
-// src/Controller/AuthController.php
+/**
+ * AuthController - Authentifizierung für Gäste
+ * 
+ * Verarbeitet Login, Logout und zeigt das Login-Formular an.
+ * Unterstützt gehashte und Klartext-Passwörter für die Migration.
+ */
+
 require_once __DIR__ . '/../Bootstrap.php';
 require_once __DIR__ . '/../Security/Csrf.php';
 require_once __DIR__ . '/../Security/RateLimiter.php';
@@ -14,11 +20,14 @@ require_once __DIR__ . '/../Auth/AuthContext.php';
 
 final class AuthController
 {
+    /**
+     * Zeigt das Login-Formular an.
+     */
     public static function showLoginForm(string $error = '', string $identifier = ''): void
     {
         Bootstrap::init();
 
-        // Wenn schon eingeloggt -> direkt ins Dashboard
+        // Bereits eingeloggte Nutzer direkt ins Dashboard weiterleiten
         if (AuthContext::mainId() !== '') {
             Response::redirect('/dashboard.php');
         }
@@ -90,11 +99,14 @@ final class AuthController
         Layout::footer();
     }
 
+    /**
+     * Verarbeitet den Login-Vorgang mit Rate-Limiting und Passwort-Validierung.
+     */
     public static function login(): void
     {
         Bootstrap::init();
 
-        // Wenn schon eingeloggt -> direkt ins Dashboard
+        // Bereits eingeloggte Nutzer direkt ins Dashboard weiterleiten
         if (AuthContext::mainId() !== '') {
             Response::redirect('/dashboard.php');
         }
@@ -132,7 +144,7 @@ final class AuthController
 
         $input = $password;
 
-        // hashed oder klartext akzeptieren
+        // Sowohl gehashte als auch Klartext-Passwörter akzeptieren (für Migration)
         $isHashed = str_starts_with($stored, '$2y$') || str_starts_with($stored, '$argon2');
         $ok = $isHashed ? password_verify($input, $stored) : hash_equals($stored, $input);
 
@@ -148,18 +160,22 @@ final class AuthController
             }
         }
 
-        // Session setzen zentral
+        // Session starten und Benutzer anmelden
         AuthContext::loginAsMain($user);
 
+        // Bei erstem Login Hinweis zur Passwortänderung anzeigen
         $mainId = ParticipantsRepository::resolveMainIdFromRow($user);
         $changed = ParticipantsRepository::isPasswordChangedForMainId($mainId);
         if (!$changed) {
-            $_SESSION['show_pw_prompt'] = 1; // nur einmal pro Login-Session anzeigen
+            $_SESSION['show_pw_prompt'] = 1;
         }
 
         Response::redirect('/dashboard.php');
     }
 
+    /**
+     * Meldet den Benutzer ab und leitet zur Login-Seite weiter.
+     */
     public static function logout(): void
     {
         AuthContext::logout('/login.php');

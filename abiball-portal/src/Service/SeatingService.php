@@ -1,21 +1,20 @@
 <?php
 declare(strict_types=1);
 
-// src/Service/SeatingService.php
+/**
+ * SeatingService - Verwaltung der Sitzplatzplanung
+ * 
+ * Speichert und lädt Sitzgruppen sowie Notizen für Personen und Gruppen.
+ * Jeder Hauptgast hat eine eigene JSON-Datei mit seiner Sitzplatzplanung.
+ */
+
 require_once __DIR__ . '/../Config.php';
 
 final class SeatingService
 {
     /**
-     * Garantiertes Format:
-     * [
-     *   'groups' => [
-     *      'SG1' => ['name'=>'Sitzgruppe 1','members'=>[...]],
-     *      'SG2' => ...
-     *   ],
-     *   'group_notes' => ['SG1'=>'...', ...],
-     *   'person_notes' => ['PID'=>'...', ...],
-     * ]
+     * Lädt die Sitzplatzplanung eines Hauptgastes.
+     * Gibt immer ein normalisiertes Array mit mindestens einer Sitzgruppe zurück.
      */
     public static function load(string $mainId): array
     {
@@ -34,6 +33,10 @@ final class SeatingService
         return self::normalize($data);
     }
 
+    /**
+     * Speichert die komplette Sitzplatzplanung eines Hauptgastes.
+     * Verwendet atomares Schreiben um Datenverlust bei Abstürzen zu vermeiden.
+     */
     public static function saveAll(string $mainId, array $groups, array $groupNotes, array $personNotes): void
     {
         $mainId = trim($mainId);
@@ -53,7 +56,6 @@ final class SeatingService
             @mkdir($dir, 0775, true);
         }
 
-        // atomic write
         $tmp = $path . '.tmp';
         $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
         if (!is_string($json)) {
@@ -77,8 +79,8 @@ final class SeatingService
     }
 
     /**
-     * Wird von dashboard_notes_save.php benötigt:
-     * Speichert/aktualisiert eine Notiz für eine Person innerhalb dieser main_id.
+     * Aktualisiert die Notiz einer einzelnen Person.
+     * Bei leerem Notiztext wird die Notiz gelöscht.
      */
     public static function updatePersonNote(string $mainId, string $personId, string $note): void
     {
@@ -101,7 +103,7 @@ final class SeatingService
         if (!is_array($personNotes)) $personNotes = [];
 
         if ($note === '') {
-            unset($personNotes[$personId]); // leere Notiz = löschen
+            unset($personNotes[$personId]);
         } else {
             $personNotes[$personId] = $note;
         }
@@ -110,7 +112,8 @@ final class SeatingService
     }
 
     /**
-     * Optional hilfreich (falls du später Group-Notes einzeln speichern willst)
+     * Aktualisiert die Notiz einer Sitzgruppe.
+     * Bei leerem Notiztext wird die Notiz gelöscht.
      */
     public static function updateGroupNote(string $mainId, string $groupId, string $note): void
     {
@@ -141,6 +144,9 @@ final class SeatingService
         self::saveAll($mainId, $groups, $groupNotes, $personNotes);
     }
 
+    /**
+     * Liefert eine leere Standardstruktur mit einer Sitzgruppe.
+     */
     private static function empty(): array
     {
         return [
@@ -152,6 +158,10 @@ final class SeatingService
         ];
     }
 
+    /**
+     * Normalisiert die Datenstruktur und migriert alte Formate.
+     * Stellt sicher, dass immer mindestens Sitzgruppe 1 existiert.
+     */
     private static function normalize(array $data): array
     {
         $SG1 = 'SG1'; $SG2 = 'SG2'; $SG3 = 'SG3';
@@ -159,7 +169,7 @@ final class SeatingService
         $groups = $data['groups'] ?? [];
         if (!is_array($groups)) $groups = [];
 
-        // Falls alte/numerische Struktur: [0=>...,1=>...] -> mappe auf SG1/SG2/SG3
+        // Migration: Alte numerische Arrays auf benannte Gruppen umstellen
         $isList = self::isListArray($groups);
         if ($isList) {
             $mapped = [];
@@ -169,12 +179,10 @@ final class SeatingService
             $groups = $mapped;
         }
 
-        // SG1 immer vorhanden
         if (!isset($groups[$SG1]) || !is_array($groups[$SG1])) {
             $groups[$SG1] = ['name' => 'Sitzgruppe 1', 'members' => []];
         }
 
-        // Normalisiere jede Gruppe
         $normGroups = [];
         foreach ([$SG1,$SG2,$SG3] as $gid) {
             if (!isset($groups[$gid]) || !is_array($groups[$gid])) continue;
@@ -192,7 +200,7 @@ final class SeatingService
             $members = $groups[$gid]['members'] ?? [];
             if (!is_array($members)) $members = [];
 
-            // Stringify + trim + unique
+            // Duplikate entfernen und leere Einträge filtern
             $seen = [];
             $cleanMembers = [];
             foreach ($members as $m) {
@@ -222,6 +230,9 @@ final class SeatingService
         ];
     }
 
+    /**
+     * Prüft, ob ein Array ein numerisch indiziertes Listen-Array ist.
+     */
     private static function isListArray(array $arr): bool
     {
         $i = 0;

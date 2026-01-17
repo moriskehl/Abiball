@@ -1,5 +1,36 @@
-/abiball-portal/storage/*.log
+# ===========================================
+# Abiball Portal - Git Ignore
+# ===========================================
+
+# ----- Sensible Daten (NIEMALS committen!) -----
 /abiball-portal/storage/data/*.csv
+/abiball-portal/storage/data/*.json
 /abiball-portal/storage/data/*.lock
 /abiball-portal/storage/seating/*.json
 /abiball-portal/storage/secrets/*
+/abiball-portal/storage/rate_limits/*
+
+# ----- Logs -----
+/abiball-portal/storage/*.log
+/abiball-portal/var/cache/*
+/abiball-portal/var/log/*
+
+# ----- Composer (vendor kann via composer install wiederhergestellt werden) -----
+/abiball-portal/vendor/
+
+# ----- Umgebungsdateien -----
+/abiball-portal/.env
+/abiball-portal/.env.local
+
+# ----- IDE & OS -----
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ----- Temporäre Dateien -----
+*.tmp
+*.bak
+*~

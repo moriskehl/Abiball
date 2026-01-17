@@ -1,22 +1,29 @@
 <?php
 declare(strict_types=1);
 
-// src/Bootstrap.php
+/**
+ * Bootstrap - Initialisiert die Anwendung
+ * 
+ * Kümmert sich um Error-Handling, Timezone und sichere Session-Konfiguration.
+ * Muss am Anfang jeder Seite via Bootstrap::init() aufgerufen werden.
+ */
 require_once __DIR__ . '/Config.php';
 
 final class Bootstrap
 {
+    /**
+     * Initialisiert die Anwendung mit allen nötigen Einstellungen.
+     */
     public static function init(): void
     {
+        // Fehleranzeige je nach Umgebung konfigurieren
         if (Config::isDev()) {
             ini_set('display_errors', '1');
             ini_set('display_startup_errors', '1');
-            // Show all errors except deprecations from vendor packages
             error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
         } else {
             ini_set('display_errors', '0');
             ini_set('display_startup_errors', '0');
-            // Production: Log errors but don't display, exclude deprecations
             error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
         }
 
@@ -27,11 +34,14 @@ final class Bootstrap
         }
     }
 
+    /**
+     * Startet eine gehärtete Session mit sicheren Cookie-Einstellungen.
+     */
     private static function startSecureSession(): void
     {
         $secure = Config::isHttps();
 
-        // Session-Härtungen
+        // Session-Sicherheit: Keine URL-Parameter, nur Cookies
         ini_set('session.use_strict_mode', '1');
         ini_set('session.use_only_cookies', '1');
         ini_set('session.use_trans_sid', '0');
@@ -42,7 +52,7 @@ final class Bootstrap
         $path   = ($params['path'] ?? '') !== '' ? (string)$params['path'] : '/';
         $domain = ($params['domain'] ?? '') !== '' ? (string)$params['domain'] : null;
 
-        // Lax ist in der Praxis sinnvoll (z.B. Links aus Mails/QR)
+        // Lax erlaubt Zugriff über externe Links (z.B. aus E-Mails)
         $sameSite = 'Lax';
 
         if (PHP_VERSION_ID >= 70300) {
@@ -59,7 +69,7 @@ final class Bootstrap
 
             session_set_cookie_params($cookie);
         } else {
-            // PHP <7.3: SameSite über path-String
+            // Fallback für ältere PHP-Versionen
             $pathWithSameSite = $path . '; samesite=' . $sameSite;
             session_set_cookie_params(
                 0,
@@ -72,7 +82,7 @@ final class Bootstrap
 
         session_start();
 
-        // Erstinitialisierung (reduziert Fixation-Risiko)
+        // Neue Session-ID bei erstem Aufruf generieren (verhindert Session-Fixation)
         if (empty($_SESSION['_inited'])) {
             session_regenerate_id(true);
             $_SESSION['_inited'] = 1;

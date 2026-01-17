@@ -1,6 +1,13 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * Footer Partial - Seitenfuß für alle Seiten
+ * 
+ * Zeigt Copyright, Ersteller-Hinweis mit LinkedIn-Link
+ * und Navigation zu wichtigen Unterseiten.
+ */
+
 require_once __DIR__ . '/../Helpers.php';
 ?>
 

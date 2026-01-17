@@ -1,17 +1,26 @@
 <?php
 declare(strict_types=1);
 
-// src/Controller/ImpressumController.php
+/**
+ * ImpressumController - Impressum und rechtliche Angaben
+ * 
+ * Zeigt die gesetzlich erforderlichen Angaben gemäß TMG und MStV.
+ */
+
 require_once __DIR__ . '/../Bootstrap.php';
 require_once __DIR__ . '/../View/Layout.php';
 
 final class ImpressumController
 {
+    /**
+     * Zeigt die Impressum-Seite mit rechtlichen Angaben.
+     */
     public static function show(): void
     {
         Bootstrap::init();
 
-        Layout::header('Impressum');
+        Layout::header('Impressum', 'Impressum und rechtliche Angaben zum Abiball 2026 Portal des BSZ Leonberg.');
+        Layout::breadcrumbStructuredData(['Startseite' => '/', 'Impressum' => '/impressum.php']);
         ?>
         <main class="bg-starfield">
           <div class="container py-5" style="max-width: 1000px;">

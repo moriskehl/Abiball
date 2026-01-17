@@ -18,9 +18,11 @@ Allow: /login.php
 Allow: /location/
 Allow: /zahlung.php
 Allow: /impressum.php
+Allow: /datenschutz.php
+Allow: /faq.php
 
-# Sitemap (erstellen wir im nächsten Schritt)
-Sitemap: https://example.com/sitemap.xml
+# Sitemap
+Sitemap: https://bsz.app/sitemap.xml
 
 # Crawl-Delay für schonenden Umgang mit Server
 Crawl-delay: 10

@@ -1,7 +1,12 @@
 <?php
 declare(strict_types=1);
 
-// src/Controller/AdminController.php
+/**
+ * AdminController - Administrationsoberfläche für das Organisationsteam
+ * 
+ * Verwaltet Teilnehmer, Preisüberschreibungen, Essensbestellungen und Audit-Logs.
+ * Zugriff nur für authentifizierte Admins.
+ */
 
 require_once __DIR__ . '/../Bootstrap.php';
 require_once __DIR__ . '/../Security/Csrf.php';
@@ -28,10 +33,13 @@ use Dompdf\Options;
 
 final class AdminController
 {
-    /* =========================
-     * AUTH
-     * ========================= */
+    /* ================================================
+     * AUTHENTIFIZIERUNG
+     * ================================================ */
 
+    /**
+     * Zeigt das Admin-Login-Formular an.
+     */
     public static function showLoginForm(string $error = '', string $identifier = ''): void
     {
         Bootstrap::init();
@@ -89,6 +97,9 @@ final class AdminController
         Layout::footer();
     }
 
+    /**
+     * Verarbeitet den Admin-Login mit Rate-Limiting.
+     */
     public static function login(): void
     {
         Bootstrap::init();
@@ -130,7 +141,7 @@ final class AdminController
 
         $input = $password;
 
-        // SECURITY: Support hashed and plaintext (for migration), prefer hashed
+        // Sowohl gehashte als auch Klartext-Passwörter akzeptieren (Migration)
         $isHashed = str_starts_with($stored, '$2y$') || str_starts_with($stored, '$argon2');
         $ok = $isHashed ? password_verify($input, $stored) : hash_equals($stored, $input);
 
@@ -139,7 +150,7 @@ final class AdminController
             return;
         }
 
-        // SECURITY: Auto-migrate plaintext to hashed on successful login
+        // Automatische Migration: Klartext-Passwörter beim nächsten Login hashen
         if (!$isHashed) {
             $newHash = password_hash($input, PASSWORD_DEFAULT);
             if ($newHash !== false) {
@@ -147,7 +158,7 @@ final class AdminController
                     $adminId = (string)($admin['id'] ?? '');
                     ParticipantsRepository::updateLoginCodeForMainId($adminId, $newHash);
                 } catch (Throwable $e) {
-                    // Silent fail - login was successful, hash migration is optional
+                    // Login war erfolgreich, Hash-Migration ist optional
                 }
             }
         }
@@ -156,15 +167,21 @@ final class AdminController
         Response::redirect('/admin/admin_dashboard.php');
     }
 
+    /**
+     * Meldet den Admin ab und leitet zur Login-Seite weiter.
+     */
     public static function logout(): void
     {
         AdminContext::logout('/admin_login.php');
     }
 
-    /* =========================
-     * ACTIONS
-     * ========================= */
+    /* ================================================
+     * TEILNEHMER- UND ZAHLUNGSVERWALTUNG
+     * ================================================ */
 
+    /**
+     * Aktualisiert den bezahlten Betrag für einen Hauptgast.
+     */
     public static function updatePaid(): void
     {
         AdminContext::requireAdmin();
@@ -205,6 +222,9 @@ final class AdminController
         }
     }
 
+    /**
+     * Speichert oder aktualisiert eine Preisüberschreibung.
+     */
     public static function saveOverride(): void
     {
         AdminContext::requireAdmin();
@@ -246,6 +266,9 @@ final class AdminController
         }
     }
 
+    /**
+     * Löscht eine Preisüberschreibung.
+     */
     public static function deleteOverride(): void
     {
         AdminContext::requireAdmin();
@@ -276,6 +299,9 @@ final class AdminController
         }
     }
 
+    /**
+     * Legt einen neuen Hauptgast an.
+     */
     public static function createMainGuest(): void
     {
         AdminContext::requireAdmin();
@@ -303,6 +329,9 @@ final class AdminController
         }
     }
 
+    /**
+     * Legt eine neue Begleitperson zu einem Hauptgast an.
+     */
     public static function createCompanion(): void
     {
         AdminContext::requireAdmin();
@@ -331,10 +360,13 @@ final class AdminController
         }
     }
 
-    /* =========================
-     * PDF
-     * ========================= */
+    /* ================================================
+     * PDF-GENERIERUNG
+     * ================================================ */
 
+    /**
+     * Generiert ein PDF mit allen Hauptgast-Login-Codes zum Ausdrucken.
+     */
     public static function printMainLoginsPdf(): void
     {
         AdminContext::requireAdmin();
@@ -458,10 +490,13 @@ final class AdminController
         exit;
     }
 
-    /* =========================
-     * ADMIN MANAGEMENT
-     * ========================= */
+    /* ================================================
+     * ADMIN-VERWALTUNG
+     * ================================================ */
 
+    /**
+     * Ändert das Passwort des eingeloggten Admins.
+     */
     public static function changeAdminPassword(): void
     {
         AdminContext::requireAdmin();
@@ -493,6 +528,9 @@ final class AdminController
         }
     }
 
+    /**
+     * Löscht einen Teilnehmer (Hauptgast oder Begleiter).
+     */
     public static function deleteParticipant(): void
     {
         AdminContext::requireAdmin();
@@ -520,6 +558,9 @@ final class AdminController
         }
     }
 
+    /**
+     * Ändert den Namen eines Teilnehmers.
+     */
     public static function editParticipantName(): void
     {
         AdminContext::requireAdmin();
@@ -549,6 +590,9 @@ final class AdminController
         }
     }
 
+    /**
+     * Setzt das Passwort eines Teilnehmers neu.
+     */
     public static function changeParticipantPassword(): void
     {
         AdminContext::requireAdmin();
@@ -577,15 +621,18 @@ final class AdminController
         }
     }
 
-    /* =========================
-     * DASHBOARD
-     * ========================= */
+    /* ================================================
+     * ADMIN-DASHBOARD
+     * ================================================ */
 
+    /**
+     * Zeigt das Admin-Dashboard mit Statistiken, Teilnehmerliste und Verwaltungsfunktionen.
+     */
     public static function dashboard(): void
     {
         AdminContext::requireAdmin();
 
-        // -------- Stats (Charts) --------
+        // Statistiken für die Charts berechnen
         $allForStats = ParticipantsRepository::all();
 
         $kindCounts = [];
@@ -633,7 +680,7 @@ final class AdminController
         arsort($classTotals);
         $classTotals = array_slice($classTotals, 0, 12, true);
 
-        // -------- Search + grouping --------
+        // Suche und Gruppierung der Teilnehmer
         $q   = Request::getString('q');
         $all = ParticipantsRepository::all();
 

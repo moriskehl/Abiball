@@ -1,7 +1,9 @@
 <?php
+/**
+ * Fehlerseite 500 - Interner Serverfehler
+ */
 declare(strict_types=1);
 
-// public/500.php
 http_response_code(500);
 
 require_once __DIR__ . '/../src/Bootstrap.php';
