@@ -262,6 +262,7 @@ final class Layout
         <html lang="de">
         <head>
             <meta charset="utf-8">
+            <meta name="google-site-verification" content="Z3_GyNQ2Cv40aZriedKw6ShGQWvX9xdUEtjhp-wve_Y" />
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <meta name="description" content="<?= htmlspecialchars($description, ENT_QUOTES, 'UTF-8') ?>">
             <meta name="keywords" content="Abiball, BSZ Leonberg, 2026, Tickets, Abitur, Berufliches Gymnasium">
