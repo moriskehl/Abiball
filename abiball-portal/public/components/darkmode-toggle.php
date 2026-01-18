@@ -37,8 +37,8 @@ declare(strict_types=1);
 (function () {
   const html = document.documentElement;
 
-  const FAV_LIGHT = "/images/favicon.png";
-  const FAV_DARK  = "/favicon-dark.png";
+  const FAV_LIGHT = "/images/!!favicon.png";
+  const FAV_DARK  = "/images/!!favicon-dark.png";
 
   function setStoredTheme(v){ try{ localStorage.setItem('theme', v); }catch(e){} }
 
@@ -57,7 +57,8 @@ declare(strict_types=1);
     document.querySelectorAll(".navbar-logo").forEach(img => {
       const light = img.getAttribute("data-logo-light") || FAV_LIGHT;
       const dark  = img.getAttribute("data-logo-dark")  || FAV_DARK;
-      img.src = (isDark ? dark : light) + "?v=" + (isDark ? "dark" : "light");
+      // Immer !!favicon verwenden, egal was im data-Attribut steht
+      img.src = (isDark ? FAV_DARK : FAV_LIGHT) + "?v=" + (isDark ? "dark" : "light");
     });
   }
 

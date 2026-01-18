@@ -160,9 +160,9 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
     <div class="navbar-left">
       <a class="navbar-brand d-flex align-items-center" href="/">
         <img class="navbar-logo"
-             src="/images/favicon.png"
-             data-logo-light="/images/favicon.png"
-             data-logo-dark="/images/favicon-dark.png"
+             src="/images/!!favicon.png"
+             data-logo-light="/images/!!favicon.png"
+             data-logo-dark="/images/!!favicon-dark.png"
              width="60" height="60" alt="Logo">
       </a>
     </div>
