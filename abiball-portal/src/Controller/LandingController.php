@@ -269,6 +269,40 @@ final class LandingController
               </div>
             </div>
 
+
+            <!-- SEO-Keyword-Block: Suchbegriffe für bessere Auffindbarkeit -->
+            <div style="max-width:900px;margin:48px auto 0 auto;padding:24px 18px 18px 18px;background:rgba(255,255,255,0.04);border-radius:18px;border:1px dashed #c9a227;">
+              <div style="font-size:1.05rem;color:#bba14a;font-weight:600;margin-bottom:8px;">Weitere Begriffe rund um den Abiball Leonberg:</div>
+              <div style="font-size:0.98rem;line-height:1.7;color:#bba14a;">
+                Abiball 2026, Abi Ball 2026, Abiball Leonberg, Abi Ball Leonberg, Abiball 2026 Leonberg, Abi Ball 2026 Leonberg, Abiball Berufliches Schulzentrum Leonberg, Abiball Berufliches Schulzentrum Leonberg, Abiball BSZ Leonberg, Abschlussball Leonberg, Abschlussball 2026, Abschlussball Berufsschule Leonberg, Abschlussfeier Leonberg, Abschlussfeier 2026, Abschlussfeier Berufliches Schulzentrum, Schulabschluss Feier Leonberg, Schulabschluss 2026 Leonberg, Abiturfeier Leonberg, Abi Abschlussball 2026,<br><br>
+                Abiball Tickets, Abiball Karten, Abiball Eintrittskarten, Abiball Tickets online, Abiball Tickets kaufen, Abiball Karten kaufen, Abiball Tickets Leonberg, Abiball Eintritt Leonberg, Abiball Ticketverkauf, Abiball Online Ticketshop, Abiball Ticketreservierung,<br><br>
+                Abiball Essen, Abiball Essen vorbestellen, Abiball Menü, Abiball Menü bestellen, Abiball Speisekarte, Abiball Catering, Abiball Gala Menü,<br><br>
+                Abiball Sitzplätze, Abiball Sitzplatzreservierung, Abiball Tischreservierung, Abiball Platzwahl,<br><br>
+                Abiball Veranstaltung, Abiball Event, Abiball Event Leonberg, Schulveranstaltung Leonberg, Schulevent 2026, Galaabend Leonberg, Festlicher Ball Leonberg, Schulball Leonberg,<br><br>
+                Abiball Infos, Abiball Informationen, Abiball Ablauf, Abiball Programm, Abiball Uhrzeit, Abiball Einlass, Abiball Dresscode, Abiball Einlasszeit, Abiball Ort, Wo findet der Abiball statt, Wann ist der Abiball 2026,<br><br>
+                Abiball Website, Abiball offizielle Website, Abiball Leonberg Website, Abiball 2026 Website, Abiball Online Anmeldung,<br><br>
+                Abiball Abschlussjahrgang 2026, Abiball Schüler 2026, Abiball Eltern Gäste, Abiball Freunde Familie,<br><br>
+                Abiball 2026 Berufsschule Leonberg, Abiball Leonberg Tickets online kaufen, Abschlussball BSZ Leonberg 2026, Abiball Eintrittskarten Leonberg kaufen, Abiball Essen online vorbestellen, Abiball Galaabend Berufliches Schulzentrum Leonberg
+              </div>
+            </div>
+
+            <!-- SEO-Keyword-Block: Weitere Abi Leonberg Begriffe -->
+            <div style="max-width:900px;margin:18px auto 0 auto;padding:20px 16px 16px 16px;background:rgba(255,255,255,0.03);border-radius:16px;border:1px dashed #bba14a;">
+              <div style="font-size:1.02rem;color:#bba14a;font-weight:600;margin-bottom:8px;">Weitere Begriffe rund um Abi Leonberg:</div>
+              <div style="font-size:0.97rem;line-height:1.7;color:#bba14a;">
+                Abi Leonberg, Abi BSZ, Abi BSZ Leonberg, Abi Berufliches Schulzentrum Leonberg, Abi 2026 Leonberg, Abi Jahrgang 2026 Leonberg, Abi Abschluss Leonberg, Abi Abschlussfeier Leonberg, Abi Abschlussball Leonberg, Abi Feier Leonberg,<br><br>
+                Abi Ball Leonberg, Abi Ball BSZ, Abi Ball BSZ Leonberg, Abi Ball 2026 Leonberg, Abi Ball Berufliches Schulzentrum Leonberg,<br><br>
+                Abi Tickets Leonberg, Abi Tickets BSZ, Abi Karten Leonberg, Abi Eintritt Leonberg, Abi Ticketverkauf Leonberg, Abi Tickets online Leonberg,<br><br>
+                Abi Essen Leonberg, Abi Menü Leonberg, Abi Catering Leonberg, Abi Gala Leonberg,<br><br>
+                Abi Event Leonberg, Abi Veranstaltung Leonberg, Abi Schulveranstaltung Leonberg, Abi Schulball Leonberg,<br><br>
+                Abi Infos Leonberg, Abi Informationen BSZ, Abi Ablauf Leonberg, Abi Programm Leonberg, Abi Uhrzeit Leonberg, Abi Einlass Leonberg, Abi Dresscode Leonberg,<br><br>
+                Abi Website Leonberg, Abi offizielle Website Leonberg, Abi Seite BSZ,<br><br>
+                Abi Schüler Leonberg, Abi Eltern Leonberg, Abi Gäste Leonberg,<br><br>
+                Abi 2026 BSZ Leonberg, Abi Abschluss 2026 BSZ, Abi Ball 2026 BSZ Leonberg, Abi Event 2026 Leonberg,<br><br>
+                Abi Berufliches Schulzentrum Leonberg
+              </div>
+            </div>
+
           </div>
         </main>
         <?php

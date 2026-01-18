@@ -289,12 +289,13 @@ final class Layout
             <meta name="apple-mobile-web-app-title" content="Abiball 2026">
             <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
             
-            <!-- Favicon (Google benötigt mindestens 48x48, optimal 192x192) -->
-            <link rel="icon" href="/images/favicon.ico" sizes="48x48">
+            <!-- Favicon: Standard .ico für Browser -->
+            <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+            <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico">
+            <!-- PNG-Varianten für Geräte/Apps -->
             <link rel="icon" type="image/png" sizes="192x192" href="/images/favicon.png">
             <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
             <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
-            <link rel="shortcut icon" href="/images/favicon.ico">
             
             <!-- PWA Manifest -->
             <link rel="manifest" href="/manifest.webmanifest">
