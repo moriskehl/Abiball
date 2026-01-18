@@ -101,6 +101,11 @@ final class LandingController
             }
           }
         </style>
+        <style>
+          @media (max-width: 770px) {
+            .countdown-seconds-box { display: none !important; }
+          }
+        </style>
 
         <main class="bg-starfield">
           <div class="container py-5" style="max-width: 1100px;">
@@ -125,7 +130,7 @@ final class LandingController
                   <div id="countdown-minutes" style="font-size: 2rem; font-weight: 600; color: var(--gold); line-height: 1;">--</div>
                   <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text); opacity: 0.6; margin-top: 4px;">Minuten</div>
                 </div>
-                <div class="countdown-box" style="min-width: 80px; padding: 12px 16px; border-radius: 12px; background: rgba(201,162,39,.08); border: 1px solid rgba(201,162,39,.2);">
+                <div class="countdown-box countdown-seconds-box" style="min-width: 80px; padding: 12px 16px; border-radius: 12px; background: rgba(201,162,39,.08); border: 1px solid rgba(201,162,39,.2);">
                   <div id="countdown-seconds" style="font-size: 2rem; font-weight: 600; color: var(--gold); line-height: 1;">--</div>
                   <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text); opacity: 0.6; margin-top: 4px;">Sekunden</div>
                 </div>
