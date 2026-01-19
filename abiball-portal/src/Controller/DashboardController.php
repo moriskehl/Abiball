@@ -403,7 +403,11 @@ final class DashboardController
                         <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: .5rem;">Verpflegung</div>
                         <div class="h6 mb-0">Essensbestellungen</div>
                       </div>
-                      <a class="btn btn-outline-secondary btn-soft btn-sm" href="/food/food_order.php">Verwalten</a>
+                      <a class="btn btn-outline-secondary btn-soft btn-sm disabled" href="#" tabindex="-1" aria-disabled="true">Verwalten</a>
+                    </div>
+
+                    <div class="alert alert-warning" style="border-radius: 12px;">
+                      <strong>Hinweis:</strong> Die Essensbestellungen sind aktuell noch nicht freigeschaltet. Wir müssen die Details noch mit dem Caterer abklären. Sobald Bestellungen möglich sind, informieren wir euch hier.
                     </div>
 
                     <?php if (empty($foodOrders)): ?>
@@ -472,7 +476,7 @@ final class DashboardController
                     <div class="section-label mb-3">Aktionen</div>
                     <div class="d-flex gap-2 flex-wrap">
                       <a class="btn btn-outline-secondary btn-soft" href="/seating/seating.php">Sitzgruppen</a>
-                      <a class="btn btn-outline-secondary btn-soft" href="/food/food_order.php">Essensbestellung</a>
+                      <a class="btn btn-outline-secondary btn-soft disabled" href="#" tabindex="-1" aria-disabled="true">Essensbestellung</a>
                       <a class="btn btn-outline-secondary btn-soft" href="/zahlung.php">Zahlung</a>
                     </div>
                   </div>
