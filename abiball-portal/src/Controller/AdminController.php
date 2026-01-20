@@ -910,7 +910,7 @@ final class AdminController
                       <div class="text-muted small admin-kicker">Teilnehmer</div>
                       <div class="h6 mb-0">Teilnehmer hinzufügen</div>
                       <div class="text-muted" style="font-size:.9rem;">
-                        Hauptgast endet auf <code>S</code>. Begleiter-ID wird automatisch (<code>B1/B2/…</code>) vergeben.
+                        Hauptgast endet auf <code>S</code> <b>oder</b> <code>L</code> (Lehrer). Begleiter-ID wird automatisch (<code>B1/B2/…</code>) vergeben.
                       </div>
                     </div>
                   </div>
@@ -922,7 +922,7 @@ final class AdminController
                         <form method="post" action="/admin/admin_create_main_guest.php" class="row g-2">
                           <?= Csrf::inputField() ?>
                           <div class="col-12">
-                            <input class="form-control" name="id" placeholder="ID z.B. WGW00S" required>
+                            <input class="form-control" name="id" placeholder="ID z.B. WGW00S oder LEHRER01L" required>
                           </div>
                           <div class="col-12">
                             <input class="form-control" name="name" placeholder="Name" required>

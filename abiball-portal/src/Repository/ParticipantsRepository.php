@@ -380,8 +380,8 @@ final class ParticipantsRepository
         if ($name === '') throw new InvalidArgumentException('Name missing');
         if ($loginCode === '') throw new InvalidArgumentException('Login code missing');
 
-        if (!preg_match('/S$/i', $id)) {
-            throw new InvalidArgumentException('Main guest id must end with "S"');
+        if (!preg_match('/[SL]$/i', $id)) {
+            throw new InvalidArgumentException('Main guest id must end with "S" (Schüler) oder "L" (Lehrer)');
         }
 
         $path = Config::participantsCsvPath();
