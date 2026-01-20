@@ -2,13 +2,9 @@
 # Abiball Portal - Git Ignore
 # ===========================================
 
-# ----- Sensible Daten (NIEMALS committen!) -----
-/abiball-portal/storage/data/*.csv
-/abiball-portal/storage/data/*.json
-/abiball-portal/storage/data/*.lock
-/abiball-portal/storage/seating/*.json
-/abiball-portal/storage/secrets/*
-/abiball-portal/storage/rate_limits/*
+
+# ----- Sensible Daten & Storage (NIEMALS committen!) -----
+/abiball-portal/storage/
 
 # ----- Logs -----
 /abiball-portal/storage/*.log

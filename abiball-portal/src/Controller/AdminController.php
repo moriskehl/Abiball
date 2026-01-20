@@ -749,7 +749,7 @@ final class AdminController
                 <a class="btn btn-outline-primary btn-sm" href="/admin/admin_main_logins_pdf.php" target="_blank" rel="noopener">
                   PDF: Login-Codes
                 </a>
-                <a class="btn btn-outline-danger btn-sm" href="/admin/admin_logout.php">Logout</a>
+                <a class="btn btn-outline-danger btn-sm" href="/public/admin/admin_logout.php">Logout</a>
               </div>
             </div>
 

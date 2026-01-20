@@ -141,27 +141,31 @@ final class FaqController
                 'questions' => [
                     [
                         'question' => 'Wann und wo findet der Abiball statt?',
-                        'answer' => 'Ort/Datum findest du auf der Location-Seite und in den Infos im Portal. Bitte prüfe vor dem Event nochmal die aktuellen Hinweise.'
-                    ],
-                    [
-                        'question' => 'Gibt es einen Dresscode?',
-                        'answer' => 'In der Regel ist festliche Kleidung erwünscht. Falls die Orga konkrete Vorgaben macht, findest du diese im Portal oder erhältst sie über die üblichen Kommunikationswege.'
+                        'answer' => 'Der Abiball findet am 10.07.2026 in der Leonberger Stadthalle, Römerstraße 110, 71229 Leonberg statt. Einlass ist ab 17:00 Uhr.'
                     ],
                     [
                         'question' => 'Wie läuft der Abend ab?',
-                        'answer' => 'Der genaue Ablauf wird von der Orga kommuniziert. Plane bitte genügend Zeit für Einlass/Scan ein und halte Ticket + Ausweis bereit.'
+                        'answer' => 'Einlass ist ab 17:00 Uhr. Nach dem Einlass folgt das offizielle Programm, Essen und Ehrungen. Bitte halte dein Ticket (QR-Code) und deinen Personalausweis bereit.'
+                    ],
+                    [
+                        'question' => 'Gibt es einen Dresscode?',
+                        'answer' => 'Festliche Kleidung ist erwünscht. Abendgarderobe wie Anzug, Kleid oder vergleichbar ist passend.'
                     ],
                     [
                         'question' => 'Gibt es Parkmöglichkeiten?',
-                        'answer' => 'Hinweise zu Anfahrt und Parken findest du auf der Location-Seite. Bitte beachte ggf. Beschilderung vor Ort.'
+                        'answer' => 'Direkt an der Stadthalle Leonberg gibt es Parkplätze. Bitte beachte die Beschilderung vor Ort.'
                     ],
                     [
                         'question' => 'Muss ich mein Ticket ausdrucken?',
-                        'answer' => 'Nein, in der Regel reicht es digital (PDF/QR-Code) auf dem Handy. Wenn du auf Nummer sicher gehen willst, kannst du es zusätzlich ausdrucken.'
+                        'answer' => 'Du kannst dein Ticket digital (PDF/QR-Code) auf dem Handy vorzeigen. Ein Ausdruck ist nicht zwingend nötig, aber möglich.'
                     ],
                     [
                         'question' => 'Was soll ich am Abend dabei haben?',
-                        'answer' => 'Ticket (digital oder ausgedruckt) und unbedingt Personalausweis. Falls du Essen vorbestellt hast: den Essens-Bon (QR-Code).'
+                        'answer' => 'Ticket (digital oder ausgedruckt), Personalausweis und ggf. Essens-Bon (QR-Code), falls du Essen bestellt hast.'
+                    ],
+                    [
+                        'question' => 'Ab wann kann ich kommen?',
+                        'answer' => 'Der Einlass beginnt um 17:00 Uhr. Das Programm startet kurz darauf.'
                     ],
                 ]
             ],
