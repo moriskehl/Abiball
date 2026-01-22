@@ -1,3 +1,0 @@
-timestamp;ticket_id;main_id;door_person_id;action;ip_address
-2026-01-16 11:01:12;ABI01S;ABI01S;DOOR01;VALIDATED;::1
-2026-01-16 11:06:15;ABI01S;ABI01S;DOOR01;VALIDATED;::1

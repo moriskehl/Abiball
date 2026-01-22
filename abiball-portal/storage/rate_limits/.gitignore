@@ -1,3 +1,0 @@
-# Rate limit files (auto-generated, IP-based)
-*.json
-!.gitignore
