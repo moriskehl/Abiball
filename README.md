@@ -222,7 +222,7 @@ Internes Schulprojekt - Alle Rechte vorbehalten
 
 ## 📞 Kontakt
 
-Bei Fragen oder Problemen: [Kontakt-Email einfügen]
+Bei Fragen oder Problemen: moris.kehl@gmail.com
 
 ---
 
