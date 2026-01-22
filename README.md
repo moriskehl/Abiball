@@ -84,18 +84,9 @@ cd abiball-portal
 composer install
 ```
 
-### Schritt 3: Secrets konfigurieren
-Erstelle die folgenden Dateien in `storage/secrets/`:
 
-**admin_password.txt**
-```
-dein-sicheres-admin-passwort
-```
-
-**door_password.txt**
-```
-dein-türkontrolle-passwort
-```
+### Schritt 3: CSRF-Secret konfigurieren
+Erstelle die folgende Datei in `storage/secrets/`:
 
 **csrf_secret.txt**
 ```
@@ -125,12 +116,14 @@ Die `.htaccess` ist bereits konfiguriert. DocumentRoot auf `/public` setzen.
 </VirtualHost>
 ```
 
-### Schritt 6: Erste Teilnehmer importieren
-Die Datei `storage/data/participants.csv` sollte folgendes Format haben:
+### Schritt 4: Teilnehmer und Passwörter anlegen
+Alle Passwörter (Admin, Tür, Food Helper, Teilnehmer) werden in der Datei `storage/data/participants.csv` gespeichert.
+Diese Datei sollte folgendes Format haben:
 ```csv
-ID,Vorname,Nachname,Klasse,Passwort,PaidAmount
-ABI001,Max,Mustermann,12A,passwort123,0
+ID,Vorname,Nachname,Klasse,Passwort,PaidAmount,Typ
+ABI001,Max,Mustermann,12A,passwort123,0,admin
 ```
+Weitere Benutzer (z.B. Türpersonal, Food Helper) werden ebenfalls als Einträge mit entsprechendem Typ und Passwort in dieser Datei gepflegt.
 
 ## 🔐 Sicherheit
 
@@ -140,19 +133,13 @@ ABI001,Max,Mustermann,12A,passwort123,0
 - **Security-Headers**: X-Frame-Options, CSP, X-Content-Type-Options
 - **Passwort-Hashing**: bcrypt für alle Passwörter
 
-## 📊 Admin-Zugang
+## 📊 Admin- und Spezial-Zugänge
 
-URL: `/admin_login.php`
+URL Admin-Login: `/admin_login.php`
+URL Türkontrolle: `/door_login.php`
+URL Food Helper: `/food_helper_login.php`
 
-Standard-Benutzername: `admin`  
-Passwort: Siehe `storage/secrets/admin_password.txt`
-
-## 🚪 Türkontrolle-Zugang
-
-URL: `/door_login.php`
-
-Benutzername: `door`  
-Passwort: Siehe `storage/secrets/door_password.txt`
+Benutzernamen und Passwörter werden ausschließlich in `storage/data/participants.csv` gepflegt. Siehe dort die jeweiligen Einträge für Admin, Türpersonal und Food Helper.
 
 ## 🎨 Design-System
 
