@@ -10,15 +10,28 @@ Ein vollständiges Verwaltungssystem für die Organisation des Abiballs mit Tick
 - Passwort-geschützte Anmeldung
 - Ticket-Generierung mit QR-Codes
 
+
+### 🍽️ Essensbestellungen
+- Online-Bestellung von Essen für Teilnehmer und Begleitpersonen
+- Verwaltung und Ausgabe von Essensbons (Food Helper Dashboard)
+- QR-Code-Validierung bei Essensausgabe
+
 ### 💰 Preisgestaltung
-- Flexible Preisstaffelung nach Teilnehmertyp
 - Admin-Überschreibungen für individuelle Preise
 - Automatische Befreiungen (Kinder <4 Jahre, behinderte Personen)
+
 
 ### 🪑 Sitzplatzreservierung
 - Interaktive Saalplanung
 - Gruppenverwaltung
 - Echtzeit-Verfügbarkeit
+
+### 📍 Location & Anfahrt
+- Interaktive Karte mit Leaflet zur Anzeige des Veranstaltungsorts
+- Standortinformationen und Anfahrtsbeschreibung
+
+### ❓ FAQ
+- Häufig gestellte Fragen direkt im Portal abrufbar
 
 ### 🚪 Türkontrolle
 - QR-Code Scanner mit ZXing
@@ -37,9 +50,9 @@ Ein vollständiges Verwaltungssystem für die Organisation des Abiballs mit Tick
 - **Frontend**: Bootstrap 5.3.3, Custom CSS mit Dark Mode
 - **Libraries**:
   - Chart.js 4.4.1 (Statistiken)
-  - Leaflet 1.9.4 (Karten)
-  - ZXing 0.21.0 (QR-Scanner)
-  - Dompdf (Ticket-Generierung)
+  - Leaflet 1.9.4 (Karten, Location-Seite)
+  - ZXing 0.21.0 (QR-Scanner für Tickets und Essensbons)
+  - Dompdf (Ticket- und Bon-Generierung)
 - **Server**: Apache mit mod_rewrite, mod_headers, mod_deflate
 - **Datenbank**: CSV-Dateien (keine SQL-Datenbank erforderlich)
 
@@ -49,19 +62,19 @@ Ein vollständiges Verwaltungssystem für die Organisation des Abiballs mit Tick
 abiball-portal/
 ├── public/              # Öffentlich zugängliche Dateien
 │   ├── assets/          # CSS, JavaScript, Bilder
-│   ├── *.php            # Endpunkte (login, dashboard, admin, etc.)
+│   ├── *.php            # Endpunkte (login, dashboard, admin, food, faq, location, etc.)
 │   ├── .htaccess        # Apache-Konfiguration
 │   ├── robots.txt       # SEO
 │   └── sitemap.xml      # SEO
 ├── src/                 # PHP-Klassen (PSR-4)
-│   ├── Auth/            # Authentifizierung (Admin, User, Door)
-│   ├── Controller/      # MVC-Controller
+│   ├── Auth/            # Authentifizierung (Admin, User, Door, Food Helper)
+│   ├── Controller/      # MVC-Controller (inkl. FAQ, Location, FoodOrder)
 │   ├── Repository/      # Datenzugriff
 │   ├── Security/        # CSRF, RateLimiter, Guards
 │   ├── Service/         # Business-Logik
 │   └── View/            # View-Helper und Layouts
 ├── storage/
-│   ├── data/            # CSV-Dateien (participants, pricing_overrides)
+│   ├── data/            # CSV-Dateien (participants, pricing_overrides, food_orders)
 │   └── seating/         # JSON-Sitzplatzdaten
 └── vendor/              # Composer-Dependencies
 ```
@@ -118,12 +131,29 @@ Die `.htaccess` ist bereits konfiguriert. DocumentRoot auf `/public` setzen.
 
 ### Schritt 4: Teilnehmer und Passwörter anlegen
 Alle Passwörter (Admin, Tür, Food Helper, Teilnehmer) werden in der Datei `storage/data/participants.csv` gespeichert.
-Diese Datei sollte folgendes Format haben:
+Diese Datei hat das folgende Format (Beispiel):
 ```csv
-ID,Vorname,Nachname,Klasse,Passwort,PaidAmount,Typ
-ABI001,Max,Mustermann,12A,passwort123,0,admin
+id;name;is_main;main_id;login_code;role;amount_paid;password_changed;ticket_validated;validation_time;validation_person;amount_subsided
+ADMIN00;Admin;1;ADMIN00;<hash>;ADMIN;;;;;;
+DOOR01;"Eingang Team 1";1;DOOR01;<hash>;DOOR;0;;;;;
+FOOD01;"Essensausgabe Team 1";1;FOOD01;<hash>;FOOD_HELPER;0;;;;;
+WGW00S;"Thilo Breuer";1;WGW00S;<hash>;USER;0;;;;;
+WGW00B1;"Isi Breuer";0;WGW00S;<code>;USER;;;;;;
 ```
-Weitere Benutzer (z.B. Türpersonal, Food Helper) werden ebenfalls als Einträge mit entsprechendem Typ und Passwort in dieser Datei gepflegt.
+Spaltenbeschreibung:
+- `id`: Eindeutige ID
+- `name`: Name der Person
+- `is_main`: 1 = Hauptgast, 0 = Begleitperson
+- `main_id`: ID des Hauptgasts (bei Begleitpersonen)
+- `login_code`: Passwort-Hash oder Login-Code
+- `role`: ADMIN, DOOR, FOOD_HELPER, USER
+- `amount_paid`: Bezahlter Betrag
+- `password_changed`: (optional) Zeitstempel, wenn Passwort geändert
+- `ticket_validated`: (optional) Ticket validiert (1/0)
+- `validation_time`: (optional) Zeitstempel der Validierung
+- `validation_person`: (optional) Wer validiert hat
+- `amount_subsided`: (optional) Zuschussbetrag
+Weitere Benutzer (z.B. Türpersonal, Food Helper) werden ebenfalls als Einträge mit entsprechendem `role` und Passwort in dieser Datei gepflegt.
 
 ## 🔐 Sicherheit
 
