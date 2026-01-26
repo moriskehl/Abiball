@@ -23,10 +23,15 @@ final class ImpressumController
         Layout::breadcrumbStructuredData(['Startseite' => '/', 'Impressum' => '/impressum.php']);
         ?>
         <main class="bg-starfield">
+          <!-- Star layers -->
+          <div class="stars-layer-1"></div>
+          <div class="stars-layer-2"></div>
+          <div class="stars-layer-3"></div>
+
           <div class="container py-5" style="max-width: 1000px;">
 
             <div class="text-center mx-auto mb-5" style="max-width: 820px; padding-top: 18px; padding-bottom: 24px;">
-              <h1 class="h-serif mb-3"
+              <h1 class="h-serif mb-3 reveal-text"
                   style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
                 Impressum
               </h1>
@@ -35,7 +40,7 @@ final class ImpressumController
               </p>
             </div>
 
-            <div class="card mx-auto" style="max-width: 900px;">
+            <div class="card mx-auto hover-float" style="max-width: 900px;">
               <div class="card-body p-4 p-md-5">
 
                 <!-- Verantwortlich -->

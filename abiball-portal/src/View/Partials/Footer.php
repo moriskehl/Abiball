@@ -9,6 +9,9 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/../Helpers.php';
+require_once __DIR__ . '/../../Auth/AuthContext.php';
+
+$isLoggedIn = (trim(AuthContext::mainId()) !== '');
 ?>
 
 <footer>
@@ -36,7 +39,12 @@ require_once __DIR__ . '/../Helpers.php';
 
     <nav class="footer-links small" aria-label="Footer Navigation">
       <a class="text-muted" href="/location/location.php">Location</a>
-      <a class="text-muted" href="/login.php">Login</a>
+      
+      <?php if ($isLoggedIn): ?>
+        <a class="text-muted" href="/dashboard.php">Dashboard</a>
+      <?php else: ?>
+        <a class="text-muted" href="/login.php">Login</a>
+      <?php endif; ?>
 
       <?php if (in_array(basename($_SERVER['PHP_SELF']), ['login.php', 'admin_login.php', 'door_login.php', 'food_helper_login.php'], true)): ?>
         <a class="text-muted" href="/admin/admin_login.php">Admin</a>
@@ -48,7 +56,6 @@ require_once __DIR__ . '/../Helpers.php';
       <a class="text-muted" href="/faq.php">FAQ</a>
       <a class="text-muted" href="/impressum.php">Impressum</a>
       <a class="text-muted" href="/datenschutz.php">Datenschutz</a>
-      <a class="text-muted" href="/dashboard.php">Dashboard</a>
     </nav>
 
   </div>

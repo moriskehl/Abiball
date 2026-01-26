@@ -1,9 +1,4 @@
-
 <?php
-/**
- * Essensbestellung - Menüauswahl für Teilnehmer
- * (vorübergehend deaktiviert)
- */
 declare(strict_types=1);
 
 // Blockiert die Seite für Nutzer, aber erhält den Code für spätere Aktivierung

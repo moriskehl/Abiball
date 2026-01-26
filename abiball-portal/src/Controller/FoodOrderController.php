@@ -344,12 +344,17 @@ final class FoodOrderController
 </style>
 
 <main class="bg-starfield">
+  <!-- Star layers -->
+  <div class="stars-layer-1"></div>
+  <div class="stars-layer-2"></div>
+  <div class="stars-layer-3"></div>
+
   <div class="container py-4" style="max-width: 1200px;">
 
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
       <div>
         <div class="text-muted small" style="letter-spacing:.22em; text-transform:uppercase;">Essensbestellung</div>
-        <h1 class="h-serif mb-1" style="font-size: clamp(28px, 3.5vw, 40px); font-weight: 300; line-height: 1.1;">
+        <h1 class="h-serif mb-1 reveal-text" style="font-size: clamp(28px, 3.5vw, 40px); font-weight: 300; line-height: 1.1;">
           Speisekarte & Bestellungen
         </h1>
         <div class="text-muted" style="font-size:.95rem; line-height:1.6; max-width: 68ch;">
@@ -601,7 +606,7 @@ final class FoodOrderController
               <h4 class="mb-0" style="font-weight: 600;">Gesamtsumme:</h4>
               <h2 class="mb-0" style="color: var(--gold); font-weight: 700;" id="total-price">0,00 €</h2>
             </div>
-            <button type="submit" class="btn btn-create-order w-100">Bestellung erstellen</button>
+            <button type="submit" class="btn btn-create-order btn-shimmer w-100">Bestellung erstellen</button>
             <div class="text-muted small mt-3 text-center" style="line-height: 1.6;">
               Die Bestellung ist nach Überweisung des Betrags gültig und kann dann als Bon-PDF heruntergeladen werden.
             </div>

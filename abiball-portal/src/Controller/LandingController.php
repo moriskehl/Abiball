@@ -108,16 +108,21 @@ final class LandingController
         </style>
 
         <main class="bg-starfield">
+          <!-- Star layers -->
+          <div class="stars-layer-1"></div>
+          <div class="stars-layer-2"></div>
+          <div class="stars-layer-3"></div>
+
           <div class="container py-5" style="max-width: 1100px;">
             <div class="text-center mx-auto" style="max-width: 820px; padding-top: 24px; padding-bottom: 28px;">
 
-              <h1 class="h-serif mb-3" style="font-size: clamp(42px, 5.5vw, 86px); font-weight: 300; line-height: .95;">
+              <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(42px, 5.5vw, 86px); font-weight: 300; line-height: .95;">
                 Abiball<br>
                 <span style="font-style: italic;">Ein Abend der Eleganz</span>
               </h1>
 
               <!-- Countdown Timer -->
-              <div class="countdown-container mb-4" style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+              <div class="countdown-container mb-4 animate-fade-up delay-100" style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
                 <div class="countdown-box" style="min-width: 80px; padding: 12px 16px; border-radius: 12px; background: rgba(201,162,39,.08); border: 1px solid rgba(201,162,39,.2);">
                   <div id="countdown-days" style="font-size: 2rem; font-weight: 600; color: var(--gold); line-height: 1;">--</div>
                   <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text); opacity: 0.6; margin-top: 4px;">Tage</div>
@@ -169,21 +174,24 @@ final class LandingController
                 })();
               </script>
 
-              <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.7;">
-                Alle wichtigen Informationen rund um Tickets, Sitzplätze und organisatorische Hinweise findest du hier im Portal.
-                Melde dich an, um deinen Status einzusehen und Details im Dashboard aufzurufen.
-              </p>
+              <div class="animate-fade-up delay-200">
+                <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.7;">
+                  Alle wichtigen Informationen rund um Tickets, Sitzplätze und organisatorische Hinweise findest du hier im Portal.
+                  Melde dich an, um deinen Status einzusehen und Details im Dashboard aufzurufen.
+                </p>
 
-              <div class="d-flex justify-content-center gap-3 flex-wrap pt-2 landing-cta-wrap">
-                <?php if ($isLoggedIn): ?>
-                  <a class="btn btn-cta btn-cta-lg landing-cta" href="/dashboard.php">Zum Dashboard</a>
-                <?php else: ?>
-                  <a class="btn btn-cta btn-cta-lg landing-cta" href="/login.php">Zum Login</a>
-                <?php endif; ?>
+                <div class="d-flex justify-content-center gap-3 flex-wrap pt-2 landing-cta-wrap">
+                  <?php if ($isLoggedIn): ?>
+                    <a class="btn btn-cta btn-cta-lg landing-cta btn-shimmer" href="/dashboard.php">Zum Dashboard</a>
+                  <?php else: ?>
+                    <a class="btn btn-cta btn-cta-lg landing-cta btn-shimmer" href="/login.php">Zum Login</a>
+                  <?php endif; ?>
+                </div>
               </div>
+
             </div>
 
-            <div class="card mx-auto" style="max-width: 900px;">
+            <div class="card mx-auto animate-fade-up delay-300" style="max-width: 900px;">
               <div class="card-body p-4 p-md-5">
                 <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap margin-bottom-4">
                   <div>

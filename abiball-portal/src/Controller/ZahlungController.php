@@ -63,10 +63,15 @@ final class ZahlungController
         ?>
 
         <main class="bg-starfield">
+            <!-- Star layers -->
+            <div class="stars-layer-1"></div>
+            <div class="stars-layer-2"></div>
+            <div class="stars-layer-3"></div>
+
             <div class="container py-0 px-3 px-sm-4" style="max-width: 1100px;">
 
                 <div class="text-center mx-auto" style="max-width: 820px; padding-top: 18px; padding-bottom: 24px;">
-                    <h1 class="h-serif mb-3" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
+                    <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
                         Zahlung<br>
                         <span style="font-style: italic;">Überweisung</span>
                     </h1>
@@ -121,11 +126,11 @@ final class ZahlungController
 
                     <div class="d-flex justify-content-center gap-3 flex-wrap pt-2 zahlung-cta-wrap">
                         <?php if ($isLoggedIn): ?>
-                            <a class="btn btn-cta btn-cta-lg zahlung-cta" href="/dashboard.php">Zum Dashboard</a>
+                            <a class="btn btn-cta btn-cta-lg zahlung-cta btn-shimmer" href="/dashboard.php">Zum Dashboard</a>
                         <?php else: ?>
-                            <a class="btn btn-cta btn-cta-lg zahlung-cta" href="/login.php">Zum Login</a>
+                            <a class="btn btn-cta btn-cta-lg zahlung-cta btn-shimmer" href="/login.php">Zum Login</a>
                         <?php endif; ?>
-                        <a class="btn btn-cta btn-cta-lg zahlung-cta" href="/">Zur Startseite</a>
+                        <a class="btn btn-cta btn-cta-lg zahlung-cta btn-shimmer" href="/">Zur Startseite</a>
                     </div>
                 </div>
 

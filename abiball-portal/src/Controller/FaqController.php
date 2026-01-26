@@ -355,10 +355,15 @@ final class FaqController
 </style>
 
 <main class="bg-starfield">
+  <!-- Star layers -->
+  <div class="stars-layer-1"></div>
+  <div class="stars-layer-2"></div>
+  <div class="stars-layer-3"></div>
+
   <div class="container py-5" style="max-width: 900px;">
 
     <div class="text-center mb-5">
-      <h1 class="h-serif mb-3" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
+      <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
         <span style="font-size: 70%;">Hilfe & Support</span><br>
         <span style="font-style: italic;">Häufige Fragen</span>
       </h1>
@@ -433,7 +438,7 @@ final class FaqController
     </div>
 
     <!-- Kontakt-Box -->
-    <div class="faq-contact-box">
+    <div class="faq-contact-box hover-float">
       <h4>Noch Fragen?</h4>
       <p class="text-muted mb-2">
         Falls du hier keine Antwort gefunden hast, kontaktiere uns gerne per E-Mail:

@@ -107,12 +107,17 @@ final class SeatingController
         Layout::header('Abiball – Sitzgruppen');
         ?>
         <main class="bg-starfield">
+          <!-- Star layers -->
+          <div class="stars-layer-1"></div>
+          <div class="stars-layer-2"></div>
+          <div class="stars-layer-3"></div>
+
           <div class="container py-4" style="max-width:1100px;">
 
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
               <div>
                 <div class="text-muted small" style="letter-spacing:.22em; text-transform:uppercase;">Sitzgruppen</div>
-                <h1 class="h-serif mb-1" style="font-size: clamp(28px, 3.5vw, 40px); font-weight: 300; line-height: 1.1;">
+                <h1 class="h-serif mb-1 reveal-text" style="font-size: clamp(28px, 3.5vw, 40px); font-weight: 300; line-height: 1.1;">
                   Gruppen verwalten
                 </h1>
                 <div class="text-muted" style="font-size:.95rem; line-height:1.6; max-width: 68ch;">
@@ -312,7 +317,7 @@ final class SeatingController
               <input type="hidden" name="payload" id="payload">
 
               <div class="text-muted" style="font-size:.9rem;">Änderungen werden erst nach „Speichern“ übernommen.</div>
-              <button class="btn btn-save-strong" type="submit">Speichern</button>
+              <button class="btn btn-save-strong btn-shimmer" type="submit">Speichern</button>
             </form>
 
           </div>

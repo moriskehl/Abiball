@@ -10,6 +10,44 @@ declare(strict_types=1);
 final class Config
 {
     // =========================================================================
+    // Event-Konfiguration
+    // =========================================================================
+
+    /** Das Datum des Abiballs (YYYY-MM-DD Format) */
+    public const EVENT_DATE = '2026-07-10';
+
+    /** Ob das Voting aktuell freigeschaltet ist */
+    public const VOTING_ENABLED = false;
+
+    /**
+     * Prüft ob das Voting aktuell geöffnet ist.
+     */
+    public static function isVotingOpen(): bool
+    {
+        return self::VOTING_ENABLED && self::isVotingChangeAllowed();
+    }
+
+    /**
+     * Prüft ob Voting-Änderungen noch erlaubt sind (bis 18:00 Uhr am Tag des Abiballs).
+     */
+    public static function isVotingChangeAllowed(): bool
+    {
+        $eventDate = new DateTime(self::EVENT_DATE);
+        $deadline = $eventDate->setTime(18, 0, 0);
+        $now = new DateTime();
+        
+        return $now < $deadline;
+    }
+
+    /**
+     * Prüft ob Voting-Ergebnisse sichtbar sein dürfen (erst nach der Deadline).
+     */
+    public static function areResultsVisible(): bool
+    {
+        return !self::isVotingChangeAllowed();
+    }
+
+    // =========================================================================
     // Dateipfade
     // =========================================================================
 

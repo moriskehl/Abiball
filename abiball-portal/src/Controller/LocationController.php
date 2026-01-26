@@ -65,10 +65,15 @@ final class LocationController
         </style>
 
         <main class="bg-starfield">
+          <!-- Star layers -->
+          <div class="stars-layer-1"></div>
+          <div class="stars-layer-2"></div>
+          <div class="stars-layer-3"></div>
+
           <div class="container py-5" style="max-width: 1100px;">
 
             <div class="text-center mx-auto" style="max-width: 820px; padding-top: 18px; padding-bottom: 24px;">
-              <h1 class="h-serif mb-3" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
+              <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
                 Location<br>
                 <span style="font-style: italic;"><?= htmlspecialchars($venueName) ?></span>
               </h1>
@@ -78,7 +83,7 @@ final class LocationController
               </p>
 
               <div class="d-flex justify-content-center gap-3 flex-wrap pt-2">
-                <a class="btn btn-cta btn-cta-lg" href="/">Zur Startseite</a>
+                <a class="btn btn-cta btn-cta-lg btn-shimmer" href="/">Zur Startseite</a>
               </div>
             </div>
 
@@ -132,13 +137,13 @@ final class LocationController
                         </p>
 
                         <div class="d-grid gap-2 mt-3">
-                          <a class="btn btn-cta" href="<?= htmlspecialchars($googleMap, ENT_QUOTES) ?>" target="_blank" rel="noopener">
+                          <a class="btn btn-cta btn-shimmer" href="<?= htmlspecialchars($googleMap, ENT_QUOTES) ?>" target="_blank" rel="noopener">
                             Google Maps
                           </a>
-                          <a class="btn btn-cta" href="<?= htmlspecialchars($appleMap, ENT_QUOTES) ?>" target="_blank" rel="noopener">
+                          <a class="btn btn-cta btn-shimmer" href="<?= htmlspecialchars($appleMap, ENT_QUOTES) ?>" target="_blank" rel="noopener">
                             Apple Karten
                           </a>
-                          <a class="btn btn-cta" href="<?= htmlspecialchars($waze, ENT_QUOTES) ?>" target="_blank" rel="noopener">
+                          <a class="btn btn-cta btn-shimmer" href="<?= htmlspecialchars($waze, ENT_QUOTES) ?>" target="_blank" rel="noopener">
                             Waze
                           </a>
                         </div>

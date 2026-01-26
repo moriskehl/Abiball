@@ -27,25 +27,7 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
     display: block;
     border-radius: 999px;
   }
-  .navbar-brand::after{
-    content:"";
-    position:absolute;
-    left: 50%;
-    top: 70%;
-    width: 120%;
-    height: 60%;
-    transform: translateX(-50%);
-    border-radius: 999px;
-    z-index: 1;
-    pointer-events: none;
-    background: transparent;
-    opacity: .9;
-    box-shadow:
-      0 12px 26px rgba(201,162,39,.16),
-      0 22px 58px rgba(201,162,39,.10);
-    filter: blur(10px);
-    mix-blend-mode: normal;
-  }
+  /* Navbar brand glow removed as per request */
 
   /* Rechte Elemente auf Mobile (Initialen + Toggle) */
   .navbar-right-mobile{
@@ -78,6 +60,14 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
     user-select:none;
   }
 
+  /* Smooth fade-out for focus/active states on touch devices */
+  button,
+  a,
+  .btn,
+  .navbar-toggler {
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+  }
+
   @media (max-width: 991.98px){
     /* Mobile: Toggle und Initialen außerhalb des Menüs anzeigen */
     .navbar-toggle-slot{ display:flex; }
@@ -86,6 +76,8 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
     .navbar-toggle-inmenu{ display:none !important; }
 
     .navbar .container{
+      display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
     }
 
@@ -97,6 +89,8 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
 
     .navbar-collapse{
       margin-top: .75rem;
+      width: 100%;
+      order: 4; /* Ensure it stays below brand/toggler */
     }
 
     #mainNavbar .navbar-nav{
@@ -207,6 +201,10 @@ $initials   = $isLoggedIn ? AuthContext::userInitials() : '';
 
         <li class="nav-item">
           <a class="nav-link" href="/faq.php">FAQ</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="/voting/result.php">Voting</a>
         </li>
 
         <!-- Desktop: Initialen und Toggle im Menü -->

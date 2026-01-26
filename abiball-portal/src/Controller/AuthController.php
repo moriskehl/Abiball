@@ -35,10 +35,15 @@ final class AuthController
         Layout::header('Abiball – Login');
         ?>
         <main class="bg-starfield">
+          <!-- Star layers -->
+          <div class="stars-layer-1"></div>
+          <div class="stars-layer-2"></div>
+          <div class="stars-layer-3"></div>
+
           <div class="container py-5" style="max-width: 1100px;">
 
             <div class="text-center mx-auto" style="max-width: 760px; padding-top: 18px; padding-bottom: 24px;">
-              <h1 class="h-serif mb-3" style="font-size: clamp(36px, 4.5vw, 58px); font-weight: 300; line-height: 1.05;">
+              <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 58px); font-weight: 300; line-height: 1.05;">
                 Gästelogin
               </h1>
 
@@ -81,7 +86,7 @@ final class AuthController
                   </div>
 
                   <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-save" type="submit">Einloggen</button>
+                    <button class="btn btn-save btn-shimmer" type="submit">Einloggen</button>
                     <a class="btn btn-outline-secondary" href="/">Zur Landing Page</a>
                   </div>
 

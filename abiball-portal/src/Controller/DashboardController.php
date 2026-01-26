@@ -74,6 +74,11 @@ final class DashboardController
         Layout::header('Abiball – Dashboard');
         ?>
         <main class="bg-starfield">
+          <!-- Star layers -->
+          <div class="stars-layer-1"></div>
+          <div class="stars-layer-2"></div>
+          <div class="stars-layer-3"></div>
+
           <div class="container py-4" style="max-width: 1100px;">
 
             <?php if ($pwOk !== ''): ?>
@@ -99,7 +104,7 @@ final class DashboardController
 
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
               <div>
-                <h1 class="h-serif mb-1" style="font-size: 2rem; font-weight: 300;">Dein Bereich</h1>
+                <h1 class="h-serif mb-1 reveal-text" style="font-size: 2rem; font-weight: 300;">Dein Bereich</h1>
                 <div class="text-muted" style="font-size:.95rem;">
                   Übersicht deiner Daten, Sitzgruppen und Zahlungsstand.
                 </div>
@@ -315,8 +320,13 @@ final class DashboardController
                 <!-- Zahlung -->
                 <div class="card mb-3">
                   <div class="card-body p-4">
-                    <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: 0.5rem;">Zahlung</div>
-                    <div class="h6 mb-3">Zahlungsübersicht</div>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                      <div>
+                        <div class="text-muted small" style="letter-spacing:.18em;text-transform:uppercase; margin-bottom: .5rem;">Zahlung</div>
+                        <div class="h6 mb-0">Zahlungsübersicht</div>
+                      </div>
+                      <a class="btn btn-outline-secondary btn-soft btn-sm" href="/zahlung.php">Verwalten</a>
+                    </div>
 
                     <div class="d-flex justify-content-between align-items-center">
                       <div class="text-muted">Gesamtpreis (Soll)</div>
@@ -478,6 +488,7 @@ final class DashboardController
                       <a class="btn btn-outline-secondary btn-soft" href="/seating/seating.php">Sitzgruppen</a>
                       <a class="btn btn-outline-secondary btn-soft disabled" href="#" tabindex="-1" aria-disabled="true">Essensbestellung</a>
                       <a class="btn btn-outline-secondary btn-soft" href="/zahlung.php">Zahlung</a>
+                      <a class="btn btn-outline-secondary btn-soft disabled" href="#" tabindex="-1" aria-disabled="true">Lehrer Voting</a>
                     </div>
                   </div>
                 </div>
