@@ -377,26 +377,7 @@ html:not(.dark) .stars-layer-3 {
   }
 }
 
-@keyframes shooting {
-  0% {
-    transform: translate(0, 0) rotate(35deg);
-    opacity: 0;
-  }
 
-  10% {
-    opacity: 1;
-  }
-
-  20% {
-    transform: translate(-300px, 200px) rotate(35deg);
-    opacity: 0;
-  }
-
-  100% {
-    transform: translate(-300px, 200px) rotate(35deg);
-    opacity: 0;
-  }
-}
 
 .stars-layer-1,
 .stars-layer-2,
@@ -475,35 +456,8 @@ html:not(.dark) .stars-layer-3 {
   animation: moveUp 200s linear infinite;
 }
 
-/* Shooting Stars (Dark Mode Only) */
-html.dark .stars-layer-1::before,
-html.dark .stars-layer-2::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 120px;
-  height: 2px;
-  background: linear-gradient(90deg, #fff, transparent);
-  animation: shooting 7s ease-in-out infinite;
-  opacity: 0;
-  border-radius: 100%;
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
-}
+/* Shooting Stars (Global Container - Dark Mode Only) */
 
-html.dark .stars-layer-1::before {
-  top: 30%;
-  left: 70%;
-  animation-delay: 1s;
-}
-
-html.dark .stars-layer-2::before {
-  top: 55%;
-  left: 85%;
-  animation-delay: 4s;
-  width: 150px;
-  background: linear-gradient(90deg, var(--gold), transparent);
-}
 
 
 
