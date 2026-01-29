@@ -104,6 +104,23 @@ final class LandingController
         <style>
           @media (max-width: 770px) {
             .countdown-seconds-box { display: none !important; }
+            
+            /* Force countdown to stay in one line and scale down */
+            .countdown-container {
+              flex-wrap: nowrap !important;
+              gap: 8px !important;
+            }
+            .countdown-box {
+              min-width: 0 !important;
+              padding: 8px 4px !important;
+              flex: 1;
+            }
+            .countdown-box > div:first-child {
+              font-size: 1.5rem !important; /* Smaller number */
+            }
+            .countdown-box > div:last-child {
+              font-size: 0.6rem !important; /* Smaller label */
+            }
           }
         </style>
 
@@ -114,15 +131,16 @@ final class LandingController
           <div class="stars-layer-3"></div>
 
           <div class="container py-5" style="max-width: 1100px;">
-            <div class="text-center mx-auto" style="max-width: 820px; padding-top: 24px; padding-bottom: 28px;">
+            <div class="text-center mx-auto" style="max-width: 900px; padding-top: 24px; padding-bottom: 28px;">
 
-              <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(42px, 5.5vw, 86px); font-weight: 300; line-height: .95;">
-                Abiball<br>
-                <span style="font-style: italic;">Ein Abend der Eleganz</span>
-              </h1>
-
+              <div class="glass-hero-header mb-4 animate-fade-up">
+                <h1 class="h-serif m-0 reveal-text" style="font-size: clamp(42px, 5.5vw, 86px); font-weight: 300; line-height: .95;">
+                  Abiball<br>
+                  <span style="font-style: italic;">Ein Abend der Eleganz</span>
+                </h1>
+              
               <!-- Countdown Timer -->
-              <div class="countdown-container mb-4 animate-fade-up delay-100" style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+              <div class="countdown-container mt-4 mb-4 animate-fade-up delay-100" style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
                 <div class="countdown-box" style="min-width: 80px; padding: 12px 16px; border-radius: 12px; background: rgba(201,162,39,.08); border: 1px solid rgba(201,162,39,.2);">
                   <div id="countdown-days" style="font-size: 2rem; font-weight: 600; color: var(--gold); line-height: 1;">--</div>
                   <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text); opacity: 0.6; margin-top: 4px;">Tage</div>
@@ -188,6 +206,7 @@ final class LandingController
                   <?php endif; ?>
                 </div>
               </div>
+            </div> <!-- Closing glass-hero-header -->
 
             </div>
 

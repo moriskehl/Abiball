@@ -23,6 +23,17 @@ final class Request
 
     public static function ip(): string
     {
+        // Cloudflare
+        if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+            return (string)$_SERVER['HTTP_CF_CONNECTING_IP'];
+        }
+
+        // X-Forwarded-For (Standard Proxy)
+        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $list = explode(',', (string)$_SERVER['HTTP_X_FORWARDED_FOR']);
+            return trim($list[0]);
+        }
+
         return (string)($_SERVER['REMOTE_ADDR'] ?? 'unknown');
     }
 }

@@ -192,22 +192,18 @@ hr {
 /* Theme transitions (global) */
 html,
 body,
-.bg-starfield,
-.navbar,
-footer,
-.card,
-.table,
-.form-control,
-.btn,
-.alert,
-.dropdown-menu,
-.list-group-item {
+*,
+*::before,
+*::after {
   transition:
     background-color var(--theme-transition),
     color var(--theme-transition),
     border-color var(--theme-transition),
     box-shadow var(--theme-transition),
     filter var(--theme-transition),
+    fill var(--theme-transition),
+    stroke var(--theme-transition),
+    text-decoration-color var(--theme-transition),
     opacity var(--theme-transition);
 }
 
@@ -271,21 +267,62 @@ html.dark .accordion-button::after {
 /* Better: use custom SVG globally if desired, but this simple fix handles text color */
 
 /* =========================================================
-   Premium Background (STATIC)
+   Premium Background (Redesigned)
+   Light: Marble + Gold Geometry
+   Dark:  Deep Space + Stars
    ========================================================= */
 .bg-starfield {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  background: var(--bg);
+  /* Light Mode Base */
+  background-color: #fbfbfd;
 }
 
-.bg-starfield::before {
+html:not(.dark) .bg-starfield::before {
+  /* Light Mode Layer 1: Static Gold/Marble Veins */
   content: "";
   position: absolute;
-  inset: -15%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   z-index: 0;
+
+  /* User Texture - Static & Premium */
+  background-image: url('/images/marble-bg.png');
+  background-repeat: repeat;
+  background-position: top left;
+
+  /* Mobile: 50% of width visible (Zoomed In) -> Image width = 200% of container */
+  background-size: 200% auto;
+  opacity: 1;
+}
+
+/* Desktop: 1.5 tiles horizontal -> 100% / 1.5 = ~66.66% width */
+@media (min-width: 992px) {
+  html:not(.dark) .bg-starfield::before {
+    background-size: 66.667% auto;
+  }
+}
+
+
+
+
+
+
+/* Dark Mode Overrides - Restore Stars */
+html.dark .bg-starfield {
+  background: var(--landing-grad);
+}
+
+html.dark .bg-starfield::before {
+  /* Glows */
+  inset: -15%;
+  width: auto;
+  height: auto;
+  filter: blur(.25px);
+  animation: none;
   background:
     radial-gradient(var(--glow1-w) var(--glow1-h) at var(--glow-x) var(--glow-y),
       var(--glow-color-1),
@@ -297,29 +334,21 @@ html.dark .accordion-button::after {
       transparent 58%,
       rgba(0, 51, 153, .04) 100%);
   opacity: .90;
-  filter: blur(.25px);
-}
-
-.bg-starfield::after {
-  content: "";
-  position: absolute;
-  inset: -20%;
-  pointer-events: none;
-  z-index: 0;
-  /* Light mode: Stronger gold stars */
-  background-image:
-    radial-gradient(circle, rgba(176, 137, 29, .5) 0.8px, transparent 1.8px),
-    radial-gradient(circle, rgba(176, 137, 29, .3) 0.6px, transparent 1.6px);
-  background-size: 700px 700px, 900px 900px;
-  background-position: 120px 180px, 420px 260px;
-  opacity: .75;
 }
 
 html.dark .bg-starfield::after {
-  /* Dark mode: Lighter gold and white stars */
+  /* Static Stars */
+  inset: -20%;
+  width: auto;
+  height: auto;
+  mask-image: none;
+  -webkit-mask-image: none;
   background-image:
     radial-gradient(circle, rgba(201, 162, 39, .4) 0.8px, transparent 1.8px),
     radial-gradient(circle, rgba(255, 255, 255, .4) 0.8px, transparent 1.8px);
+  background-size: 700px 700px, 900px 900px;
+  background-position: 120px 180px, 420px 260px;
+  animation: none;
   opacity: .5;
 }
 
@@ -328,8 +357,15 @@ html.dark .bg-starfield::after {
   z-index: 1;
 }
 
+/* Hide star layers in Light Mode, show in Dark */
+html:not(.dark) .stars-layer-1,
+html:not(.dark) .stars-layer-2,
+html:not(.dark) .stars-layer-3 {
+  display: none !important;
+}
+
 /* =========================================================
-   Animated Starfield Background
+   Animated Starfield Background (Dark Mode Only)
    ========================================================= */
 @keyframes moveUp {
   from {
@@ -362,17 +398,22 @@ html.dark .bg-starfield::after {
   height: 1px;
   background: transparent;
   box-shadow:
-    124px 345px var(--star-color),
-    1746px 234px var(--star-color),
-    432px 876px var(--star-color),
-    890px 123px var(--star-color),
-    1678px 876px var(--star-color),
-    234px 678px var(--star-color),
-    456px 167px var(--star-color),
-    1234px 543px var(--star-color),
-    678px 1234px var(--star-color),
-    150px 800px var(--star-color),
-    900px 300px var(--star-color);
+    124px 345px var(--star-color), 1746px 234px var(--star-color), 432px 876px var(--star-color),
+    890px 123px var(--star-color), 1678px 876px var(--star-color), 234px 678px var(--star-color),
+    456px 167px var(--star-color), 1234px 543px var(--star-color), 678px 1234px var(--star-color),
+    150px 800px var(--star-color), 900px 300px var(--star-color), 50px 50px var(--star-color),
+    1900px 100px var(--star-color), 100px 900px var(--star-color), 1500px 500px var(--star-color),
+    600px 600px var(--star-color), 300px 1100px var(--star-color), 1100px 200px var(--star-color),
+    1300px 800px var(--star-color), 700px 400px var(--star-color), 200px 200px var(--star-color),
+    1800px 900px var(--star-color), 1600px 100px var(--star-color), 400px 400px var(--star-color),
+    1400px 700px var(--star-color), 800px 800px var(--star-color), 1000px 1000px var(--star-color),
+    20px 1200px var(--star-color), 1950px 1150px var(--star-color), 550px 50px var(--star-color),
+    1700px 1200px var(--star-color), 250px 1050px var(--star-color), 1350px 350px var(--star-color),
+    950px 650px var(--star-color), 50px 1250px var(--star-color), 1850px 450px var(--star-color),
+    450px 950px var(--star-color), 1150px 150px var(--star-color), 1550px 750px var(--star-color),
+    350px 250px var(--star-color), 1250px 1250px var(--star-color), 750px 550px var(--star-color),
+    2000px 50px var(--star-color), 100px 1200px var(--star-color), 1900px 300px var(--star-color),
+    650px 850px var(--star-color), 1450px 950px var(--star-color), 850px 150px var(--star-color);
   animation: moveUp 100s linear infinite;
 }
 
@@ -381,14 +422,18 @@ html.dark .bg-starfield::after {
   height: 2px;
   background: transparent;
   box-shadow:
-    453px 765px var(--star-color),
-    1234px 432px var(--star-color),
-    678px 1234px var(--star-color),
-    1567px 876px var(--star-color),
-    345px 890px var(--star-color),
-    987px 234px var(--star-color),
-    1876px 543px var(--star-color),
-    543px 210px var(--star-color);
+    453px 765px var(--star-color), 1234px 432px var(--star-color), 678px 1234px var(--star-color),
+    1567px 876px var(--gold), 345px 890px var(--star-color), 987px 234px var(--star-color),
+    1876px 543px var(--star-color), 543px 210px var(--star-color), 100px 100px var(--gold),
+    1600px 1100px var(--star-color), 200px 900px var(--star-color), 1400px 200px var(--star-color),
+    800px 600px var(--star-color), 400px 1200px var(--gold), 1800px 400px var(--star-color),
+    1200px 800px var(--star-color), 600px 300px var(--star-color), 1000px 1000px var(--star-color),
+    1950px 50px var(--star-color), 50px 1250px var(--star-color), 1300px 700px var(--gold),
+    1500px 150px var(--star-color), 300px 650px var(--star-color), 900px 1150px var(--star-color),
+    1700px 950px var(--star-color), 650px 50px var(--gold), 1100px 450px var(--star-color),
+    250px 350px var(--star-color), 1350px 1250px var(--star-color), 750px 850px var(--star-color),
+    150px 450px var(--star-color), 1850px 1250px var(--gold), 950px 50px var(--star-color),
+    550px 950px var(--star-color), 1650px 350px var(--star-color), 50px 550px var(--star-color);
   animation: moveUp 150s linear infinite;
 }
 
@@ -397,26 +442,49 @@ html.dark .bg-starfield::after {
   height: 3px;
   background: transparent;
   box-shadow:
-    678px 345px var(--star-color),
-    123px 876px var(--star-color),
-    1456px 234px var(--star-color),
-    345px 1678px var(--star-color),
-    1678px 456px var(--star-color),
-    789px 098px var(--star-color),
-    234px 567px var(--star-color);
+    678px 345px var(--star-color), 1432px 876px var(--star-color), 234px 1098px var(--gold),
+    876px 123px var(--star-color), 1654px 543px var(--star-color), 432px 654px var(--star-color),
+    123px 765px var(--gold), 1876px 234px var(--star-color), 987px 987px var(--star-color),
+    200px 200px var(--star-color), 1700px 1100px var(--gold), 500px 800px var(--star-color),
+    1300px 300px var(--star-color), 800px 1200px var(--star-color), 1500px 600px var(--gold),
+    300px 500px var(--star-color), 1100px 900px var(--star-color), 1900px 100px var(--star-color),
+    600px 1000px var(--gold), 1400px 400px var(--star-color), 50px 50px var(--star-color),
+    1950px 1250px var(--star-color), 150px 1150px var(--gold), 1600px 750px var(--star-color),
+    750px 150px var(--star-color), 1050px 650px var(--star-color), 550px 1350px var(--star-color);
   animation: moveUp 200s linear infinite;
 }
 
-.bg-starfield {
-  position: relative;
-  overflow: hidden;
-  background: var(--landing-grad);
+
+
+
+
+/* =========================================================
+   Glass Hero Header
+   ========================================================= */
+.glass-hero-header {
+  display: block;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+
+  /* Light Mode Appearance */
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  border-radius: var(--radius);
+  padding: 2.5rem 4rem;
+  box-shadow: 0 16px 48px rgba(201, 162, 39, 0.22);
 }
 
-.bg-starfield::before {
-  /* Retain existing gradient glows if desired, or let the new background take over. 
-     Keeping it minimal so stars pop. */
-  opacity: 0.4;
+/* Dark Mode Appearance */
+html.dark .glass-hero-header {
+  background: rgba(7, 7, 10, 0.3);
+  backdrop-filter: blur(5px) brightness(1.2);
+  -webkit-backdrop-filter: blur(5px) brightness(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+  padding: 2.5rem 4rem;
 }
 
 /* =========================================================
@@ -535,7 +603,7 @@ html.dark .navbar,
   font-weight: 600;
   font-size: .9rem;
   color: var(--text) !important;
-  transition: transform 0.3s ease, filter 0.3s ease;
+  transition: transform 0.3s ease, filter 0.3s ease, color var(--theme-transition);
 }
 
 .navbar-brand:hover {
@@ -581,7 +649,7 @@ html.dark .navbar,
 .navbar a,
 footer a {
   text-decoration: none !important;
-  transition: color .15s ease;
+  transition: color var(--theme-transition);
 }
 
 .navbar a:hover,
@@ -703,7 +771,7 @@ html.dark footer {
   color: var(--gold) !important;
   transform: translateY(-2px);
 }
-}
+
 
 /* Theme toggle icon fix */
 #themeToggleBtn svg {
