@@ -68,6 +68,9 @@ function renderPage(string $state, array $data): void
           })();
         </script>
 
+        <!-- Standard Styles -->
+        <link rel="stylesheet" href="/assets/css/style.css">
+
         <style>
             :root{
                 --bg:#fbfbfd;
@@ -104,32 +107,11 @@ function renderPage(string $state, array $data): void
                 background:var(--bg);
             }
 
-            .bg{
+            .bg-custom-scanner{
                 min-height:100%;
                 position:relative;
                 overflow:hidden;
                 padding: 18px 16px 22px 16px;
-            }
-
-            .bg::before{
-                content:"";
-                position:absolute;
-                inset:-15%;
-                pointer-events:none;
-                z-index:0;
-                background:
-                    radial-gradient(760px 520px at 50% 22%, rgba(201,162,39,.14), transparent 62%),
-                    radial-gradient(980px 720px at 50% 42%, rgba(255,255,255,.08), transparent 70%),
-                    radial-gradient(1120px 860px at 50% 50%, transparent 58%, rgba(0,0,0,.10) 100%);
-                opacity:.9;
-            }
-
-            html.dark .bg::before{
-                background:
-                    radial-gradient(760px 520px at 50% 22%, rgba(201,162,39,.16), transparent 64%),
-                    radial-gradient(980px 720px at 50% 42%, rgba(201,162,39,.07), transparent 72%),
-                    radial-gradient(1120px 860px at 50% 50%, transparent 56%, rgba(0,0,0,.34) 100%);
-                opacity:.85;
             }
 
             .wrap{
@@ -412,8 +394,13 @@ function renderPage(string $state, array $data): void
             }
         </style>
     </head>
-    <body>
-        <div class="bg">
+    <body class="bg-starfield">
+        <!-- Star layers -->
+        <div class="stars-layer-1"></div>
+        <div class="stars-layer-2"></div>
+        <div class="stars-layer-3"></div>
+
+        <div class="bg-custom-scanner">
             <div class="wrap">
 
                 <!-- Header with dark mode toggle (no navigation links) -->

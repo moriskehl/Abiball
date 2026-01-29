@@ -411,6 +411,58 @@ final class ParticipantsRepository
     }
 
     /**
+     * Erstellt einen neuen Staff-Account (Food Helper oder Door).
+     */
+    public static function createStaffMember(string $name, string $loginCode, string $role): void
+    {
+        $name = self::normalizeName($name);
+        $loginCode = trim($loginCode);
+        $role = self::normalizeRole($role);
+
+        if ($name === '') throw new InvalidArgumentException('Name missing');
+        if ($loginCode === '') throw new InvalidArgumentException('Login code missing');
+        if (!in_array($role, ['FOOD_HELPER', 'DOOR'], true)) {
+            throw new InvalidArgumentException('Role must be FOOD_HELPER or DOOR');
+        }
+
+        // Generate unique ID based on role
+        $prefix = ($role === 'FOOD_HELPER') ? 'FOOD' : 'DOOR';
+        
+        $path = Config::participantsCsvPath();
+
+        CsvRepository::updateAssocAtomic($path, static function (array $header, array $rows) use ($name, $loginCode, $role, $prefix): array {
+            $header = self::ensureParticipantsHeader($header);
+
+            // Find next available number for this role
+            $max = 0;
+            $pattern = '/^' . preg_quote($prefix, '/') . '(\d+)$/i';
+            
+            foreach ($rows as $r) {
+                $id = trim((string)($r['id'] ?? ''));
+                if (preg_match($pattern, $id, $m)) {
+                    $n = (int)$m[1];
+                    if ($n > $max) $max = $n;
+                }
+            }
+            
+            $newId = $prefix . str_pad((string)($max + 1), 2, '0', STR_PAD_LEFT);
+
+            $rows[] = [
+                'id' => $newId,
+                'name' => $name,
+                'is_main' => '0',
+                'main_id' => '',
+                'login_code' => $loginCode,
+                'role' => $role,
+                'amount_paid' => '',
+                'amount_subsided' => '',
+            ];
+
+            return [$header, $rows];
+        }, ';');
+    }
+
+    /**
      * Erstellt einen neuen Begleiter fuer einen Hauptgast.
      * 
      * @return string Die generierte Begleiter-ID

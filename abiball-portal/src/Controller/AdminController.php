@@ -627,6 +627,80 @@ final class AdminController
         }
     }
 
+    /**
+     * Erstellt einen neuen Staff-Account (Food Helper oder Door).
+     */
+    public static function createStaff(): void
+    {
+        AdminContext::requireAdmin();
+
+        if (!Csrf::validate(Request::postString('_csrf'))) {
+            Response::redirect('/admin/admin_dashboard.php?err=csrf#staff');
+        }
+
+        $name = trim(Request::postString('name'));
+        $loginCode = trim(Request::postString('login_code'));
+        $role = trim(Request::postString('role'));
+
+        if ($name === '' || $loginCode === '' || !in_array($role, ['FOOD_HELPER', 'DOOR'], true)) {
+            Response::redirect('/admin/admin_dashboard.php?err=staff_missing_data#staff');
+        }
+
+        try {
+            ParticipantsRepository::createStaffMember($name, $loginCode, $role);
+
+            AdminAuditLogRepository::append('create_staff', [
+                'name' => $name,
+                'role' => $role,
+            ]);
+
+            Response::redirect('/admin/admin_dashboard.php?ok=staff_created#staff');
+        } catch (Throwable $e) {
+            Response::redirect('/admin/admin_dashboard.php?err=staff_create_failed#staff');
+        }
+    }
+
+    /**
+     * Löscht einen Staff-Account.
+     */
+    public static function deleteStaff(): void
+    {
+        AdminContext::requireAdmin();
+
+        if (!Csrf::validate(Request::postString('_csrf'))) {
+            Response::redirect('/admin/admin_dashboard.php?err=csrf#staff');
+        }
+
+        $id = trim(Request::postString('id'));
+
+        if ($id === '') {
+            Response::redirect('/admin/admin_dashboard.php?err=staff_id_missing#staff');
+        }
+
+        // Verify this is actually a staff member (FOOD_HELPER or DOOR)
+        $participant = ParticipantsRepository::findById($id);
+        if (!$participant || !in_array($participant['role'] ?? '', ['FOOD_HELPER', 'DOOR'], true)) {
+            Response::redirect('/admin/admin_dashboard.php?err=staff_not_found#staff');
+        }
+
+        try {
+            $name = $participant['name'] ?? '';
+            $role = $participant['role'] ?? '';
+
+            ParticipantsRepository::deleteParticipantById($id);
+
+            AdminAuditLogRepository::append('delete_staff', [
+                'id' => $id,
+                'name' => $name,
+                'role' => $role,
+            ]);
+
+            Response::redirect('/admin/admin_dashboard.php?ok=staff_deleted#staff');
+        } catch (Throwable $e) {
+            Response::redirect('/admin/admin_dashboard.php?err=staff_delete_failed#staff');
+        }
+    }
+
     /* ================================================
      * ADMIN-DASHBOARD
      * ================================================ */
@@ -743,6 +817,11 @@ final class AdminController
         Layout::header('Admin – Dashboard', '', '', true);
         ?>
         <main class="bg-starfield admin-dashboard">
+          <!-- Star layers -->
+          <div class="stars-layer-1"></div>
+          <div class="stars-layer-2"></div>
+          <div class="stars-layer-3"></div>
+          
           <div class="container py-4">
 
             <div class="admin-head d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -764,6 +843,8 @@ final class AdminController
                 <?php
                 echo match ($ok) {
                     'food_paid' => 'Essensbestellung als bezahlt markiert.',
+                    'staff_created' => 'Staff-Account angelegt.',
+                    'staff_deleted' => 'Staff-Account gelöscht.',
                     default => 'Gespeichert.'
                 };
                 ?>
@@ -796,6 +877,11 @@ final class AdminController
                     'food_order_not_found' => 'Essensbestellung nicht gefunden.',
                     'food_invalid_status' => 'Bestellung kann nicht mehr geändert werden (Status ungültig).',
                     'food_update_failed' => 'Essensbestellung aktualisieren fehlgeschlagen.',
+                    'staff_missing_data' => 'Name und Login-Code sind erforderlich.',
+                    'staff_create_failed' => 'Staff-Account anlegen fehlgeschlagen.',
+                    'staff_id_missing' => 'Staff-ID fehlt.',
+                    'staff_not_found' => 'Staff-Account nicht gefunden.',
+                    'staff_delete_failed' => 'Staff-Account löschen fehlgeschlagen.',
                     default => 'Fehler.'
                 };
                 ?>
@@ -838,6 +924,7 @@ final class AdminController
                         <option value="edit" selected>Teilnehmer & Paid bearbeiten</option>
                         <option value="seating">Sitzgruppen & Notizen</option>
                         <option value="food">Essensbestellungen</option>
+                        <option value="staff">Staff Zugangsdaten</option>
                         <option value="logs">Änderungsprotokoll</option>
                       </select>
                       <div class="text-muted small mt-2">
@@ -1588,6 +1675,161 @@ final class AdminController
               <?php endif; ?>
             </section>
 
+            <!-- Staff Credentials Section -->
+            <section class="admin-section" data-section="staff" id="staff" style="display:none;">
+              <div class="card admin-card mb-3">
+                <div class="card-body p-4">
+                  <div class="text-muted small admin-kicker">Personal</div>
+                  <div class="h6 mb-3">Staff Zugangsdaten</div>
+                  <p class="text-muted" style="font-size:.9rem;">Login-Codes für Essensausgabe- und Türpersonal.</p>
+
+                  <div class="row g-4">
+                    <!-- Food Helpers -->
+                    <div class="col-12 col-lg-6">
+                      <div class="admin-panel p-3">
+                        <div class="fw-semibold mb-3">🍽️ Essensausgabe (Food Helper)</div>
+                        <?php
+                        $foodHelpers = array_filter(ParticipantsRepository::all(), static function($p) {
+                            return strtoupper(trim((string)($p['role'] ?? ''))) === 'FOOD_HELPER';
+                        });
+                        if (empty($foodHelpers)): ?>
+                          <div class="text-muted mb-3">Keine Food Helper angelegt.</div>
+                        <?php else: ?>
+                          <table class="table table-sm mb-3">
+                            <thead>
+                              <tr>
+                                <th>Name</th>
+                                <th>ID</th>
+                                <th>Login-Code</th>
+                                <th></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <?php foreach ($foodHelpers as $fh): ?>
+                                <tr>
+                                  <td><?= e((string)($fh['name'] ?? '')) ?></td>
+                                  <td><code><?= e((string)($fh['id'] ?? '')) ?></code></td>
+                                  <td>
+                                    <?php
+                                    $code = (string)($fh['login_code'] ?? '');
+                                    $isHashed = str_starts_with($code, '$2y$');
+                                    ?>
+                                    <?php if ($isHashed): ?>
+                                      <span class="text-muted">(bcrypt-Hash)</span>
+                                    <?php else: ?>
+                                      <code class="text-success"><?= e($code) ?></code>
+                                    <?php endif; ?>
+                                  </td>
+                                  <td>
+                                    <form method="post" action="/admin/admin_delete_staff.php" class="d-inline" onsubmit="return confirm('Wirklich löschen?');">
+                                      <?= Csrf::inputField() ?>
+                                      <input type="hidden" name="id" value="<?= e((string)($fh['id'] ?? '')) ?>">
+                                      <button type="submit" class="btn btn-sm btn-outline-danger">×</button>
+                                    </form>
+                                  </td>
+                                </tr>
+                              <?php endforeach; ?>
+                            </tbody>
+                          </table>
+                        <?php endif; ?>
+
+                        <!-- Create Food Helper Form -->
+                        <div class="border-top pt-3 mt-2">
+                          <div class="text-muted small mb-2">Neuer Food Helper</div>
+                          <form method="post" action="/admin/admin_create_staff.php" class="row g-2">
+                            <?= Csrf::inputField() ?>
+                            <input type="hidden" name="role" value="FOOD_HELPER">
+                            <div class="col-12">
+                              <input class="form-control form-control-sm" name="name" placeholder="Name" required>
+                            </div>
+                            <div class="col-12">
+                              <input class="form-control form-control-sm" name="login_code" placeholder="Login-Code" required>
+                            </div>
+                            <div class="col-12">
+                              <button class="btn btn-sm btn-save" type="submit">Anlegen</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Door Staff -->
+                    <div class="col-12 col-lg-6">
+                      <div class="admin-panel p-3">
+                        <div class="fw-semibold mb-3">🚪 Türkontrolle (Door Staff)</div>
+                        <?php
+                        $doorStaff = array_filter(ParticipantsRepository::all(), static function($p) {
+                            return strtoupper(trim((string)($p['role'] ?? ''))) === 'DOOR';
+                        });
+                        if (empty($doorStaff)): ?>
+                          <div class="text-muted mb-3">Kein Türpersonal angelegt.</div>
+                        <?php else: ?>
+                          <table class="table table-sm mb-3">
+                            <thead>
+                              <tr>
+                                <th>Name</th>
+                                <th>ID</th>
+                                <th>Login-Code</th>
+                                <th></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <?php foreach ($doorStaff as $ds): ?>
+                                <tr>
+                                  <td><?= e((string)($ds['name'] ?? '')) ?></td>
+                                  <td><code><?= e((string)($ds['id'] ?? '')) ?></code></td>
+                                  <td>
+                                    <?php
+                                    $code = (string)($ds['login_code'] ?? '');
+                                    $isHashed = str_starts_with($code, '$2y$');
+                                    ?>
+                                    <?php if ($isHashed): ?>
+                                      <span class="text-muted">(bcrypt-Hash)</span>
+                                    <?php else: ?>
+                                      <code class="text-success"><?= e($code) ?></code>
+                                    <?php endif; ?>
+                                  </td>
+                                  <td>
+                                    <form method="post" action="/admin/admin_delete_staff.php" class="d-inline" onsubmit="return confirm('Wirklich löschen?');">
+                                      <?= Csrf::inputField() ?>
+                                      <input type="hidden" name="id" value="<?= e((string)($ds['id'] ?? '')) ?>">
+                                      <button type="submit" class="btn btn-sm btn-outline-danger">×</button>
+                                    </form>
+                                  </td>
+                                </tr>
+                              <?php endforeach; ?>
+                            </tbody>
+                          </table>
+                        <?php endif; ?>
+
+                        <!-- Create Door Staff Form -->
+                        <div class="border-top pt-3 mt-2">
+                          <div class="text-muted small mb-2">Neues Türpersonal</div>
+                          <form method="post" action="/admin/admin_create_staff.php" class="row g-2">
+                            <?= Csrf::inputField() ?>
+                            <input type="hidden" name="role" value="DOOR">
+                            <div class="col-12">
+                              <input class="form-control form-control-sm" name="name" placeholder="Name" required>
+                            </div>
+                            <div class="col-12">
+                              <input class="form-control form-control-sm" name="login_code" placeholder="Login-Code" required>
+                            </div>
+                            <div class="col-12">
+                              <button class="btn btn-sm btn-save" type="submit">Anlegen</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="text-muted small mt-3">
+                    Hinweis: Wenn der Login-Code als "(bcrypt-Hash)" angezeigt wird, ist das Passwort verschlüsselt gespeichert und kann nicht mehr angezeigt werden.
+                  </div>
+                </div>
+              </div>
+            </section>
+
           </div>
         </main>
 
@@ -1616,7 +1858,7 @@ final class AdminController
 
             function init(){
               const hash = (location.hash || '').replace('#','').trim();
-              const valid = ['create','ovr','edit','seating','food','logs'];
+              const valid = ['create','ovr','edit','seating','food','staff','logs'];
               const start = valid.includes(hash) ? hash : (sel ? sel.value : 'edit');
               if (sel) sel.value = start;
               show(start);
