@@ -207,7 +207,7 @@ Layout::header('Türkontrolle – Scanner');
             border-top: 1px solid rgba(11,11,15,.14);
         }
 
-        html[data-theme="dark"] .result-details {
+        html.dark .result-details {
             border-top-color: rgba(243,243,246,.14);
         }
 
@@ -290,6 +290,11 @@ Layout::header('Türkontrolle – Scanner');
 
 <div id="door-scanner-container">
 <main class="bg-starfield">
+  <!-- Star layers -->
+  <div class="stars-layer-1"></div>
+  <div class="stars-layer-2"></div>
+  <div class="stars-layer-3"></div>
+
   <div class="container py-5" style="max-width: 800px;">
 
     <div class="text-center mx-auto mb-4" style="max-width: 760px;">

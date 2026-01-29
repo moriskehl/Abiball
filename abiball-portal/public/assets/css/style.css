@@ -832,10 +832,40 @@ html.dark footer {
   background: transparent;
   border-radius: .75rem;
   width: 100%;
+  color: var(--text);
+}
+
+.zahl-acc .accordion-button:not(.collapsed) {
+  color: var(--text);
+  background: transparent;
+  box-shadow: none;
+}
+
+.zahl-acc .accordion-button::after {
+  filter: var(--accordion-icon-filter, none);
+}
+
+html.dark .zahl-acc .accordion-button::after {
+  filter: invert(1) brightness(0.9);
 }
 
 .zahl-acc .accordion-button:focus {
   box-shadow: none;
+}
+
+.zahl-acc .accordion-body {
+  color: var(--text);
+}
+
+.zahl-acc .accordion-body a {
+  color: var(--primary);
+}
+
+.zahl-acc .accordion-body code {
+  color: var(--text);
+  background: rgba(201, 162, 39, .12);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 /* =========================================================
@@ -1012,7 +1042,8 @@ html.dark footer {
    Premium CTA Button (anchor-safe)
    ========================================================= */
 a.btn-cta,
-a.btn-cta:visited {
+a.btn-cta:visited,
+button.btn-cta {
   position: relative;
   isolation: isolate;
   background: rgba(255, 255, 255, 0.6) !important;
@@ -1034,17 +1065,22 @@ a.btn-cta:visited {
     box-shadow 260ms ease,
     transform 120ms ease;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+  cursor: pointer;
 }
 
 html.dark a.btn-cta,
-.dark a.btn-cta {
+.dark a.btn-cta,
+html.dark button.btn-cta,
+.dark button.btn-cta {
   background: rgba(255, 255, 255, 0.04) !important;
   border-color: rgba(255, 255, 255, .15) !important;
   color: #f3f3f6 !important;
 }
 
 a.btn-cta:hover,
-a.btn-cta:focus-visible {
+a.btn-cta:focus-visible,
+button.btn-cta:hover,
+button.btn-cta:focus-visible {
   text-decoration: none !important;
   transform: translateY(-1px);
   background: linear-gradient(135deg, rgba(201, 162, 39, .18), rgba(11, 11, 15, .02)) !important;
@@ -1057,25 +1093,30 @@ a.btn-cta:focus-visible {
 }
 
 html.dark a.btn-cta:hover,
-html.dark a.btn-cta:focus-visible {
+html.dark a.btn-cta:focus-visible,
+html.dark button.btn-cta:hover,
+html.dark button.btn-cta:focus-visible {
   box-shadow:
     0 18px 44px rgba(0, 0, 0, .40),
     0 10px 26px rgba(201, 162, 39, .18),
     inset 0 0 0 1px rgba(255, 255, 255, .10);
 }
 
-a.btn-cta:active {
+a.btn-cta:active,
+button.btn-cta:active {
   transform: translateY(0);
   box-shadow: 0 10px 24px var(--cta-glow);
 }
 
-a.btn-cta:focus-visible {
+a.btn-cta:focus-visible,
+button.btn-cta:focus-visible {
   outline: none;
   box-shadow: var(--focus), 0 14px 34px var(--cta-glow);
 }
 
 /* Navbar compact CTA */
-a.btn-cta.btn-cta-sm {
+a.btn-cta.btn-cta-sm,
+button.btn-cta.btn-cta-sm {
   padding: 0 1.2rem !important;
   height: 44px;
   display: inline-flex;
@@ -1087,6 +1128,13 @@ a.btn-cta.btn-cta-sm {
   letter-spacing: normal;
   text-transform: none;
   /* Keep it natural */
+}
+
+/* Large CTA button for login forms */
+button.btn-cta.btn-cta-lg {
+  padding: .85rem 2rem !important;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
 /* =========================================================

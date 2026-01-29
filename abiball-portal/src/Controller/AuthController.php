@@ -86,9 +86,9 @@ final class AuthController
                   </div>
 
                   <div class="d-grid gap-3">
-                    <button class="btn btn-primary btn-shimmer py-3 fw-bold" type="submit" style="font-size: 1.1rem;">Einloggen</button>
-                    <a class="btn btn-ghost text-muted" href="/">Zurück zur Startseite</a>
-                  </div>
+                <button class="btn btn-cta btn-cta-lg" type="submit">Einloggen</button>
+                <a class="btn btn-ghost text-muted" href="/">Zurück zur Startseite</a>
+              </div>
 
                   <div class="text-muted small" style="line-height: 1.6;">
                     Hinweis: Der Login-Code wird vom Organisationsteam vergeben. Bitte prüfe Groß-/Kleinschreibung und Sonderzeichen.

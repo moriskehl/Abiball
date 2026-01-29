@@ -48,9 +48,16 @@ Layout::header('Bon-Validierung');
 ?>
 
 <main class="bg-starfield">
+  <!-- Star layers -->
+  <div class="stars-layer-1"></div>
+  <div class="stars-layer-2"></div>
+  <div class="stars-layer-3"></div>
+
   <div class="container py-5" style="max-width: 600px;">
-    <div class="text-center mb-4">
-      <h1 class="h-serif" style="font-size: 2.5rem;">Bon-Validierung</h1>
+    <div class="glass-hero-header sm mb-5 animate-fade-up text-center mx-auto" style="max-width: 560px;">
+      <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 58px); font-weight: 300; line-height: 1.05;">
+        Bon-Validierung
+      </h1>
     </div>
 
     <div class="card">

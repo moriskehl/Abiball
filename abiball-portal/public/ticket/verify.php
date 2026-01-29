@@ -57,18 +57,13 @@ function renderPage(string $state, array $data): void
         <script>
           (function () {
             try {
-              var saved = localStorage.getItem('abiball_theme'); // 'dark'|'light'|null
-              if (saved === 'dark' || saved === 'light') {
-                document.documentElement.setAttribute('data-theme', saved);
-              } else {
-                // system default
-                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-              }
+              var saved = localStorage.getItem('theme'); // 'dark'|'light'|null
+              var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+              var theme = (saved === 'dark' || saved === 'light') ? saved : (prefersDark ? 'dark' : 'light');
+              document.documentElement.classList.toggle('dark', theme === 'dark');
             } catch (e) {
-              // fallback: system
               var prefersDark2 = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-              document.documentElement.setAttribute('data-theme', prefersDark2 ? 'dark' : 'light');
+              document.documentElement.classList.toggle('dark', prefersDark2);
             }
           })();
         </script>
@@ -90,8 +85,8 @@ function renderPage(string $state, array $data): void
                 --radius:18px;
             }
 
-            /* Dark mode is controlled by data-theme, not by OS only */
-            html[data-theme="dark"]{
+            /* Dark mode via html.dark class */
+            html.dark{
                 --bg:#07070a;
                 --surface:rgba(18,18,24,.84);
                 --surface2:rgba(18,18,24,.62);
@@ -129,7 +124,7 @@ function renderPage(string $state, array $data): void
                 opacity:.9;
             }
 
-            html[data-theme="dark"] .bg::before{
+            html.dark .bg::before{
                 background:
                     radial-gradient(760px 520px at 50% 22%, rgba(201,162,39,.16), transparent 64%),
                     radial-gradient(980px 720px at 50% 42%, rgba(201,162,39,.07), transparent 72%),
@@ -216,7 +211,7 @@ function renderPage(string $state, array $data): void
                 font-size: .72rem;
             }
 
-            html[data-theme="dark"] .toggle{
+            html.dark .toggle{
                 background: rgba(243,243,246,.08);
             }
 
@@ -244,7 +239,7 @@ function renderPage(string $state, array $data): void
                 box-shadow: 0 6px 14px rgba(0,0,0,.18);
             }
 
-            html[data-theme="dark"] .toggle .knob::after{
+            html.dark .toggle .knob::after{
                 left: 18px;
             }
 
@@ -306,7 +301,7 @@ function renderPage(string $state, array $data): void
                 background: rgba(11,11,15,.06);
                 color: var(--text);
             }
-            html[data-theme="dark"] .pill{ background: rgba(243,243,246,.08); }
+            html.dark .pill{ background: rgba(243,243,246,.08); }
 
             .pill-ok{
                 border-color: rgba(43,212,125,.35);
@@ -337,7 +332,7 @@ function renderPage(string $state, array $data): void
                 border-radius: 14px;
                 background: rgba(255,255,255,.42);
             }
-            html[data-theme="dark"] .row{ background: rgba(255,255,255,.03); }
+            html.dark .row{ background: rgba(255,255,255,.03); }
 
             .label{
                 color:var(--muted);
@@ -511,20 +506,18 @@ function renderPage(string $state, array $data): void
             var label = document.getElementById('themeLabel');
 
             function currentTheme() {
-              var t = document.documentElement.getAttribute('data-theme');
-              return (t === 'dark' || t === 'light') ? t : 'light';
+              return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
             }
 
             function syncLabel() {
               var t = currentTheme();
-              // Button shows the mode that will be activated on click
               label.textContent = (t === 'dark') ? 'Light' : 'Dark';
               btn.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
             }
 
             function setTheme(t) {
-              document.documentElement.setAttribute('data-theme', t);
-              try { localStorage.setItem('abiball_theme', t); } catch (e) {}
+              document.documentElement.classList.toggle('dark', t === 'dark');
+              try { localStorage.setItem('theme', t); } catch (e) {}
               syncLabel();
             }
 
