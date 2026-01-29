@@ -53,18 +53,17 @@ final class VotingController
             <div class="stars-layer-2"></div>
             <div class="stars-layer-3"></div>
             
-            <div class="container py-4" style="max-width: 800px;">
-                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
-                    <div>
-                        <div class="text-muted small" style="letter-spacing:.22em; text-transform:uppercase;">Abstimmung</div>
-                        <h1 class="h-serif mb-1 reveal-text" style="font-size: clamp(28px, 3.5vw, 40px); font-weight: 300; line-height: 1.1;">
-                            Lehrer Voting
-                        </h1>
-                        <div class="text-muted" style="font-size:.95rem; line-height:1.6; max-width: 68ch;">
-                            <?= $isUpdate ? 'Du kannst deine Auswahl noch ändern.' : 'Wähle deine Favoriten in jeder Kategorie.' ?>
-                        </div>
+            <div class="container py-0 px-3 px-sm-4" style="max-width: 1100px;">
+                <div class="text-center mx-auto" style="max-width: 820px; padding-top: 18px; padding-bottom: 24px;">
+                    <div class="glass-hero-header sm mb-5 animate-fade-up">
+                      <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
+                        <span style="font-size: 70%;">Abstimmung</span><br>
+                        <span style="font-style: italic;">Lehrer Voting</span>
+                      </h1>
+                      <p class="text-muted mt-3" style="max-width: 600px; margin: 0 auto; font-size: 1.05rem; line-height: 1.7;">
+                        <?= $isUpdate ? 'Du kannst deine Auswahl noch ändern.' : 'Wähle deine Favoriten in jeder Kategorie.' ?>
+                      </p>
                     </div>
-                    <a class="btn btn-outline-secondary btn-soft" href="/dashboard.php">Zurück</a>
                 </div>
 
                 <div class="card">
@@ -233,7 +232,8 @@ final class VotingController
     public static function listResults(): void
     {
         Bootstrap::init();
-        AuthContext::requireLogin('/login.php');
+        // Public access allowed for results page
+        // AuthContext::requireLogin('/login.php');
 
         $resultsVisible = Config::areResultsVisible();
         $results = $resultsVisible ? VotingService::getResults() : [];
@@ -252,22 +252,21 @@ final class VotingController
             <div class="stars-layer-2"></div>
             <div class="stars-layer-3"></div>
 
-            <div class="container py-4" style="max-width: 900px;">
-                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
-                    <div>
-                        <div class="text-muted small" style="letter-spacing:.22em; text-transform:uppercase;">Abstimmung</div>
-                        <h1 class="h-serif mb-1 reveal-text" style="font-size: clamp(28px, 3.5vw, 40px); font-weight: 300; line-height: 1.1;">
-                            Die Ergebnisse
-                        </h1>
-                        <div class="text-muted" style="font-size:.95rem; line-height:1.6; max-width: 68ch;">
+            <div class="container py-0 px-3 px-sm-4" style="max-width: 1100px;">
+                <div class="text-center mx-auto" style="max-width: 820px; padding-top: 18px; padding-bottom: 24px;">
+                    <div class="glass-hero-header sm mb-5 animate-fade-up">
+                      <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
+                        <span style="font-size: 70%;">Abstimmung</span><br>
+                        <span style="font-style: italic;">Die Ergebnisse</span>
+                      </h1>
+                      <p class="text-muted mt-3" style="max-width: 600px; margin: 0 auto; font-size: 1.05rem; line-height: 1.7;">
                             <?php if ($resultsVisible): ?>
                                 Top 5 Platzierungen pro Kategorie
                             <?php else: ?>
                                 Spannung bis zum Schluss!
                             <?php endif; ?>
-                        </div>
+                      </p>
                     </div>
-                    <a class="btn btn-outline-secondary btn-soft" href="/dashboard.php">Zurück</a>
                 </div>
 
                 <?php if (!$resultsVisible): ?>

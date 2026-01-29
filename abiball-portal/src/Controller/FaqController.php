@@ -230,7 +230,7 @@ final class FaqController
         ?>
 <style>
 .faq-search-container {
-    max-width: 600px;
+    max-width: 100%;
     margin: 0 auto 2rem auto;
 }
 
@@ -360,9 +360,9 @@ final class FaqController
   <div class="stars-layer-2"></div>
   <div class="stars-layer-3"></div>
 
-  <div class="container py-5" style="max-width: 900px;">
+  <div class="container py-5" style="max-width: 1100px;">
 
-    <div class="text-center mb-5">
+    <div class="glass-hero-header sm mb-5 animate-fade-up text-center">
       <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
         <span style="font-size: 70%;">Hilfe & Support</span><br>
         <span style="font-style: italic;">Häufige Fragen</span>
@@ -372,8 +372,9 @@ final class FaqController
       </p>
     </div>
 
-    <!-- Suchfeld -->
-    <div class="faq-search-container">
+    <div class="card p-4 p-md-5 mb-5 shadow-sm mx-auto" style="max-width: 980px;">
+      <!-- Suchfeld -->
+      <div class="faq-search-container">
       <div class="faq-search-wrapper">
         <svg class="faq-search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"></circle>
@@ -435,6 +436,7 @@ final class FaqController
       </div>
       <h4>Keine Ergebnisse gefunden</h4>
       <p>Versuche es mit anderen Suchbegriffen oder kontaktiere uns direkt.</p>
+    </div>
     </div>
 
     <!-- Kontakt-Box -->

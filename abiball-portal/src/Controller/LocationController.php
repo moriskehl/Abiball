@@ -73,17 +73,17 @@ final class LocationController
           <div class="container py-5" style="max-width: 1100px;">
 
             <div class="text-center mx-auto" style="max-width: 820px; padding-top: 18px; padding-bottom: 24px;">
-              <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
-                Location<br>
-                <span style="font-style: italic;"><?= htmlspecialchars($venueName) ?></span>
-              </h1>
+              <div class="glass-hero-header sm mb-5 animate-fade-up">
+                <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
+                  Location<br>
+                  <span style="font-style: italic;"><?= htmlspecialchars($venueName) ?></span>
+                </h1>
 
-              <p class="text-muted mb-4" style="font-size: 1.05rem; line-height: 1.7;">
-                Adresse, Anfahrt und Kartenansicht für den Abiball 2026.
-              </p>
+                <p class="text-muted mb-4" style="font-size: 1.05rem; line-height: 1.7;">
+                  Adresse, Anfahrt und Kartenansicht für den Abiball 2026.
+                </p>
 
-              <div class="d-flex justify-content-center gap-3 flex-wrap pt-2">
-                <a class="btn btn-cta btn-cta-lg btn-shimmer" href="/">Zur Startseite</a>
+
               </div>
             </div>
 

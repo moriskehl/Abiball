@@ -71,66 +71,17 @@ final class ZahlungController
             <div class="container py-0 px-3 px-sm-4" style="max-width: 1100px;">
 
                 <div class="text-center mx-auto" style="max-width: 820px; padding-top: 18px; padding-bottom: 24px;">
-                    <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
-                        Zahlung<br>
-                        <span style="font-style: italic;">Überweisung</span>
-                    </h1>
+                    <div class="glass-hero-header sm mb-5 animate-fade-up">
+                        <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
+                            Zahlung<br>
+                            <span style="font-style: italic;">Überweisung</span>
+                        </h1>
 
-                    <p class="text-muted mb-4" style="font-size: 1.05rem; line-height: 1.7;">
-                        Hier findest du die Bankdaten sowie ein Beispiel für den Verwendungszweck.
-                    </p>
+                        <p class="text-muted mb-4" style="font-size: 1.05rem; line-height: 1.7;">
+                            Hier findest du die Bankdaten sowie ein Beispiel für den Verwendungszweck.
+                        </p>
 
-                    <style>
-                        .zahlung-cta{
-                            display:inline-flex;
-                            align-items:center;
-                            justify-content:center;
-                            white-space:nowrap;
-                        }
-                        @media (max-width: 575.98px){
-                            .zahlung-cta{ width:100%; }
-                            .zahlung-cta-wrap{
-                                width:100%;
-                                padding-left:.25rem;
-                                padding-right:.25rem;
-                            }
-                        }
 
-                        .zahl-card{
-                            background: rgba(201,162,39,.10);
-                            border: 1px solid rgba(201,162,39,.35);
-                            border-radius: .75rem;
-                        }
-                        .zahl-pill{
-                            font-size: .95rem;
-                            letter-spacing: .18em;
-                            text-transform: uppercase;
-                            background: rgba(201,162,39,.22);
-                            border: 1px solid rgba(201,162,39,.45);
-                            color: var(--primary);
-                        }
-                        .zahl-acc .accordion-item{
-                            border:none;
-                            background:transparent;
-                        }
-                        .zahl-acc .accordion-button{
-                            font-size:1.15rem;
-                            font-weight:400;
-                            background:transparent;
-                            border-radius:.75rem;
-                        }
-                        .zahl-acc .accordion-button:focus{
-                            box-shadow:none;
-                        }
-                    </style>
-
-                    <div class="d-flex justify-content-center gap-3 flex-wrap pt-2 zahlung-cta-wrap">
-                        <?php if ($isLoggedIn): ?>
-                            <a class="btn btn-cta btn-cta-lg zahlung-cta btn-shimmer" href="/dashboard.php">Zum Dashboard</a>
-                        <?php else: ?>
-                            <a class="btn btn-cta btn-cta-lg zahlung-cta btn-shimmer" href="/login.php">Zum Login</a>
-                        <?php endif; ?>
-                        <a class="btn btn-cta btn-cta-lg zahlung-cta btn-shimmer" href="/">Zur Startseite</a>
                     </div>
                 </div>
 
