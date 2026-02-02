@@ -404,6 +404,9 @@ final class Layout
         <!-- UI-Verbesserungen (Cookie-Banner, Nach-oben-Button) -->
         <script src="/assets/js/ui-enhancements.js"></script>
         
+        <!-- Shooting Stars Animation (Dark Mode) -->
+        <script src="/assets/js/shooting-stars.js"></script>
+        
         <!-- Service Worker für PWA -->
         <script src="/assets/js/sw-register.js"></script>
         </body>
