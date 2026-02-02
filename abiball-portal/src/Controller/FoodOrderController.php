@@ -189,157 +189,264 @@ final class FoodOrderController
     ): void {
         ?>
 <style>
-.menu-category { margin-bottom: 2rem; }
+/* Food Order Page Styles - Premium Design System */
+
+/* Menu Categories */
+.menu-category { 
+  margin-bottom: 2.5rem; 
+}
+
+.menu-category h3 {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.menu-category h3::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: var(--gold);
+  border-radius: 2px;
+}
+
+/* Menu Items */
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 14px 16px;
+  padding: 16px 20px;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  margin-bottom: 10px;
-  transition: all 0.2s;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--surface);
+  backdrop-filter: blur(8px);
 }
+
 .menu-item:hover {
-  background: rgba(201,162,39,.06);
-  border-color: var(--gold);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  background: rgba(201,162,39,.08);
+  border-color: rgba(201,162,39,.45);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,.08);
 }
+
+html.dark .menu-item:hover {
+  box-shadow: 0 8px 20px rgba(0,0,0,.25);
+}
+
 .menu-item input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  margin-right: 14px;
+  width: 22px;
+  height: 22px;
+  margin-right: 16px;
   cursor: pointer;
   accent-color: var(--gold);
+  border-radius: 6px;
 }
+
 .menu-item-name {
   flex: 1;
   font-weight: 500;
   cursor: pointer;
+  line-height: 1.4;
 }
+
 .menu-item-price {
   color: var(--gold);
-  font-weight: 600;
-  margin-right: 14px;
-  font-size: 1.05rem;
+  font-weight: 700;
+  margin-right: 16px;
+  font-size: 1.1rem;
+  white-space: nowrap;
 }
+
 .menu-item-qty {
-  width: 75px;
+  width: 80px;
+  text-align: center;
 }
+
+/* Order Cards */
 .order-card {
   border-left: 4px solid var(--border);
-  margin-bottom: 1rem;
-  transition: all 0.2s;
+  margin-bottom: 1.25rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .order-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,.08);
-  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.10);
+  transform: translateY(-2px);
 }
-.order-card.status-open { border-left-color: #ffa500; }
+
+html.dark .order-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
+.order-card.status-open { border-left-color: #ffa726; }
 .order-card.status-paid { border-left-color: var(--success); }
-.order-card.status-redeemed { border-left-color: #6c757d; }
+.order-card.status-redeemed { border-left-color: #78909c; }
 .order-card.status-cancelled { border-left-color: var(--danger); }
 
-/* Segment Switch - moderner Toggle zwischen Ansichten */
+/* Segment Switch - Premium Tab Design */
 .segment-switch {
   display: inline-flex;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 4px;
+  border-radius: var(--radius-sm);
+  padding: 5px;
   gap: 4px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  backdrop-filter: blur(8px);
+}
+
+html.dark .segment-switch {
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
 }
 
 .segment-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.25rem;
+  gap: 0.6rem;
+  padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 9px;
+  border-radius: 10px;
   background: transparent;
   color: var(--muted);
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
 }
 
 .segment-btn:hover {
   color: var(--text);
-  background: rgba(201,162,39,.06);
+  background: rgba(201,162,39,.08);
 }
 
 .segment-btn.active {
-  background: var(--gold);
+  background: linear-gradient(180deg, var(--gold-2), var(--gold));
   color: #0b0b0f;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(201,162,39,.25);
+  box-shadow: 0 4px 12px rgba(201,162,39,.30);
 }
 
 .segment-btn .badge {
-  background: rgba(0,0,0,.15);
+  background: rgba(0,0,0,.12);
   color: inherit;
-  font-size: 0.7rem;
-  padding: 0.2rem 0.45rem;
-  border-radius: 5px;
-  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  font-weight: 700;
 }
 
 .segment-btn.active .badge {
-  background: rgba(0,0,0,.2);
+  background: rgba(0,0,0,.18);
 }
 
+/* Tab Content */
 .food-tab-content {
   display: none;
+  animation: fadeIn 0.3s ease-out;
 }
 
 .food-tab-content.active {
   display: block;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Payment Info Box */
 .payment-info-box {
-  background: rgba(201,162,39,.10);
-  border: 1px solid rgba(201,162,39,.35);
-  border-radius: 14px;
-  padding: 1.5rem;
+  background: rgba(201,162,39,.08);
+  border: 1px solid rgba(201,162,39,.30);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  backdrop-filter: blur(8px);
 }
+
+html.dark .payment-info-box {
+  background: rgba(201,162,39,.12);
+  border-color: rgba(201,162,39,.35);
+}
+
+/* Total Card */
 .total-card {
-  background: linear-gradient(135deg, rgba(201,162,39,.08), rgba(201,162,39,.04));
-  border: 1px solid rgba(201,162,39,.25);
-  border-radius: 16px;
-  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(201,162,39,.10), rgba(201,162,39,.04));
+  border: 1px solid rgba(201,162,39,.28);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  backdrop-filter: blur(8px);
 }
+
+html.dark .total-card {
+  background: linear-gradient(135deg, rgba(201,162,39,.15), rgba(201,162,39,.08));
+}
+
+/* Create Order Button */
 .btn-create-order {
   background: linear-gradient(180deg, var(--gold-2), var(--gold));
   border: 1px solid rgba(0,0,0,.12);
   color: #0b0b0f !important;
   font-weight: 700;
-  padding: 0.85rem 1.5rem;
+  padding: 0.95rem 1.75rem;
   border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(201,162,39,.25);
-  transition: all 0.2s;
+  box-shadow: 0 10px 24px rgba(201,162,39,.28);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 1rem;
+  letter-spacing: 0.01em;
 }
+
 .btn-create-order:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(201,162,39,.35);
-  filter: brightness(1.05);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(201,162,39,.38);
+  filter: brightness(1.04);
 }
+
 .btn-create-order:active {
-  transform: translateY(0);
-}
-.btn-soft {
-  border-radius: 10px;
-  padding: 0.5rem 1rem;
-  transition: all 0.2s;
-}
-.btn-soft:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  box-shadow: 0 8px 20px rgba(201,162,39,.32);
+}
+
+/* Soft Button Enhancement */
+.btn-soft {
+  border-radius: 12px;
+  padding: 0.55rem 1.15rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-soft:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.10);
+}
+
+html.dark .btn-soft:hover {
+  box-shadow: 0 6px 16px rgba(0,0,0,.25);
+}
+
+/* Empty State Enhancement */
+.empty-state-icon {
+  opacity: 0.25;
+  transition: all 0.3s ease;
+}
+
+.text-center:hover .empty-state-icon {
+  opacity: 0.35;
+  transform: scale(1.05);
+}
+
+/* Section Label Consistency */
+.section-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
 }
 </style>
 
@@ -558,48 +665,55 @@ final class FoodOrderController
         <form method="post" action="/food/food_order_create.php" id="order-form">
           <?= Csrf::inputField() ?>
 
-          <?php foreach ($menu['categories'] ?? [] as $category): ?>
-            <div class="menu-category">
-              <h3 class="h5 mb-3"><?= e($category['name']) ?></h3>
-              <?php if (!empty($category['description'])): ?>
-                <div class="text-muted small mb-3"><?= e($category['description']) ?></div>
-              <?php endif; ?>
+          <!-- Menu Card Container -->
+          <div class="card mb-4">
+            <div class="card-body p-4">
+              <div class="text-muted small mb-3" style="letter-spacing:.18em;text-transform:uppercase;">Speisekarte</div>
+              
+              <?php foreach ($menu['categories'] ?? [] as $category): ?>
+                <div class="menu-category">
+                  <h3 class="h5 mb-3"><?= e($category['name']) ?></h3>
+                  <?php if (!empty($category['description'])): ?>
+                    <div class="text-muted small mb-3"><?= e($category['description']) ?></div>
+                  <?php endif; ?>
 
-              <?php foreach ($category['items'] ?? [] as $item): ?>
-                <?php if (!($item['available'] ?? false)) continue; ?>
+                  <?php foreach ($category['items'] ?? [] as $item): ?>
+                    <?php if (!($item['available'] ?? false)) continue; ?>
 
-                <div class="menu-item">
-                  <input
-                    type="checkbox"
-                    name="items[<?= e($item['id']) ?>][selected]"
-                    value="1"
-                    id="item_<?= e($item['id']) ?>"
-                    onchange="updateTotal()"
-                  >
-                  <label class="menu-item-name" for="item_<?= e($item['id']) ?>">
-                    <?= e($item['name']) ?>
-                    <?php if ($item['fish'] ?? false): ?>
-                      <span class="badge text-bg-info" style="font-size: 0.7rem;">Fisch</span>
-                    <?php endif; ?>
-                  </label>
-                  <div class="menu-item-price" data-price="<?= $item['price'] ?>">
-                    <?= number_format($item['price'], 2, ',', '.') ?> €
-                  </div>
-                  <input
-                    type="number"
-                    name="items[<?= e($item['id']) ?>][quantity]"
-                    class="form-control form-control-sm menu-item-qty"
-                    value="1"
-                    min="1"
-                    max="99"
-                    id="qty_<?= e($item['id']) ?>"
-                    onchange="updateTotal()"
-                  >
-                  <input type="hidden" name="items[<?= e($item['id']) ?>][id]" value="<?= e($item['id']) ?>">
+                    <div class="menu-item">
+                      <input
+                        type="checkbox"
+                        name="items[<?= e($item['id']) ?>][selected]"
+                        value="1"
+                        id="item_<?= e($item['id']) ?>"
+                        onchange="updateTotal()"
+                      >
+                      <label class="menu-item-name" for="item_<?= e($item['id']) ?>">
+                        <?= e($item['name']) ?>
+                        <?php if ($item['fish'] ?? false): ?>
+                          <span class="badge text-bg-info" style="font-size: 0.7rem;">Fisch</span>
+                        <?php endif; ?>
+                      </label>
+                      <div class="menu-item-price" data-price="<?= $item['price'] ?>">
+                        <?= number_format($item['price'], 2, ',', '.') ?> €
+                      </div>
+                      <input
+                        type="number"
+                        name="items[<?= e($item['id']) ?>][quantity]"
+                        class="form-control form-control-sm menu-item-qty"
+                        value="1"
+                        min="1"
+                        max="99"
+                        id="qty_<?= e($item['id']) ?>"
+                        onchange="updateTotal()"
+                      >
+                      <input type="hidden" name="items[<?= e($item['id']) ?>][id]" value="<?= e($item['id']) ?>">
+                    </div>
+                  <?php endforeach; ?>
                 </div>
               <?php endforeach; ?>
             </div>
-          <?php endforeach; ?>
+          </div>
 
           <div class="total-card mt-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
