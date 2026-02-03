@@ -805,6 +805,11 @@ final class AdminController
         }
         $totalOpen = max(0, $totalDue - $totalPaid);
 
+        // Load food stats early for overview
+        $foodStatsOverview = FoodOrderRepository::getStatistics();
+        $totalPaidWithFood = $totalPaid + (int)$foodStatsOverview['total_paid'] + (int)$foodStatsOverview['total_redeemed'];
+        $totalOpenWithFood = $totalOpen + (int)$foodStatsOverview['total_open'];
+
         $overrides = PricingOverridesRepository::mapById();
         $audit = AdminAuditLogRepository::latest(200);
 
@@ -913,6 +918,22 @@ final class AdminController
                         <span class="badge text-bg-success">0 €</span>
                       <?php else: ?>
                         <span class="badge text-bg-danger"><?= (int)$totalOpen ?> €</span>
+                      <?php endif; ?>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                      <div class="text-muted">Gesamt Bezahlt (mit Essen)</div>
+                      <div class="fw-semibold"><?= (int)$totalPaidWithFood ?> €</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                      <div class="text-muted">Gesamt Offen (mit Essen)</div>
+                      <?php if ($totalOpenWithFood === 0): ?>
+                        <span class="badge text-bg-success">0 €</span>
+                      <?php else: ?>
+                        <span class="badge text-bg-danger"><?= (int)$totalOpenWithFood ?> €</span>
                       <?php endif; ?>
                     </div>
 
@@ -1234,13 +1255,23 @@ final class AdminController
                                 <?php endif; ?>
                               </td>
                               <td>
-                                <form class="d-flex gap-2" method="post" action="/admin/admin_update_paid.php">
-                                  <?= Csrf::inputField() ?>
-                                  <input type="hidden" name="main_id" value="<?= e($mainId) ?>">
-                                  <input class="form-control form-control-sm" name="amount_paid" inputmode="numeric" pattern="\d+"
-                                         value="<?= e((string)$amountPaid) ?>">
-                                  <button class="btn btn-sm btn-save" type="submit">Speichern</button>
-                                </form>
+                                <div class="d-flex gap-2 align-items-center flex-wrap">
+                                  <form class="d-flex gap-2" method="post" action="/admin/admin_update_paid.php">
+                                    <?= Csrf::inputField() ?>
+                                    <input type="hidden" name="main_id" value="<?= e($mainId) ?>">
+                                    <input class="form-control form-control-sm" name="amount_paid" inputmode="numeric" pattern="\d+"
+                                           value="<?= e((string)$amountPaid) ?>" style="width: 80px;">
+                                    <button class="btn btn-sm btn-save" type="submit">Speichern</button>
+                                  </form>
+                                  <?php if ($open > 0): ?>
+                                    <form method="post" action="/admin/admin_update_paid.php" class="d-inline">
+                                      <?= Csrf::inputField() ?>
+                                      <input type="hidden" name="main_id" value="<?= e($mainId) ?>">
+                                      <input type="hidden" name="amount_paid" value="<?= e((string)$amountDue) ?>">
+                                      <button class="btn btn-sm btn-outline-success" type="submit" title="Soll-Betrag als bezahlt markieren">Soll bezahlen</button>
+                                    </form>
+                                  <?php endif; ?>
+                                </div>
                               </td>
                               <td>
                                 <form method="post" action="/admin/admin_delete_participant.php" style="display:inline;" onsubmit="return confirm('Wirklich löschen? (inkl. alle Begleiter)');">
