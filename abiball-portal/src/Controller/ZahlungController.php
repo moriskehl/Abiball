@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -48,19 +49,19 @@ final class ZahlungController
         if ($participantId !== '' && $name !== '' && $tickets > 0) {
             $purpose =
                 'Abiball 2026'
-                . ' | Name: ' . $name
-                . ' | ID: ' . $participantId
-                . ' | Tickets: ' . $tickets;
+                . '; Name: ' . $name
+                . '; ID: ' . $participantId
+                . '; Tickets: ' . $tickets;
         } else {
             $purpose =
                 'Abiball 2026'
-                . ' | Name: <NAME>'
-                . ' | ID: <TEILNEHMER-ID>'
-                . ' | Tickets: <ANZAHL>';
+                . '; Name: <NAME>'
+                . '; ID: <TEILNEHMER-ID>'
+                . '; Tickets: <ANZAHL>';
         }
 
         Layout::header('Abiball – Zahlung');
-        ?>
+?>
 
         <main class="bg-starfield">
             <!-- Star layers -->
@@ -78,7 +79,7 @@ final class ZahlungController
                         </h1>
 
                         <p class="text-muted mb-4" style="font-size: 1.05rem; line-height: 1.7;">
-                            Hier findest du die Bankdaten sowie ein Beispiel für den Verwendungszweck.
+                            Hier findest du die Bankdaten sowie ein den Verwendungszweck.
                         </p>
 
 
@@ -92,19 +93,19 @@ final class ZahlungController
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="headingChange">
                                     <button class="accordion-button collapsed h-serif" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#collapseChange"
-                                            aria-expanded="false" aria-controls="collapseChange">
+                                        data-bs-toggle="collapse" data-bs-target="#collapseChange"
+                                        aria-expanded="false" aria-controls="collapseChange">
                                         <span class="badge rounded-pill px-3 py-2 zahl-pill me-2">Wichtig</span>
                                         Änderungen bitte vor der Zahlung melden
                                     </button>
                                 </h2>
                                 <div id="collapseChange" class="accordion-collapse collapse"
-                                     aria-labelledby="headingChange" data-bs-parent="#changeAccordion">
+                                    aria-labelledby="headingChange" data-bs-parent="#changeAccordion">
                                     <div class="accordion-body text-center" style="font-size:1.08rem;">
                                         <div class="mb-2">
                                             <strong>Vor der Überweisung bitte per E-Mail melden bei:</strong><br>
                                             <a href="mailto:moris.kehl@gmail.com"
-                                               style="color: var(--primary); text-decoration: none; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono','Courier New', monospace; font-size: 1.05rem;">
+                                                style="color: var(--primary); text-decoration: none; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono','Courier New', monospace; font-size: 1.05rem;">
                                                 moris.kehl@gmail.com
                                             </a>
                                         </div>
@@ -131,14 +132,14 @@ final class ZahlungController
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="headingPrice">
                                     <button class="accordion-button collapsed h-serif" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#collapsePrice"
-                                            aria-expanded="false" aria-controls="collapsePrice">
+                                        data-bs-toggle="collapse" data-bs-target="#collapsePrice"
+                                        aria-expanded="false" aria-controls="collapsePrice">
                                         <span class="badge rounded-pill px-3 py-2 zahl-pill me-2">Wichtig</span>
                                         Ticketpreis steigt ab 15.02.
                                     </button>
                                 </h2>
                                 <div id="collapsePrice" class="accordion-collapse collapse"
-                                     aria-labelledby="headingPrice" data-bs-parent="#ticketPriceAccordion">
+                                    aria-labelledby="headingPrice" data-bs-parent="#ticketPriceAccordion">
                                     <div class="accordion-body text-center" style="font-size:1.08rem;">
                                         <span class="fw-semibold">Bis 14.02.: 17&nbsp;€ pro Ticket</span><br>
                                         <span class="fw-semibold">Ab 15.02.: 20&nbsp;€ pro Ticket</span><br>
@@ -159,14 +160,14 @@ final class ZahlungController
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="headingFood">
                                     <button class="accordion-button collapsed h-serif" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#collapseFood"
-                                            aria-expanded="false" aria-controls="collapseFood">
+                                        data-bs-toggle="collapse" data-bs-target="#collapseFood"
+                                        aria-expanded="false" aria-controls="collapseFood">
                                         <span class="badge rounded-pill px-3 py-2 zahl-pill me-2">Hinweis</span>
                                         Essensbestellungen separat bezahlen
                                     </button>
                                 </h2>
                                 <div id="collapseFood" class="accordion-collapse collapse"
-                                     aria-labelledby="headingFood" data-bs-parent="#foodAccordion">
+                                    aria-labelledby="headingFood" data-bs-parent="#foodAccordion">
                                     <div class="accordion-body text-center" style="font-size:1.08rem;">
                                         Essensbestellungen werden separat abgerechnet. Gehe zur
                                         <a href="/food/food_order.php" class="alert-link">Essensbestellungsseite</a>,
@@ -231,7 +232,7 @@ final class ZahlungController
 
                             <div class="col-12 col-lg-6">
                                 <div class="text-muted small" style="letter-spacing:.22em; text-transform:uppercase;">
-                                    Beispiel Verwendungszweck
+                                    Verwendungszweck
                                 </div>
 
                                 <div class="p-soft mt-2" style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
@@ -260,7 +261,7 @@ final class ZahlungController
             </div>
         </main>
 
-        <?php
+<?php
         Layout::footer();
     }
 }
