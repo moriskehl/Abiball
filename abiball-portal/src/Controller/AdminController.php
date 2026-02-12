@@ -392,7 +392,7 @@ final class AdminController
     $new1 = trim(Request::postString('new_password'));
     $new2 = trim(Request::postString('new_password2'));
 
-    // Delegate to AdminPasswordService for validation and password change
+    // Validierung und Passwortänderung an AdminPasswordService delegieren
     $result = AdminPasswordService::changePassword($adminId, $current, $new1, $new2);
 
     if ($result['success']) {
@@ -549,7 +549,7 @@ final class AdminController
       Response::redirect('/admin/admin_dashboard.php?err=staff_id_missing#staff');
     }
 
-    // Verify this is actually a staff member (FOOD_HELPER or DOOR)
+    // Verifizieren, dass dies tatsächlich ein Staff-Mitglied ist (FOOD_HELPER oder DOOR)
     $participant = ParticipantsRepository::findById($id);
     if (!$participant || !in_array($participant['role'] ?? '', ['FOOD_HELPER', 'DOOR'], true)) {
       Response::redirect('/admin/admin_dashboard.php?err=staff_not_found#staff');
@@ -571,6 +571,122 @@ final class AdminController
     } catch (Throwable $e) {
       Response::redirect('/admin/admin_dashboard.php?err=staff_delete_failed#staff');
     }
+  }
+
+  /**
+   * Setzt alle Tickets ohne vollständige Bezahlung auf 20€ (Preisüberschreibung).
+   * Teilzahlungen werden gemeldet, damit der Admin sie manuell handhabt.
+   */
+  public static function bulkPriceOverride(): void
+  {
+    AdminContext::requireAdmin();
+
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+      Response::redirect('/admin/admin_dashboard.php');
+    }
+
+    if (!Csrf::validate(Request::postString('_csrf'))) {
+      Response::redirect('/admin/admin_dashboard.php?err=csrf#ovr');
+    }
+
+    $newPrice = 20;
+    $defaultPrice = PricingService::DEFAULT_TICKET_PRICE; // 17
+
+    // Erst ab 15.02.2026 erlaubt
+    if (date('Y-m-d') < '2026-02-15') {
+      Response::redirect('/admin/admin_dashboard.php?err=bulk_too_early#ovr');
+    }
+
+    $allParticipants = ParticipantsRepository::all();
+    $overrides = PricingOverridesRepository::mapById();
+
+    // Group by main_id to determine payment status per group
+    $groups = ParticipantsRepository::groupAllByMainIdRobust();
+
+    // Track which main_ids have fully paid
+    $fullyPaidMainIds = [];
+    foreach ($groups as $mainId => $members) {
+      $dueArr    = PricingService::amountDueForMainId($mainId);
+      $amountDue = (int)($dueArr['amount_due'] ?? 0);
+      $amountPaid = (int)ParticipantsRepository::amountPaidForMainId($mainId);
+
+      if ($amountPaid >= $amountDue && $amountDue > 0) {
+        $fullyPaidMainIds[$mainId] = true;
+      }
+    }
+
+    $updated = 0;
+    $skippedPaid = 0;
+    $skippedOverride = 0;
+    $partialPayments = []; // IDs with partial payments that need manual review
+
+    foreach ($allParticipants as $p) {
+      $id = trim((string)($p['id'] ?? ''));
+      if ($id === '') continue;
+
+      // Skip non-user roles (admins, food helpers, door staff)
+      $role = strtoupper(trim((string)($p['role'] ?? 'USER')));
+      if ($role !== 'USER') continue;
+
+      // Resolve main_id for this participant
+      $mainId = ParticipantsRepository::resolveMainIdFromRow($p);
+
+      // Skip if the group has fully paid at the current price
+      if (isset($fullyPaidMainIds[$mainId])) {
+        $skippedPaid++;
+        continue;
+      }
+
+      // Skip if already has a custom override (e.g. 0€ for teachers, or already 20€)
+      if (isset($overrides[$id])) {
+        $existingPrice = (int)$overrides[$id]['ticket_price'];
+        if ($existingPrice !== $defaultPrice) {
+          // Custom override (e.g. 0€ for exemption) — don't touch
+          $skippedOverride++;
+          continue;
+        }
+        // If override is already at default price (17), we'll update it to 20
+      }
+
+      // Check for partial payment in the group
+      if (!empty($p['is_main_bool'])) {
+        $amountPaid = (int)ParticipantsRepository::amountPaidForMainId($mainId);
+        if ($amountPaid > 0) {
+          // Partial payment — flag for manual review
+          $dueArr = PricingService::amountDueForMainId($mainId);
+          $amountDue = (int)($dueArr['amount_due'] ?? 0);
+          $name = trim((string)($p['name'] ?? ''));
+          $partialPayments[] = [
+            'main_id' => $mainId,
+            'name' => $name,
+            'paid' => $amountPaid,
+            'due' => $amountDue,
+          ];
+        }
+      }
+
+      // Set override to new price
+      PricingOverridesRepository::upsertOverrideForId($id, $newPrice, 'Preiserhöhung ab 15.02.');
+      $updated++;
+    }
+
+    AdminAuditLogRepository::append('bulk_price_override', [
+      'new_price' => $newPrice,
+      'updated_count' => $updated,
+      'skipped_paid' => $skippedPaid,
+      'skipped_override' => $skippedOverride,
+      'partial_payments' => count($partialPayments),
+    ]);
+
+    // Store results in session for display
+    $_SESSION['bulk_override_result'] = [
+      'updated' => $updated,
+      'skipped_paid' => $skippedPaid,
+      'skipped_override' => $skippedOverride,
+      'partial_payments' => $partialPayments,
+    ];
+
+    Response::redirect('/admin/admin_dashboard.php?ok=bulk_override#ovr');
   }
 
     /* ================================================
@@ -603,10 +719,10 @@ final class AdminController
 
       $kindCounts[$kind] = ($kindCounts[$kind] ?? 0) + 1;
 
-      // class labels:
+      // Klassen-Labels:
       // - SGGS/SSGS + ERSTE Zahl => separat (SGGS1, SSGS2)
       // - TEACHER => LEHRER
-      // - sonst: prefix ohne zahlen
+      // - sonst: Prefix ohne Zahlen
       $classLabel = '';
 
       if ($kind === 'TEACHER') {
@@ -639,7 +755,7 @@ final class AdminController
     $filtered = $all;
     if ($q !== '') {
       $qLower = mb_strtolower($q, 'UTF-8');
-      // First pass: find all matching participants
+      // Erster Durchlauf: Alle passenden Teilnehmer finden
       $matchingMainIds = [];
       foreach ($all as $p) {
         $id   = mb_strtolower((string)($p['id'] ?? ''), 'UTF-8');
@@ -652,7 +768,7 @@ final class AdminController
           }
         }
       }
-      // Second pass: include all participants from matching main_ids
+      // Zweiter Durchlauf: Alle Teilnehmer der passenden main_ids einschließen
       $filtered = array_values(array_filter($all, static function ($p) use ($matchingMainIds) {
         $mainId = ParticipantsRepository::resolveMainIdFromRow($p);
         return isset($matchingMainIds[$mainId]);
@@ -677,7 +793,7 @@ final class AdminController
     }
     $totalOpen = max(0, $totalDue - $totalPaid);
 
-    // Load food stats early for overview
+    // Food-Statistiken frühzeitig für die Übersicht laden
     $foodStatsOverview = FoodOrderRepository::getStatistics();
     $totalPaidWithFood = $totalPaid + (int)$foodStatsOverview['total_paid'] + (int)$foodStatsOverview['total_redeemed'];
     $totalOpenWithFood = $totalOpen + (int)$foodStatsOverview['total_open'];
@@ -685,11 +801,15 @@ final class AdminController
     $overrides = PricingOverridesRepository::mapById();
     $audit = AdminAuditLogRepository::latest(200);
 
-    // UI flags
+    // UI-Flags
     $ok  = Request::getString('ok');
     $err = Request::getString('err');
     $okOverride = Request::getString('ok_override');
     $okCreate = Request::getString('ok_create');
+
+    // Bulk-Override-Ergebnis aus der Session
+    $bulkResult = $_SESSION['bulk_override_result'] ?? null;
+    unset($_SESSION['bulk_override_result']);
 
     Layout::header('Admin – Dashboard', '', '', true);
   ?>
@@ -720,10 +840,52 @@ final class AdminController
               'food_paid' => 'Essensbestellung als bezahlt markiert.',
               'staff_created' => 'Staff-Account angelegt.',
               'staff_deleted' => 'Staff-Account gelöscht.',
+              'bulk_override' => 'Preiserhöhung durchgeführt.',
               default => 'Gespeichert.'
             };
             ?>
           </div>
+
+          <?php if ($ok === 'bulk_override' && $bulkResult !== null): ?>
+            <div class="alert alert-info">
+              <strong>Ergebnis:</strong>
+              <?= (int)($bulkResult['updated'] ?? 0) ?> Tickets auf 20&nbsp;€ gesetzt,
+              <?= (int)($bulkResult['skipped_paid'] ?? 0) ?> bereits bezahlt (übersprungen),
+              <?= (int)($bulkResult['skipped_override'] ?? 0) ?> mit Sonderpreis (übersprungen).
+            </div>
+
+            <?php $partials = $bulkResult['partial_payments'] ?? []; ?>
+            <?php if (!empty($partials)): ?>
+              <div class="alert alert-warning">
+                <strong>⚠ Teilzahlungen – manuelle Prüfung erforderlich:</strong>
+                <div class="table-responsive mt-2">
+                  <table class="table table-sm table-striped mb-0">
+                    <thead>
+                      <tr>
+                        <th>main_id</th>
+                        <th>Name</th>
+                        <th>Bezahlt</th>
+                        <th>Soll (alt)</th>
+                        <th>Differenz</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php foreach ($partials as $pp): ?>
+                        <tr>
+                          <td><code><?= e($pp['main_id']) ?></code></td>
+                          <td><?= e($pp['name']) ?></td>
+                          <td><?= (int)$pp['paid'] ?> €</td>
+                          <td><?= (int)$pp['due'] ?> €</td>
+                          <td class="text-danger fw-semibold"><?= (int)$pp['paid'] - (int)$pp['due'] ?> €</td>
+                        </tr>
+                      <?php endforeach; ?>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="text-muted small mt-2">Diese Personen haben teilweise bezahlt. Die Tickets wurden trotzdem auf 20&nbsp;€ gesetzt. Bitte den offenen Differenzbetrag manuell klären.</div>
+              </div>
+            <?php endif; ?>
+          <?php endif; ?>
         <?php endif; ?>
 
         <?php if ($okOverride !== ''): ?>
@@ -757,13 +919,14 @@ final class AdminController
               'staff_id_missing' => 'Staff-ID fehlt.',
               'staff_not_found' => 'Staff-Account nicht gefunden.',
               'staff_delete_failed' => 'Staff-Account löschen fehlgeschlagen.',
+              'bulk_too_early' => 'Priserhöhung erst ab dem 15.02. möglich.',
               default => 'Fehler.'
             };
             ?>
           </div>
         <?php endif; ?>
 
-        <!-- Always visible: Overview + Charts -->
+        <!-- Immer sichtbar: Übersicht + Diagramme -->
         <div class="row g-3 mb-3">
           <div class="col-12 col-lg-5">
             <div class="card admin-card h-100">
@@ -984,6 +1147,14 @@ final class AdminController
                   <div class="h6 mb-0">Pricing Overrides</div>
                   <div class="text-muted" style="font-size:.9rem;">Ticketpreis pro ID überschreiben (z.B. Lehrer = 0€).</div>
                 </div>
+                <?php $bulkAllowed = (date('Y-m-d') >= '2026-02-15'); ?>
+                <form method="post" action="/admin/admin_bulk_override.php" onsubmit="return confirm('Alle nicht-bezahlten Tickets auf 20€ setzen?\n\nBereits bezahlte Tickets und Sonderpreise (z.B. 0€) werden nicht verändert.\n\nTeilzahlungen werden gemeldet.');" class="d-flex align-items-center gap-2">
+                  <?= Csrf::inputField() ?>
+                  <button class="btn btn-sm btn-warning" type="submit" <?= $bulkAllowed ? '' : 'disabled' ?>>Alle unbezahlten auf 20 € setzen</button>
+                  <?php if (!$bulkAllowed): ?>
+                    <span class="text-muted small">(Erst ab 15.02. verfügbar)</span>
+                  <?php endif; ?>
+                </form>
               </div>
 
               <div class="table-responsive mt-3">

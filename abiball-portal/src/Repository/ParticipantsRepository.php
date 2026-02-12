@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -305,7 +306,7 @@ final class ParticipantsRepository
      */
     private static function ensureParticipantsHeader(array $header): array
     {
-        $need = ['id','name','is_main','main_id','login_code','role','amount_paid','amount_subsided'];
+        $need = ['id', 'name', 'is_main', 'main_id', 'login_code', 'role', 'amount_paid', 'amount_subsided'];
         if (count($header) === 0) return $need;
 
         foreach ($need as $col) {
@@ -425,18 +426,18 @@ final class ParticipantsRepository
             throw new InvalidArgumentException('Role must be FOOD_HELPER or DOOR');
         }
 
-        // Generate unique ID based on role
+        // Eindeutige ID basierend auf Rolle generieren
         $prefix = ($role === 'FOOD_HELPER') ? 'FOOD' : 'DOOR';
-        
+
         $path = Config::participantsCsvPath();
 
         CsvRepository::updateAssocAtomic($path, static function (array $header, array $rows) use ($name, $loginCode, $role, $prefix): array {
             $header = self::ensureParticipantsHeader($header);
 
-            // Find next available number for this role
+            // Nächste verfügbare Nummer für diese Rolle finden
             $max = 0;
             $pattern = '/^' . preg_quote($prefix, '/') . '(\d+)$/i';
-            
+
             foreach ($rows as $r) {
                 $id = trim((string)($r['id'] ?? ''));
                 if (preg_match($pattern, $id, $m)) {
@@ -444,7 +445,7 @@ final class ParticipantsRepository
                     if ($n > $max) $max = $n;
                 }
             }
-            
+
             $newId = $prefix . str_pad((string)($max + 1), 2, '0', STR_PAD_LEFT);
 
             $rows[] = [
@@ -597,10 +598,10 @@ final class ParticipantsRepository
                 $rows = array_filter($rows, function ($r) use ($id, $mainId) {
                     $rId = trim((string)($r['id'] ?? ''));
                     $rMid = trim((string)($r['main_id'] ?? ''));
-                    
+
                     if ($rId === $id) return false;
                     if ($rMid === $id) return false;
-                    
+
                     return true;
                 });
             } else {
@@ -656,7 +657,7 @@ final class ParticipantsRepository
     {
         $p = self::findById($id);
         if (!$p) return false;
-        
+
         $status = trim((string)($p['ticket_validated'] ?? ''));
         return $status !== '' && $status !== '0';
     }
@@ -668,7 +669,7 @@ final class ParticipantsRepository
     {
         $p = self::findById($id);
         if (!$p) return '';
-        
+
         return trim((string)($p['validation_time'] ?? ''));
     }
 
@@ -679,7 +680,7 @@ final class ParticipantsRepository
     {
         $p = self::findById($id);
         if (!$p) return '';
-        
+
         return trim((string)($p['validation_person'] ?? ''));
     }
 }

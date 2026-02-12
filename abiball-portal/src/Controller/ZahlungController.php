@@ -63,11 +63,11 @@ final class ZahlungController
         Layout::header('Abiball – Zahlung');
 ?>
 
-        <main class="bg-starfield">
+        <main class="bg-starfield" id="main-content">
             <!-- Star layers -->
-            <div class="stars-layer-1"></div>
-            <div class="stars-layer-2"></div>
-            <div class="stars-layer-3"></div>
+            <div class="stars-layer-1" aria-hidden="true"></div>
+            <div class="stars-layer-2" aria-hidden="true"></div>
+            <div class="stars-layer-3" aria-hidden="true"></div>
 
             <div class="container py-0 px-3 px-sm-4" style="max-width: 1100px;">
 
@@ -173,6 +173,31 @@ final class ZahlungController
                                         <a href="/food/food_order.php" class="alert-link">Essensbestellungsseite</a>,
                                         erstelle deine Bestellung und überweise den Betrag mit dem dort angegebenen Verwendungszweck:
                                         <br><code class="text-muted">Essensbestellung; Name: [Dein Name]; ID: [Deine ID]</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hinweis 4: Zahlungsschluss -->
+                <div class="card zahl-card mx-auto mb-3" style="max-width: 980px;">
+                    <div class="card-body p-0">
+                        <div class="accordion zahl-acc" id="deadlineAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingDeadline">
+                                    <button class="accordion-button collapsed h-serif" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#collapseDeadline"
+                                        aria-expanded="false" aria-controls="collapseDeadline">
+                                        <span class="badge rounded-pill px-3 py-2 zahl-pill me-2">Wichtig</span>
+                                        Zahlungsschluss: 01. März 2026
+                                    </button>
+                                </h2>
+                                <div id="collapseDeadline" class="accordion-collapse collapse"
+                                    aria-labelledby="headingDeadline" data-bs-parent="#deadlineAccordion">
+                                    <div class="accordion-body text-center" style="font-size:1.08rem;">
+                                        Bitte überweise den fälligen Betrag <strong>bis spätestens 01.&nbsp;März&nbsp;2026</strong>.
+                                        Nach diesem Datum können keine Zahlungen mehr berücksichtigt werden.
                                     </div>
                                 </div>
                             </div>
