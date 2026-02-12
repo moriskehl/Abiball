@@ -1,11 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../src/Bootstrap.php';
-require_once __DIR__ . '/../../src/Controller/AdminController.php';
+/**
+ * Diese Funktion wurde aus Sicherheitsgründen entfernt.
+ * Login-Codes dürfen nicht als PDF exportiert werden.
+ */
 
-Bootstrap::init();
-
-// GET ist ok, weil Admin-Session geschützt ist.
-// Optional: zusätzlich CSRF über POST möglich, aber für "PDF öffnen" ist GET üblich.
-AdminController::printMainLoginsPdf();
+http_response_code(410);
+echo 'Diese Funktion ist nicht mehr verfügbar.';
+exit;

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -9,6 +10,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/../Config.php';
+require_once __DIR__ . '/../Repository/CsvRepository.php';
 require_once __DIR__ . '/../Repository/ParticipantsRepository.php';
 require_once __DIR__ . '/PricingService.php';
 
@@ -85,7 +87,7 @@ final class TicketValidationService
         $validationTime = date('Y-m-d H:i:s');
         if (self::markTicketAsValidated($pid, $validationTime, $doorPersonId)) {
             self::auditLog($pid, $mainId, $doorPersonId, 'VALIDATED');
-            
+
             return [
                 'success' => true,
                 'message' => 'Ticket erfolgreich entwertet',
@@ -108,52 +110,49 @@ final class TicketValidationService
     private static function markTicketAsValidated(string $pid, string $validationTime, string $doorPersonId): bool
     {
         $csvPath = Config::participantsCsvPath();
-        $rows = file($csvPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if ($rows === false) {
-            return false;
-        }
 
-        if (empty($rows)) {
-            return false;
-        }
-
-        $header = array_shift($rows);
-        $headerArray = str_getcsv($header, ';');
-
-        $idIdx = array_search('id', $headerArray, true);
-        $validatedIdx = array_search('ticket_validated', $headerArray, true);
-        $validationTimeIdx = array_search('validation_time', $headerArray, true);
-        $validationPersonIdx = array_search('validation_person', $headerArray, true);
-
-        if ($idIdx === false) {
-            return false;
-        }
-
-        $found = false;
-        foreach ($rows as &$row) {
-            $fields = str_getcsv($row, ';');
-            if ($fields[$idIdx] === $pid) {
-                if ($validatedIdx !== false) {
-                    $fields[$validatedIdx] = '1';
+        try {
+            CsvRepository::updateAssocAtomic($csvPath, static function (array $header, array $rows) use ($pid, $validationTime, $doorPersonId): array {
+                // Sicherstellen dass die Validierungs-Spalten existieren
+                $needCols = ['ticket_validated', 'validation_time', 'validation_person'];
+                foreach ($needCols as $col) {
+                    if (!in_array($col, $header, true)) {
+                        $header[] = $col;
+                    }
                 }
-                if ($validationTimeIdx !== false) {
-                    $fields[$validationTimeIdx] = $validationTime;
-                }
-                if ($validationPersonIdx !== false) {
-                    $fields[$validationPersonIdx] = $doorPersonId;
-                }
-                $row = implode(';', $fields);
-                $found = true;
-                break;
-            }
-        }
 
-        if (!$found) {
+                $found = false;
+                foreach ($rows as &$r) {
+                    if (trim((string)($r['id'] ?? '')) !== $pid) {
+                        continue;
+                    }
+
+                    // Innerhalb des Locks nochmal prüfen ob bereits entwertet
+                    $status = trim((string)($r['ticket_validated'] ?? ''));
+                    if ($status !== '' && $status !== '0') {
+                        throw new RuntimeException('ALREADY_VALIDATED');
+                    }
+
+                    $r['ticket_validated'] = '1';
+                    $r['validation_time'] = $validationTime;
+                    $r['validation_person'] = $doorPersonId;
+                    $found = true;
+                    break;
+                }
+                unset($r);
+
+                if (!$found) {
+                    throw new RuntimeException('Participant not found for id=' . $pid);
+                }
+
+                return [$header, $rows];
+            }, ';');
+
+            return true;
+        } catch (RuntimeException $e) {
+            // Bereits entwertet oder nicht gefunden
             return false;
         }
-
-        $content = $header . "\n" . implode("\n", $rows) . "\n";
-        return file_put_contents($csvPath, $content) !== false;
     }
 
     /**
@@ -171,7 +170,7 @@ final class TicketValidationService
 
         $timestamp = date('Y-m-d H:i:s');
         $ipAddress = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        
+
         $line = implode(';', [
             $timestamp,
             $ticketId,

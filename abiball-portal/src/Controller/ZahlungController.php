@@ -172,7 +172,7 @@ final class ZahlungController
                                         Essensbestellungen werden separat abgerechnet. Gehe zur
                                         <a href="/food/food_order.php" class="alert-link">Essensbestellungsseite</a>,
                                         erstelle deine Bestellung und überweise den Betrag mit dem dort angegebenen Verwendungszweck:
-                                        <br><code class="text-muted">Essensbestellung | Name: [Dein Name] | ID: [Deine ID]</code>
+                                        <br><code class="text-muted">Essensbestellung; Name: [Dein Name]; ID: [Deine ID]</code>
                                     </div>
                                 </div>
                             </div>

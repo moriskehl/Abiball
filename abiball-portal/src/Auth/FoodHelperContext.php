@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -71,6 +72,7 @@ final class FoodHelperContext
     public static function loginAsFoodHelper(string $helperId, string $helperName): void
     {
         self::init();
+        session_regenerate_id(true);
         $_SESSION[self::K_HELPER_ID]      = $helperId;
         $_SESSION[self::K_HELPER_NAME]    = $helperName;
         $_SESSION[self::K_IS_FOOD_HELPER] = true;
@@ -101,25 +103,25 @@ final class FoodHelperContext
     public static function checkTimeout(): bool
     {
         self::init();
-        
+
         if (empty($_SESSION[self::K_IS_FOOD_HELPER])) {
             return false;
         }
 
         $lastActivity = $_SESSION[self::K_LAST_ACTIVITY] ?? null;
-        
+
         if ($lastActivity === null) {
             $_SESSION[self::K_LAST_ACTIVITY] = time();
             return true;
         }
-        
+
         $elapsed = time() - (int)$lastActivity;
-        
+
         if ($elapsed > self::SESSION_TIMEOUT) {
             self::logout();
             return false;
         }
-        
+
         $_SESSION[self::K_LAST_ACTIVITY] = time();
         return true;
     }
@@ -130,12 +132,12 @@ final class FoodHelperContext
     public static function requireFoodHelper(string $redirectTo = '/food/food_helper_login.php'): void
     {
         self::init();
-        
+
         if (!self::isFoodHelper()) {
             header('Location: ' . $redirectTo, true, 302);
             exit;
         }
-        
+
         if (!self::checkTimeout()) {
             header('Location: ' . $redirectTo . '?timeout=1', true, 302);
             exit;

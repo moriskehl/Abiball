@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -20,23 +21,20 @@ final class RateLimiter
     }
 
     /**
-     * Ermittelt die Client-IP, auch hinter einem Reverse-Proxy.
+     * Ermittelt die Client-IP-Adresse.
+     * Nginx setzt REMOTE_ADDR korrekt über die Proxy-Konfiguration.
+     * Client-Header wie X-Forwarded-For werden NICHT vertraut,
+     * da sie vom Client gefälscht werden können.
      */
     private static function getClientIp(): string
     {
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        
-        // Falls hinter nginx/Apache Reverse-Proxy
-        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $parts = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-            $ip = trim($parts[0]);
-        }
-        
+
         // IP-Format validieren
         if (filter_var($ip, FILTER_VALIDATE_IP) === false) {
             $ip = '0.0.0.0';
         }
-        
+
         return $ip;
     }
 
@@ -49,7 +47,7 @@ final class RateLimiter
         if (!is_dir($dir)) {
             @mkdir($dir, 0755, true);
         }
-        
+
         $hash = hash('sha256', $key . ':' . $ip);
         return $dir . '/' . $hash . '.json';
     }
@@ -62,17 +60,17 @@ final class RateLimiter
         if (!file_exists($path)) {
             return null;
         }
-        
+
         $content = @file_get_contents($path);
         if ($content === false) {
             return null;
         }
-        
+
         $data = json_decode($content, true);
         if (!is_array($data) || !isset($data['start'], $data['count'])) {
             return null;
         }
-        
+
         return $data;
     }
 
@@ -94,17 +92,17 @@ final class RateLimiter
         if (!is_dir($dir)) {
             return;
         }
-        
+
         // Nur mit 1% Wahrscheinlichkeit ausführen
         if (mt_rand(1, 100) > 1) {
             return;
         }
-        
+
         $files = glob($dir . '/*.json');
         if ($files === false) {
             return;
         }
-        
+
         $expiry = time() - 3600;
         foreach ($files as $file) {
             if (filemtime($file) < $expiry) {
@@ -162,18 +160,18 @@ final class RateLimiter
     public static function getRetryAfter(string $key, int $windowSeconds = 60): int
     {
         self::init();
-        
+
         $ip = self::getClientIp();
         $path = self::getRateLimitPath($key, $ip);
-        
+
         $data = self::readData($path);
         if ($data === null) {
             return 0;
         }
-        
+
         $elapsed = time() - $data['start'];
         $remaining = $windowSeconds - $elapsed;
-        
+
         return max(0, $remaining);
     }
 }
