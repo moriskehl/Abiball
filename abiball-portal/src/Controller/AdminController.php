@@ -795,8 +795,14 @@ final class AdminController
 
     // Food-Statistiken frühzeitig für die Übersicht laden
     $foodStatsOverview = FoodOrderRepository::getStatistics();
-    $totalPaidWithFood = $totalPaid + (int)$foodStatsOverview['total_paid'] + (int)$foodStatsOverview['total_redeemed'];
-    $totalOpenWithFood = $totalOpen + (int)$foodStatsOverview['total_open'];
+
+    // Ticket-only Totals (Keep as int)
+    // $totalPaid and $totalOpen are already calculated as integers above from ParticipantsRepository
+
+    // Combined Totals (Ticket + Food) -> Float to preserve cents from food
+    // structure of $foodStatsOverview: ['total_paid' => float, 'total_open' => float, ...]
+    $totalPaidWithFood = $totalPaid + (float)$foodStatsOverview['total_paid'] + (float)$foodStatsOverview['total_redeemed'];
+    $totalOpenWithFood = $totalOpen + (float)$foodStatsOverview['total_open'];
 
     $overrides = PricingOverridesRepository::mapById();
     $audit = AdminAuditLogRepository::latest(200);
@@ -958,15 +964,15 @@ final class AdminController
 
                 <div class="d-flex justify-content-between align-items-center mt-2">
                   <div class="text-muted">Gesamt Bezahlt (mit Essen)</div>
-                  <div class="fw-semibold"><?= (int)$totalPaidWithFood ?> €</div>
+                  <div class="fw-semibold"><?= number_format($totalPaidWithFood, 2, ',', '.') ?> €</div>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mt-2">
                   <div class="text-muted">Gesamt Offen (mit Essen)</div>
-                  <?php if ($totalOpenWithFood === 0): ?>
-                    <span class="badge text-bg-success">0 €</span>
+                  <?php if ($totalOpenWithFood == 0): ?>
+                    <span class="badge text-bg-success">0,00 €</span>
                   <?php else: ?>
-                    <span class="badge text-bg-danger"><?= (int)$totalOpenWithFood ?> €</span>
+                    <span class="badge text-bg-danger"><?= number_format($totalOpenWithFood, 2, ',', '.') ?> €</span>
                   <?php endif; ?>
                 </div>
 
