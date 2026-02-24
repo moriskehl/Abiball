@@ -237,8 +237,8 @@ Bei Fragen oder Problemen: moris.kehl@gmail.com
 
 ## Quellen
 
-Readme - Claude Opus 4.6
-Coding - Claude Opus 4.6 / Gemini 3.1 Pro / Moris Kehl
+- Readme - Claude Opus 4.6
+- Coding - Claude Opus 4.6 / Gemini 3.1 Pro / Moris Kehl
 
 ---
 
