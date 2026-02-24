@@ -227,12 +227,6 @@ Audit-Logs werden in `storage/data/audit/` gespeichert.
 - `robots.txt` und `sitemap.xml` konfiguriert
 - Strukturierte Daten können hinzugefügt werden
 
-## 🤝 Contributing
-
-1. Feature-Branch erstellen
-2. Änderungen committen
-3. Pull Request öffnen
-
 ## 📄 Lizenz
 
 Internes Schulprojekt - Alle Rechte vorbehalten
@@ -241,7 +235,12 @@ Internes Schulprojekt - Alle Rechte vorbehalten
 
 Bei Fragen oder Problemen: moris.kehl@gmail.com
 
+## Quellen
+
+Readme - Claude Opus 4.6
+Coding - Claude Opus 4.6 / Gemini 3.1 Pro / Moris Kehl
+
 ---
 
-**Letzte Aktualisierung**: 2024  
+**Letzte Aktualisierung**: 2026  
 **Version**: 1.0.0
