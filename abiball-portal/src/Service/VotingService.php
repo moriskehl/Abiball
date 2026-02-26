@@ -14,9 +14,9 @@ require_once __DIR__ . '/../Config.php';
 
 final class VotingService
 {
-    private const VOTES_FILE = __DIR__ . '/../../data/votes.csv';
-    private const VOTERS_FILE = __DIR__ . '/../../data/voters.csv';
-    private const EXCLUSIONS_FILE = __DIR__ . '/../../data/teacher_exclusions.csv';
+    private const VOTES_FILE = __DIR__ . '/../../storage/data/voting/votes.csv';
+    private const VOTERS_FILE = __DIR__ . '/../../storage/data/voting/voters.csv';
+    private const EXCLUSIONS_FILE = __DIR__ . '/../../storage/data/voting/teacher_exclusions.csv';
 
     // Kategorien definieren
     public const CATEGORIES = [
