@@ -16,6 +16,7 @@ final class VotingService
 {
     private const VOTES_FILE = __DIR__ . '/../../data/votes.csv';
     private const VOTERS_FILE = __DIR__ . '/../../data/voters.csv';
+    private const EXCLUSIONS_FILE = __DIR__ . '/../../data/teacher_exclusions.csv';
 
     // Kategorien definieren
     public const CATEGORIES = [
@@ -38,12 +39,24 @@ final class VotingService
     // Lehrer die von der Abstimmung ausgeschlossen sind (Nachname)
     private const EXCLUDED_TEACHERS = ['Koch', 'Diebold'];
 
+    // Schulleitung: komplett vom Voting und Kategorie-Verwaltung ausgeschlossen (per ID)
+    private const EXCLUDED_TEACHER_IDS = ['26L', '09L'];
+
     /**
      * Prüft ob ein User ein Lehrer ist (ID endet auf 'L').
      */
     public static function isTeacher(string $userId): bool
     {
         return str_ends_with(strtoupper(trim($userId)), 'L');
+    }
+
+    /**
+     * Prüft ob ein Lehrer komplett vom Voting ausgeschlossen ist (Schulleitung).
+     * Unabhängig von CSV-Dateien — nur hardcodierte IDs.
+     */
+    public static function isExcludedTeacher(string $userId): bool
+    {
+        return in_array(strtoupper(trim($userId)), self::EXCLUDED_TEACHER_IDS, true);
     }
 
     /**
@@ -79,6 +92,58 @@ final class VotingService
 
         asort($teachers);
         return $teachers;
+    }
+
+    /**
+     * Gibt die Lehrer für eine bestimmte Kategorie zurück (ohne ausgeschlossene).
+     * @return array<string, string> Assoc Array [ID => Name]
+     */
+    public static function getTeachersForCategory(string $categoryKey): array
+    {
+        $teachers = self::getTeachers();
+        $allExclusions = self::loadAllExclusions();
+
+        foreach ($allExclusions as $teacherId => $excludedCategories) {
+            if (in_array($categoryKey, $excludedCategories, true)) {
+                unset($teachers[$teacherId]);
+            }
+        }
+
+        return $teachers;
+    }
+
+    /**
+     * Gibt die ausgeschlossenen Kategorien eines Lehrers zurück.
+     * @return string[] Liste der Kategorie-Keys
+     */
+    public static function getTeacherExclusions(string $teacherId): array
+    {
+        $all = self::loadAllExclusions();
+        return $all[$teacherId] ?? [];
+    }
+
+    /**
+     * Setzt die ausgeschlossenen Kategorien eines Lehrers.
+     * Ersetzt bestehende Votes in neu ausgeschlossenen Kategorien durch '__none__'.
+     */
+    public static function setTeacherExclusions(string $teacherId, array $categories): void
+    {
+        // Nur gültige Kategorien erlauben
+        $validCategories = array_intersect($categories, array_keys(self::CATEGORIES));
+
+        // Bisherige Ausschlüsse laden
+        $previousExclusions = self::getTeacherExclusions($teacherId);
+
+        // Neu hinzugefügte Kategorien ermitteln
+        $newExclusions = array_diff($validCategories, $previousExclusions);
+
+        // Votes in neu ausgeschlossenen Kategorien ersetzen
+        foreach ($newExclusions as $cat) {
+            self::replaceVotesForExcludedTeacher($teacherId, $cat);
+        }
+
+        // Alle Ausschlüsse neu schreiben
+        self::saveExclusionsForTeacher($teacherId, $validCategories);
     }
 
     /**
@@ -149,7 +214,6 @@ final class VotingService
             return false;
         }
 
-        $teachers = self::getTeachers();
         $validVotes = [];
 
         foreach (self::CATEGORIES as $catKey => $catLabel) {
@@ -158,8 +222,12 @@ final class VotingService
             // "keine Antwort" ist eine gültige Auswahl
             if ($teacherId === self::NO_ANSWER) {
                 $validVotes[$catKey] = self::NO_ANSWER;
-            } elseif ($teacherId !== '' && isset($teachers[$teacherId])) {
-                $validVotes[$catKey] = $teacherId;
+            } elseif ($teacherId !== '') {
+                // Pro Kategorie prüfen (berücksichtigt Lehrer-Ausschlüsse)
+                $teachersForCat = self::getTeachersForCategory($catKey);
+                if (isset($teachersForCat[$teacherId])) {
+                    $validVotes[$catKey] = $teacherId;
+                }
             }
         }
 
@@ -404,6 +472,142 @@ final class VotingService
         }
 
         fputcsv($handle, [$userId, $category, $teacherId], ';');
+        fclose($handle);
+    }
+
+    // =========================================================================
+    // Lehrer-Ausschlüsse (Kategorie-Opt-Out)
+    // =========================================================================
+
+    /**
+     * Lädt alle Lehrer-Ausschlüsse.
+     * @return array<string, string[]> [teacherId => [category1, category2, ...]]
+     */
+    private static function loadAllExclusions(): array
+    {
+        $file = self::EXCLUSIONS_FILE;
+        if (!file_exists($file)) {
+            return [];
+        }
+
+        $exclusions = [];
+        $handle = fopen($file, 'r');
+        if ($handle === false) {
+            return [];
+        }
+
+        // Header überspringen
+        fgetcsv($handle, 0, ';');
+
+        while (($row = fgetcsv($handle, 0, ';')) !== false) {
+            if (count($row) >= 2) {
+                $tid = trim((string)$row[0]);
+                $cat = trim((string)$row[1]);
+                if ($tid !== '' && $cat !== '') {
+                    $exclusions[$tid][] = $cat;
+                }
+            }
+        }
+
+        fclose($handle);
+        return $exclusions;
+    }
+
+    /**
+     * Speichert die Ausschlüsse eines Lehrers (ersetzt bestehende).
+     */
+    private static function saveExclusionsForTeacher(string $teacherId, array $categories): void
+    {
+        $file = self::EXCLUSIONS_FILE;
+        $dir = dirname($file);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+
+        // Alle Einträge laden (ohne die des aktuellen Lehrers)
+        $allRows = [];
+        if (file_exists($file)) {
+            $handle = fopen($file, 'r');
+            if ($handle !== false) {
+                fgetcsv($handle, 0, ';'); // Header
+                while (($row = fgetcsv($handle, 0, ';')) !== false) {
+                    if (count($row) >= 2 && trim((string)$row[0]) !== $teacherId) {
+                        $allRows[] = $row;
+                    }
+                }
+                fclose($handle);
+            }
+        }
+
+        // Neue Einträge des Lehrers hinzufügen
+        foreach ($categories as $cat) {
+            $allRows[] = [$teacherId, $cat];
+        }
+
+        // Datei komplett neu schreiben
+        $handle = fopen($file, 'w');
+        if ($handle === false) {
+            return;
+        }
+
+        fputcsv($handle, ['teacher_id', 'category'], ';');
+        foreach ($allRows as $row) {
+            fputcsv($handle, $row, ';');
+        }
+
+        fclose($handle);
+    }
+
+    /**
+     * Ersetzt alle Votes für einen Lehrer in einer Kategorie durch '__none__'.
+     */
+    private static function replaceVotesForExcludedTeacher(string $teacherId, string $category): void
+    {
+        $file = self::VOTES_FILE;
+        if (!file_exists($file)) {
+            return;
+        }
+
+        $handle = fopen($file, 'r');
+        if ($handle === false) {
+            return;
+        }
+
+        $header = fgetcsv($handle, 0, ';');
+        $rows = [];
+        $changed = false;
+
+        while (($row = fgetcsv($handle, 0, ';')) !== false) {
+            if (count($row) >= 3) {
+                $voteCat = trim((string)$row[1]);
+                $voteTeacher = trim((string)$row[2]);
+
+                // Vote ersetzen wenn Kategorie und Lehrer übereinstimmen
+                if ($voteCat === $category && $voteTeacher === $teacherId) {
+                    $row[2] = self::NO_ANSWER;
+                    $changed = true;
+                }
+            }
+            $rows[] = $row;
+        }
+
+        fclose($handle);
+
+        // Nur schreiben wenn sich etwas geändert hat
+        if (!$changed) {
+            return;
+        }
+
+        $handle = fopen($file, 'w');
+        if ($handle === false) {
+            return;
+        }
+
+        fputcsv($handle, $header ?: ['user_id', 'category', 'teacher_id'], ';');
+        foreach ($rows as $row) {
+            fputcsv($handle, $row, ';');
+        }
+
         fclose($handle);
     }
 }

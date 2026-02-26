@@ -27,7 +27,13 @@ final class VotingController
 
         $userId = AuthContext::mainId();
 
-        // Lehrer dürfen nicht abstimmen
+        // Schulleitung komplett blockiert (kein Voting, keine Kategorie-Verwaltung)
+        if (VotingService::isExcludedTeacher($userId)) {
+            self::renderPrincipalBlocked();
+            return;
+        }
+
+        // Lehrer sehen die Kategorie-Verwaltung
         if (VotingService::isTeacher($userId)) {
             self::renderTeacherBlocked();
             return;
@@ -42,7 +48,6 @@ final class VotingController
             return;
         }
 
-        $teachers = VotingService::getTeachers();
         $categories = VotingService::CATEGORIES;
         $previousVotes = $hasVoted ? VotingService::getVotesForUser($userId) : [];
         $isUpdate = $hasVoted && $canChange;
@@ -73,13 +78,16 @@ final class VotingController
                             <?= Csrf::inputField() ?>
 
                             <?php foreach ($categories as $catKey => $catLabel): ?>
-                                <?php $selectedId = $previousVotes[$catKey] ?? ''; ?>
+                                <?php
+                                $selectedId = $previousVotes[$catKey] ?? '';
+                                $teachersForCat = VotingService::getTeachersForCategory($catKey);
+                                ?>
                                 <div class="mb-4">
                                     <label class="form-label fw-semibold mb-2"><?= htmlspecialchars($catLabel) ?></label>
                                     <select class="form-select" name="votes[<?= $catKey ?>]" required>
                                         <option value="" <?= $selectedId === '' ? 'selected' : '' ?> disabled>Wähle eine Person...</option>
                                         <option value="__none__" <?= $selectedId === '__none__' ? 'selected' : '' ?>>Keine Antwort</option>
-                                        <?php foreach ($teachers as $id => $name): ?>
+                                        <?php foreach ($teachersForCat as $id => $name): ?>
                                             <option value="<?= htmlspecialchars($id) ?>" <?= $selectedId === $id ? 'selected' : '' ?>><?= htmlspecialchars($name) ?></option>
                                         <?php endforeach; ?>
                                     </select>
@@ -124,7 +132,13 @@ final class VotingController
 
         $userId = AuthContext::mainId();
 
-        // Lehrer dürfen nicht abstimmen
+        // Schulleitung komplett blockiert
+        if (VotingService::isExcludedTeacher($userId)) {
+            header('Location: /voting/index.php');
+            exit;
+        }
+
+        // Andere Lehrer dürfen nicht abstimmen
         if (VotingService::isTeacher($userId)) {
             header('Location: /voting/index.php');
             exit;
@@ -200,7 +214,7 @@ final class VotingController
         Layout::footer();
     }
 
-    public static function renderTeacherBlocked(): void
+    public static function renderPrincipalBlocked(): void
     {
         Layout::header('Voting - Nicht verfügbar');
     ?>
@@ -211,10 +225,9 @@ final class VotingController
 
             <div class="container py-5 text-center" style="max-width: 600px; min-height: 60vh; display: flex; flex-direction: column; justify-content: center;">
                 <div class="text-muted small mb-2" style="letter-spacing:.22em; text-transform:uppercase;">Abstimmung</div>
-                <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(28px, 3.5vw, 40px); font-weight: 300;">Nur für Schüler</h1>
+                <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(28px, 3.5vw, 40px); font-weight: 300;">Nicht verfügbar</h1>
                 <p class="text-muted mb-4" style="font-size: 1.05rem; max-width: 400px; margin: 0 auto;">
-                    Das Lehrer-Voting steht nur für Schülerinnen und Schüler zur Verfügung.<br>
-                    Als Lehrkraft können Sie die Ergebnisse am Abend des Abiballs einsehen.
+                    Das Lehrer-Voting steht für die Schulleitung nicht zur Verfügung.
                 </p>
 
                 <div class="d-grid gap-3 col-md-8 mx-auto">
@@ -229,6 +242,131 @@ final class VotingController
         </main>
     <?php
         Layout::footer();
+    }
+
+    public static function renderTeacherBlocked(): void
+    {
+        $userId = AuthContext::mainId();
+        $categories = VotingService::CATEGORIES;
+        $currentExclusions = VotingService::getTeacherExclusions($userId);
+        $success = isset($_GET['excluded']) && $_GET['excluded'] === '1';
+
+        Layout::header('Voting - Kategorien ausschließen');
+    ?>
+        <main class="bg-starfield">
+            <div class="stars-layer-1"></div>
+            <div class="stars-layer-2"></div>
+            <div class="stars-layer-3"></div>
+
+            <div class="container py-0 px-3 px-sm-4" style="max-width: 800px;">
+                <div class="text-center mx-auto" style="max-width: 820px; padding-top: 18px; padding-bottom: 24px;">
+                    <div class="glass-hero-header sm mb-5 animate-fade-up">
+                        <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
+                            <span style="font-size: 70%;">Lehrer-Voting</span><br>
+                            <span style="font-style: italic;">Kategorien verwalten</span>
+                        </h1>
+                        <p class="text-muted mt-3" style="max-width: 600px; margin: 0 auto; font-size: 1.05rem; line-height: 1.7;">
+                            Wählen Sie Kategorien aus, aus denen Sie ausgeschlossen werden möchten.
+                            Bestehende Stimmen werden auf "Keine Antwort" gesetzt.
+                        </p>
+                    </div>
+                </div>
+
+                <?php if ($success): ?>
+                    <div class="alert alert-success mb-4" style="border-radius: 12px;">
+                        Ihre Ausschlüsse wurden gespeichert.
+                    </div>
+                <?php endif; ?>
+
+                <div class="card">
+                    <div class="card-body p-4 p-md-5">
+                        <form method="post" action="/voting/exclude_save.php">
+                            <?= Csrf::inputField() ?>
+
+                            <div class="mb-4">
+                                <p class="text-muted small mb-3" style="line-height: 1.6;">
+                                    <strong>Hinweis:</strong> Wenn Sie eine Kategorie ankreuzen, werden Sie aus den Wahlmöglichkeiten
+                                    für diese Kategorie entfernt. Bereits abgegebene Stimmen für Sie in dieser Kategorie
+                                    werden automatisch auf "Keine Antwort" geändert.
+                                </p>
+                            </div>
+
+                            <?php foreach ($categories as $catKey => $catLabel): ?>
+                                <?php $isExcluded = in_array($catKey, $currentExclusions, true); ?>
+                                <div class="form-check mb-3" style="padding-left: 2rem;">
+                                    <input class="form-check-input" type="checkbox"
+                                        name="exclusions[]" value="<?= $catKey ?>"
+                                        id="excl_<?= $catKey ?>"
+                                        <?= $isExcluded ? 'checked' : '' ?>>
+                                    <label class="form-check-label fw-semibold" for="excl_<?= $catKey ?>">
+                                        <?= htmlspecialchars($catLabel) ?>
+                                    </label>
+                                </div>
+                            <?php endforeach; ?>
+
+                            <hr class="my-4">
+
+                            <button type="submit" class="btn w-100 py-3" style="font-size: 1.05rem; font-weight: 500; border-radius: 10px; background: transparent; border: 2px solid var(--gold, #c9a227); color: var(--gold, #c9a227); transition: all 0.25s ease;">
+                                Ausschlüsse speichern
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4 mb-5">
+                    <a href="/voting/result.php" class="btn btn-outline-secondary btn-soft me-2">
+                        Ergebnisse ansehen
+                    </a>
+                    <a href="/dashboard.php" class="btn btn-link text-muted">
+                        Zurück zum Dashboard
+                    </a>
+                </div>
+            </div>
+        </main>
+    <?php
+        Layout::footer();
+    }
+
+    /**
+     * Speichert die Kategorie-Ausschlüsse eines Lehrers.
+     */
+    public static function saveExclusions(): void
+    {
+        Bootstrap::init();
+        AuthContext::requireLogin('/login.php');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /voting/index.php');
+            exit;
+        }
+
+        if (!Csrf::validate($_POST['_csrf'] ?? '')) {
+            die('Invalid CSRF token');
+        }
+
+        $userId = AuthContext::mainId();
+
+        // Schulleitung darf keine Ausschlüsse setzen
+        if (VotingService::isExcludedTeacher($userId)) {
+            header('Location: /voting/index.php');
+            exit;
+        }
+
+        // Nur Lehrer dürfen Ausschlüsse setzen
+        if (!VotingService::isTeacher($userId)) {
+            header('Location: /voting/index.php');
+            exit;
+        }
+
+        $exclusions = $_POST['exclusions'] ?? [];
+        if (!is_array($exclusions)) {
+            $exclusions = [];
+        }
+
+        VotingService::setTeacherExclusions($userId, $exclusions);
+
+        header('Location: /voting/index.php?excluded=1');
+        exit;
     }
 
     public static function listResults(): void

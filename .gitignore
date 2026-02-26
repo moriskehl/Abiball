@@ -5,6 +5,7 @@
 
 # ----- Sensible Daten & Storage (NIEMALS committen!) -----
 /abiball-portal/storage/
+cookies.txt
 
 # ----- Logs -----
 /abiball-portal/storage/*.log
