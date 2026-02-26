@@ -508,7 +508,7 @@ final class DashboardController
                   <a class="btn btn-outline-secondary btn-soft" href="/seating/seating.php">Sitzgruppen</a>
                   <a class="btn btn-outline-secondary btn-soft" href="/food/food_order.php">Essensbestellung</a>
                   <a class="btn btn-outline-secondary btn-soft" href="/zahlung.php">Zahlung</a>
-                  <a class="btn btn-outline-secondary btn-soft disabled" href="#" tabindex="-1" aria-disabled="true">Lehrer Voting</a>
+                  <a class="btn btn-outline-secondary btn-soft" href="/voting/index.php">Lehrer Voting</a>
                 </div>
               </div>
             </div>

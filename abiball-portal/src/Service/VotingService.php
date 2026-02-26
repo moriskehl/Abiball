@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -18,11 +19,21 @@ final class VotingService
 
     // Kategorien definieren
     public const CATEGORIES = [
-        'creative' => 'Kreativster Unterricht',
-        'attractive' => 'Am attraktivsten',
-        'strict' => 'Am strengsten',
-        'funny' => 'Am lustigsten',
+        'schnellstes_korrigieren' => 'Am Schnellsten im Korrigieren',
+        'breitester_lehrer'       => 'Breitester Lehrer',
+        'wer_wird_millionaer'     => 'Würde bei "Wer wird Millionär" mindestens 500.000€ holen',
+        'kaffeekoenig'            => 'König / Königin des Kaffekonsums',
+        'gute_laune'              => 'Hat immer gute Laune',
+        'stand_up_comedy'         => 'Könnte eigentlich Stand-Up-Comedy machen',
+        'bester_style'            => 'Hat den Besten Style',
+        'kreativster_unterricht'  => 'Kreativster Unterricht',
+        'huebscheste_lehrkraft'   => 'Hübscheste Lehrerin / Hübschester Lehrer',
+        'tiktok_viral'            => 'Würde heimlich auf TikTok viral gehen',
+        'meiste_geduld'           => 'Am meisten Geduld',
     ];
+
+    // Spezialwert für "keine Antwort"
+    public const NO_ANSWER = '__none__';
 
     // Lehrer die von der Abstimmung ausgeschlossen sind (Nachname)
     private const EXCLUDED_TEACHERS = ['Koch', 'Diebold'];
@@ -47,7 +58,7 @@ final class VotingService
         foreach ($all as $p) {
             $id = trim((string)($p['id'] ?? ''));
             $name = trim((string)($p['name'] ?? $id));
-            
+
             if (!str_ends_with(strtoupper($id), 'L')) {
                 continue;
             }
@@ -112,7 +123,7 @@ final class VotingService
                 $voterId = trim((string)$row[0]);
                 $category = trim((string)$row[1]);
                 $teacherId = trim((string)$row[2]);
-                
+
                 if ($voterId === $userId) {
                     $votes[$category] = $teacherId;
                 }
@@ -132,7 +143,7 @@ final class VotingService
     public static function submitVote(string $userId, array $votes): bool
     {
         $hasVotedBefore = self::hasVoted($userId);
-        
+
         // Wenn bereits abgestimmt und Änderungen nicht mehr erlaubt
         if ($hasVotedBefore && !self::canChangeVote()) {
             return false;
@@ -143,8 +154,11 @@ final class VotingService
 
         foreach (self::CATEGORIES as $catKey => $catLabel) {
             $teacherId = trim((string)($votes[$catKey] ?? ''));
-            
-            if ($teacherId !== '' && isset($teachers[$teacherId])) {
+
+            // "keine Antwort" ist eine gültige Auswahl
+            if ($teacherId === self::NO_ANSWER) {
+                $validVotes[$catKey] = self::NO_ANSWER;
+            } elseif ($teacherId !== '' && isset($teachers[$teacherId])) {
                 $validVotes[$catKey] = $teacherId;
             }
         }
@@ -224,6 +238,9 @@ final class VotingService
         foreach (self::CATEGORIES as $catKey => $catLabel) {
             $counts = $votes[$catKey] ?? [];
 
+            // "keine Antwort" nicht in Ergebnisse einbeziehen
+            unset($counts[self::NO_ANSWER]);
+
             arsort($counts);
             $top5 = array_slice($counts, 0, 5, true);
 
@@ -243,6 +260,49 @@ final class VotingService
         }
 
         return $output;
+    }
+
+    /**
+     * Gibt die kompletten Ergebnisse zurück (alle Lehrer pro Kategorie, für Admin).
+     */
+    public static function getFullResults(): array
+    {
+        $votes = self::loadVotes();
+        $teachers = self::getTeachers();
+        $output = [];
+
+        foreach (self::CATEGORIES as $catKey => $catLabel) {
+            $counts = $votes[$catKey] ?? [];
+
+            // "keine Antwort" nicht in Ergebnisse einbeziehen
+            unset($counts[self::NO_ANSWER]);
+
+            arsort($counts);
+
+            $list = [];
+            foreach ($counts as $tid => $count) {
+                $list[] = [
+                    'id' => $tid,
+                    'name' => $teachers[$tid] ?? $tid,
+                    'votes' => $count
+                ];
+            }
+
+            $output[$catKey] = [
+                'label' => $catLabel,
+                'rankings' => $list
+            ];
+        }
+
+        return $output;
+    }
+
+    /**
+     * Gibt die Gesamtzahl der Wähler zurück.
+     */
+    public static function getTotalVoterCount(): int
+    {
+        return count(self::loadVoters());
     }
 
     private static function loadVoters(): array
@@ -312,7 +372,7 @@ final class VotingService
             if (count($row) >= 3) {
                 $category = trim((string)$row[1]);
                 $teacherId = trim((string)$row[2]);
-                
+
                 if (!isset($votes[$category][$teacherId])) {
                     $votes[$category][$teacherId] = 0;
                 }

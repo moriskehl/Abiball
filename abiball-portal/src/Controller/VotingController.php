@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -34,7 +35,7 @@ final class VotingController
 
         $hasVoted = VotingService::hasVoted($userId);
         $canChange = VotingService::canChangeVote();
-        
+
         // Wenn bereits abgestimmt und keine Änderungen mehr erlaubt
         if ($hasVoted && !$canChange) {
             self::renderSuccess();
@@ -47,22 +48,22 @@ final class VotingController
         $isUpdate = $hasVoted && $canChange;
 
         Layout::header('Lehrer Voting');
-        ?>
+?>
         <main class="bg-starfield">
             <div class="stars-layer-1"></div>
             <div class="stars-layer-2"></div>
             <div class="stars-layer-3"></div>
-            
+
             <div class="container py-0 px-3 px-sm-4" style="max-width: 1100px;">
                 <div class="text-center mx-auto" style="max-width: 820px; padding-top: 18px; padding-bottom: 24px;">
                     <div class="glass-hero-header sm mb-5 animate-fade-up">
-                      <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
-                        <span style="font-size: 70%;">Abstimmung</span><br>
-                        <span style="font-style: italic;">Lehrer Voting</span>
-                      </h1>
-                      <p class="text-muted mt-3" style="max-width: 600px; margin: 0 auto; font-size: 1.05rem; line-height: 1.7;">
-                        <?= $isUpdate ? 'Du kannst deine Auswahl noch ändern.' : 'Wähle deine Favoriten in jeder Kategorie.' ?>
-                      </p>
+                        <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
+                            <span style="font-size: 70%;">Abstimmung</span><br>
+                            <span style="font-style: italic;">Lehrer Voting</span>
+                        </h1>
+                        <p class="text-muted mt-3" style="max-width: 600px; margin: 0 auto; font-size: 1.05rem; line-height: 1.7;">
+                            <?= $isUpdate ? 'Du kannst deine Auswahl noch ändern.' : 'Wähle deine Favoriten in jeder Kategorie.' ?>
+                        </p>
                     </div>
                 </div>
 
@@ -70,13 +71,14 @@ final class VotingController
                     <div class="card-body p-4 p-md-5">
                         <form method="post" action="/voting/save.php">
                             <?= Csrf::inputField() ?>
-                            
+
                             <?php foreach ($categories as $catKey => $catLabel): ?>
                                 <?php $selectedId = $previousVotes[$catKey] ?? ''; ?>
                                 <div class="mb-4">
                                     <label class="form-label fw-semibold mb-2"><?= htmlspecialchars($catLabel) ?></label>
                                     <select class="form-select" name="votes[<?= $catKey ?>]" required>
                                         <option value="" <?= $selectedId === '' ? 'selected' : '' ?> disabled>Wähle eine Person...</option>
+                                        <option value="__none__" <?= $selectedId === '__none__' ? 'selected' : '' ?>>Keine Antwort</option>
                                         <?php foreach ($teachers as $id => $name): ?>
                                             <option value="<?= htmlspecialchars($id) ?>" <?= $selectedId === $id ? 'selected' : '' ?>><?= htmlspecialchars($name) ?></option>
                                         <?php endforeach; ?>
@@ -96,7 +98,7 @@ final class VotingController
                 </div>
             </div>
         </main>
-        <?php
+    <?php
         Layout::footer();
     }
 
@@ -142,17 +144,17 @@ final class VotingController
     public static function renderSuccess(): void
     {
         Layout::header('Voting Abgeschlossen');
-        ?>
+    ?>
         <main class="bg-starfield">
             <div class="stars-layer-1"></div>
             <div class="stars-layer-2"></div>
             <div class="stars-layer-3"></div>
-            
+
             <div class="container py-5 text-center" style="max-width: 600px; min-height: 60vh; display: flex; flex-direction: column; justify-content: center;">
                 <div class="text-muted small mb-2" style="letter-spacing:.22em; text-transform:uppercase;">Abstimmung</div>
                 <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(28px, 3.5vw, 40px); font-weight: 300;">Vielen Dank!</h1>
                 <p class="text-muted mb-5" style="font-size: 1.1rem;">Deine Stimme wurde gezählt.</p>
-                
+
                 <div class="d-grid gap-3 col-md-8 mx-auto">
                     <a href="/voting/result.php" class="btn btn-save btn-shimmer">
                         Ergebnisse ansehen
@@ -163,19 +165,19 @@ final class VotingController
                 </div>
             </div>
         </main>
-        <?php
+    <?php
         Layout::footer();
     }
 
     public static function renderVotingClosed(): void
     {
         Layout::header('Voting - Noch nicht verfügbar');
-        ?>
+    ?>
         <main class="bg-starfield">
             <div class="stars-layer-1"></div>
             <div class="stars-layer-2"></div>
             <div class="stars-layer-3"></div>
-            
+
             <div class="container py-5 text-center" style="max-width: 600px; min-height: 60vh; display: flex; flex-direction: column; justify-content: center;">
                 <div class="text-muted small mb-2" style="letter-spacing:.22em; text-transform:uppercase;">Abstimmung</div>
                 <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(28px, 3.5vw, 40px); font-weight: 300;">Noch nicht verfügbar</h1>
@@ -183,7 +185,7 @@ final class VotingController
                     Das Lehrer-Voting ist aktuell noch nicht freigeschaltet.<br>
                     Sobald die Abstimmung beginnt, informieren wir euch hier.
                 </p>
-                
+
                 <div class="d-grid gap-3 col-md-8 mx-auto">
                     <a href="/voting/result.php" class="btn btn-outline-secondary btn-soft">
                         Zur Ergebnisseite
@@ -194,19 +196,19 @@ final class VotingController
                 </div>
             </div>
         </main>
-        <?php
+    <?php
         Layout::footer();
     }
 
     public static function renderTeacherBlocked(): void
     {
         Layout::header('Voting - Nicht verfügbar');
-        ?>
+    ?>
         <main class="bg-starfield">
             <div class="stars-layer-1"></div>
             <div class="stars-layer-2"></div>
             <div class="stars-layer-3"></div>
-            
+
             <div class="container py-5 text-center" style="max-width: 600px; min-height: 60vh; display: flex; flex-direction: column; justify-content: center;">
                 <div class="text-muted small mb-2" style="letter-spacing:.22em; text-transform:uppercase;">Abstimmung</div>
                 <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(28px, 3.5vw, 40px); font-weight: 300;">Nur für Schüler</h1>
@@ -214,7 +216,7 @@ final class VotingController
                     Das Lehrer-Voting steht nur für Schülerinnen und Schüler zur Verfügung.<br>
                     Als Lehrkraft können Sie die Ergebnisse am Abend des Abiballs einsehen.
                 </p>
-                
+
                 <div class="d-grid gap-3 col-md-8 mx-auto">
                     <a href="/voting/result.php" class="btn btn-outline-secondary btn-soft">
                         Ergebnisse ansehen
@@ -225,7 +227,7 @@ final class VotingController
                 </div>
             </div>
         </main>
-        <?php
+    <?php
         Layout::footer();
     }
 
@@ -246,7 +248,7 @@ final class VotingController
         $eventDateStr = $eventDate->format('d.m.Y');
 
         Layout::header('Voting Ergebnisse');
-        ?>
+    ?>
         <main class="bg-starfield">
             <div class="stars-layer-1"></div>
             <div class="stars-layer-2"></div>
@@ -255,17 +257,17 @@ final class VotingController
             <div class="container py-0 px-3 px-sm-4" style="max-width: 1100px;">
                 <div class="text-center mx-auto" style="max-width: 820px; padding-top: 18px; padding-bottom: 24px;">
                     <div class="glass-hero-header sm mb-5 animate-fade-up">
-                      <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
-                        <span style="font-size: 70%;">Abstimmung</span><br>
-                        <span style="font-style: italic;">Die Ergebnisse</span>
-                      </h1>
-                      <p class="text-muted mt-3" style="max-width: 600px; margin: 0 auto; font-size: 1.05rem; line-height: 1.7;">
+                        <h1 class="h-serif mb-3 reveal-text" style="font-size: clamp(36px, 4.5vw, 64px); font-weight: 300; line-height: 1.0;">
+                            <span style="font-size: 70%;">Abstimmung</span><br>
+                            <span style="font-style: italic;">Die Ergebnisse</span>
+                        </h1>
+                        <p class="text-muted mt-3" style="max-width: 600px; margin: 0 auto; font-size: 1.05rem; line-height: 1.7;">
                             <?php if ($resultsVisible): ?>
                                 Top 5 Platzierungen pro Kategorie
                             <?php else: ?>
                                 Spannung bis zum Schluss!
                             <?php endif; ?>
-                      </p>
+                        </p>
                     </div>
                 </div>
 
@@ -275,7 +277,7 @@ final class VotingController
                         <div class="card-body p-5 text-center">
                             <div class="mb-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="var(--gold)" viewBox="0 0 16 16" style="opacity: 0.8;">
-                                    <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/>
+                                    <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z" />
                                 </svg>
                             </div>
                             <h3 class="h5 mb-2" style="font-weight: 600;">Die große Enthüllung</h3>
@@ -335,7 +337,7 @@ final class VotingController
                 <?php endif; ?>
             </div>
         </main>
-        <?php
+<?php
         Layout::footer();
     }
 }

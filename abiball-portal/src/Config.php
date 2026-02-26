@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -17,7 +18,7 @@ final class Config
     public const EVENT_DATE = '2026-07-10';
 
     /** Ob das Voting aktuell freigeschaltet ist */
-    public const VOTING_ENABLED = false;
+    public const VOTING_ENABLED = true;
 
     /**
      * Prüft ob das Voting aktuell geöffnet ist.
@@ -35,7 +36,7 @@ final class Config
         $eventDate = new DateTime(self::EVENT_DATE);
         $deadline = $eventDate->setTime(18, 0, 0);
         $now = new DateTime();
-        
+
         return $now < $deadline;
     }
 

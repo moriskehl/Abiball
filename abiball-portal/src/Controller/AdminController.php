@@ -22,6 +22,7 @@ require_once __DIR__ . '/../Service/PricingService.php';
 require_once __DIR__ . '/../Service/SeatingService.php';
 require_once __DIR__ . '/../Service/AdminPasswordService.php';
 require_once __DIR__ . '/../Service/ParticipantAdminService.php';
+require_once __DIR__ . '/../Service/VotingService.php';
 require_once __DIR__ . '/../View/Layout.php';
 require_once __DIR__ . '/../View/Helpers.php';
 require_once __DIR__ . '/../Auth/AdminContext.php';
@@ -795,15 +796,10 @@ final class AdminController
 
     // Food-Statistiken frühzeitig für die Übersicht laden
     $foodStatsOverview = FoodOrderRepository::getStatistics();
-<<<<<<< HEAD
 
-    // Ticket-only Totals (Keep as int)
-    // $totalPaid and $totalOpen are already calculated as integers above from ParticipantsRepository
-
-    // Combined Totals (Ticket + Food) -> Float to preserve cents from food
-    // structure of $foodStatsOverview: ['total_paid' => float, 'total_open' => float, ...]
-=======
->>>>>>> 61af0b0a575c5e1e2322d9a5839cc84d3ecd1592
+    // Voting-Daten für Admin-Dashboard laden
+    $votingResults = VotingService::getFullResults();
+    $votingTotalVoters = VotingService::getTotalVoterCount();
     $totalPaidWithFood = $totalPaid + (float)$foodStatsOverview['total_paid'] + (float)$foodStatsOverview['total_redeemed'];
     $totalOpenWithFood = $totalOpen + (float)$foodStatsOverview['total_open'];
 
@@ -967,26 +963,15 @@ final class AdminController
 
                 <div class="d-flex justify-content-between align-items-center mt-2">
                   <div class="text-muted">Gesamt Bezahlt (mit Essen)</div>
-<<<<<<< HEAD
-                  <div class="fw-semibold"><?= number_format($totalPaidWithFood, 2, ',', '.') ?> €</div>
-=======
                   <div class="fw-semibold"><?= number_format((float)$totalPaidWithFood, 2, ',', '.') ?> €</div>
->>>>>>> 61af0b0a575c5e1e2322d9a5839cc84d3ecd1592
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mt-2">
                   <div class="text-muted">Gesamt Offen (mit Essen)</div>
-<<<<<<< HEAD
-                  <?php if ($totalOpenWithFood == 0): ?>
-                    <span class="badge text-bg-success">0,00 €</span>
-                  <?php else: ?>
-                    <span class="badge text-bg-danger"><?= number_format($totalOpenWithFood, 2, ',', '.') ?> €</span>
-=======
                   <?php if ($totalOpenWithFood < 0.01): ?>
                     <span class="badge text-bg-success">0,00 €</span>
                   <?php else: ?>
                     <span class="badge text-bg-danger"><?= number_format((float)$totalOpenWithFood, 2, ',', '.') ?> €</span>
->>>>>>> 61af0b0a575c5e1e2322d9a5839cc84d3ecd1592
                   <?php endif; ?>
                 </div>
 
@@ -999,6 +984,7 @@ final class AdminController
                     <option value="seating">Sitzgruppen & Notizen</option>
                     <option value="food">Essensbestellungen</option>
                     <option value="staff">Staff Zugangsdaten</option>
+                    <option value="voting">Lehrer Voting</option>
                     <option value="logs">Änderungsprotokoll</option>
                   </select>
                   <div class="text-muted small mt-2">
@@ -1948,6 +1934,69 @@ final class AdminController
               <div class="text-muted small mt-3">
                 Hinweis: Wenn der Login-Code als "(bcrypt-Hash)" angezeigt wird, ist das Passwort verschlüsselt gespeichert und kann nicht mehr angezeigt werden.
               </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Lehrer Voting Section -->
+        <section class="admin-section" data-section="voting" id="voting" style="display:none;">
+          <div class="card admin-card mb-3">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                <div>
+                  <div class="text-muted small admin-kicker">Lehrer Voting</div>
+                  <div class="h6 mb-0">Ergebnisse</div>
+                </div>
+                <div class="badge bg-dark text-light px-3 py-2">
+                  <?= $votingTotalVoters ?> Stimmen abgegeben
+                </div>
+              </div>
+
+              <?php if (empty($votingResults)): ?>
+                <div class="text-muted">Noch keine Stimmen vorhanden.</div>
+              <?php else: ?>
+                <div class="row g-3">
+                  <?php foreach ($votingResults as $catKey => $catData): ?>
+                    <div class="col-12 col-lg-6">
+                      <div class="admin-panel p-3">
+                        <div class="fw-semibold mb-2" style="color: var(--gold);">
+                          <?= e($catData['label']) ?>
+                        </div>
+                        <?php if (empty($catData['rankings'])): ?>
+                          <div class="text-muted small">Noch keine Stimmen.</div>
+                        <?php else: ?>
+                          <table class="table table-sm table-striped mb-0">
+                            <thead>
+                              <tr>
+                                <th style="width:40px;">#</th>
+                                <th>Lehrer</th>
+                                <th style="width:80px;" class="text-end">Stimmen</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <?php foreach ($catData['rankings'] as $idx => $rank): ?>
+                                <tr<?= $idx === 0 ? ' class="fw-bold"' : '' ?>>
+                                  <td>
+                                    <?php if ($idx === 0): ?>
+                                      <span class="badge bg-warning text-dark"><?= $idx + 1 ?></span>
+                                    <?php elseif ($idx <= 2): ?>
+                                      <span class="badge bg-secondary"><?= $idx + 1 ?></span>
+                                    <?php else: ?>
+                                      <?= $idx + 1 ?>
+                                    <?php endif; ?>
+                                  </td>
+                                  <td><?= e($rank['name']) ?></td>
+                                  <td class="text-end"><?= $rank['votes'] ?></td>
+                                  </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                          </table>
+                        <?php endif; ?>
+                      </div>
+                    </div>
+                  <?php endforeach; ?>
+                </div>
+              <?php endif; ?>
             </div>
           </div>
         </section>
