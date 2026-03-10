@@ -583,9 +583,46 @@ WGW00B1;"Lisa Mustermann";0;WGW00S;&lt;code&gt;;USER;;;;;</code></pre>
   ),
   10 => 
   array (
-    'title' => '11. Zusammenfassung der Kernkonzepte',
+    'title' => '11. Projekt-Metriken',
+    'shortTitle' => 'Projekt-Metriken',
+    'html' => '<h2>11. Projekt-Metriken</h2>
+<table>
+<thead>
+<tr>
+<th>Metrik</th>
+<th>Wert</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Anzahl Dateien</strong></td>
+<td>116</td>
+</tr>
+<tr>
+<td><strong>Lines of Code (LoC)</strong></td>
+<td>21.301</td>
+</tr>
+<tr>
+<td><strong>Wörter</strong></td>
+<td>62.224</td>
+</tr>
+<tr>
+<td><strong>Zeichen</strong></td>
+<td>764.755</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>[!NOTE]
+Die Metriken beziehen sich auf das gesamte Projekt-Verzeichnis <code>abiball-portal</code> exklusive des <code>vendor</code>-Ordners und temporärer Dateien.</p>
+</blockquote>
+<hr />',
+  ),
+  11 => 
+  array (
+    'title' => '12. Zusammenfassung der Kernkonzepte',
     'shortTitle' => 'Zusammenfassung der Kernkonzepte',
-    'html' => '<h2>11. Zusammenfassung der Kernkonzepte</h2>
+    'html' => '<h2>12. Zusammenfassung der Kernkonzepte</h2>
 <table>
 <thead>
 <tr>
