@@ -71,10 +71,7 @@ return array (
 </tr>
 </tbody>
 </table>
-<blockquote>
-<p>[!IMPORTANT]
-<strong>Besonderheit:</strong> Das Projekt verzichtet bewusst auf eine SQL-Datenbank. Alle Daten werden in CSV-Dateien (<code>participants.csv</code>, <code>food_orders.csv</code>, <code>pricing_overrides.csv</code>) und JSON-Dateien (<code>seating_groups.json</code>, individuelle Sitzplatz-JSON-Dateien) gespeichert. Das vereinfacht das Deployment massiv – man braucht nur einen PHP-fähigen Webserver.</p>
-</blockquote>
+
 <hr />',
   ),
   2 => 

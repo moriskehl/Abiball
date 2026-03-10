@@ -41,7 +41,7 @@ final class AdminZusammenfassungController
               Abiball Projekt
             </h1>
             <p class="text-muted mb-0" style="font-size: 1.05rem; line-height: 1.7; letter-spacing: 0.5px;">
-              Wirtschaftsinformatik &mdash; Moris Kehl
+              Wirtschaftsinformatik Präsentation  -  Moris Kehl
             </p>
           </div>
         </div>
