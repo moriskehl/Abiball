@@ -227,6 +227,12 @@ Audit-Logs werden in `storage/data/audit/` gespeichert.
 - `robots.txt` und `sitemap.xml` konfiguriert
 - Strukturierte Daten können hinzugefügt werden
 
+## 🤝 Contributing
+
+1. Feature-Branch erstellen
+2. Änderungen committen
+3. Pull Request öffnen
+
 ## 📄 Lizenz
 
 Internes Schulprojekt - Alle Rechte vorbehalten
