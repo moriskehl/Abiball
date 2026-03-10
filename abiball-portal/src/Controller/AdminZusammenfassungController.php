@@ -15,62 +15,15 @@ final class AdminZusammenfassungController
         Bootstrap::init();
         AdminContext::requireAdmin();
 
-        $mdFile = __DIR__ . '/../../storage/data/systemzusammenfassung.md';
-        $mdContent = file_exists($mdFile) ? file_get_contents($mdFile) : '# Datei nicht gefunden';
-
-        $parsedown = new Parsedown();
-        $parsedown->setSafeMode(false);
-
-        // Map of mermaid diagram filenames (in order of appearance in the MD)
-        $diagramFiles = [
-            'architektur',
-            'request_fluss',
-            'auth_kontexte',
-            'csv_repository',
-            'dependency_kette',
-        ];
-
-        // Replace mermaid code blocks with <img> placeholders
-        $diagramIndex = 0;
-        $mdContent = preg_replace_callback(
-            '/```mermaid\s*\r?\n(.*?)\r?\n```/s',
-            function ($m) use (&$diagramIndex, $diagramFiles) {
-                $name = $diagramFiles[$diagramIndex] ?? ('diagram_' . $diagramIndex);
-                $diagramIndex++;
-                $src = '/images/sysinfo/' . $name . '.png';
-                return '![' . $name . '](' . $src . ')';
-            },
-            $mdContent
-        );
-
-        // Split by "## " followed by a number (chapters 1-11)
-        $parts = preg_split('/^## (?=\d+\.)/m', $mdContent);
-
-        $introMd = array_shift($parts);
-        $introHtml = $parsedown->text($introMd);
-
-        $sections = [];
-        foreach ($parts as $part) {
-            $lines = explode("\n", trim($part), 2);
-            $title = trim($lines[0] ?? '');
-            $body = $lines[1] ?? '';
-
-            // Extract short label (remove "X. " prefix for tab label)
-            $shortTitle = preg_replace('/^\d+\.\s*/', '', $title);
-
-            $sections[] = [
-                'title'      => htmlspecialchars($title, ENT_QUOTES, 'UTF-8'),
-                'shortTitle' => htmlspecialchars($shortTitle, ENT_QUOTES, 'UTF-8'),
-                'html'       => $parsedown->text("## " . $title . "\n" . $body),
-            ];
-        }
+        // Load pre-rendered static data from processed PHP file
+        $sections = require_once __DIR__ . '/../Data/SystemZusammenfassungData.php';
 
         Layout::header('Admin – Systemzusammenfassung');
-        self::renderView($introHtml, $sections);
+        self::renderView($sections);
         Layout::footer();
     }
 
-    private static function renderView(string $introHtml, array $sections): void
+    private static function renderView(array $sections): void
     {
         ?>
     <main class="bg-starfield admin-dashboard">
