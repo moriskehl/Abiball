@@ -36,7 +36,7 @@ final class AdminAuditLogRepository
         }
 
         $entry = [
-            'ts' => (new DateTimeImmutable('now', new DateTimeZone('Europe/Berlin')))->format(DateTimeInterface::ATOM),
+            'ts' => (new DateTimeImmutable('now', new DateTimeZone('Europe/Berlin')))->format(DateTimeInterface::ATOM), #frage herr altrock
             'admin' => [
                 'id' => $adminId,
                 'name' => AdminContext::adminName(),
