@@ -56,6 +56,10 @@ $isLoggedIn = (trim(AuthContext::mainId()) !== '');
       <a class="text-muted" href="/faq.php">FAQ</a>
       <a class="text-muted" href="/impressum.php">Impressum</a>
       <a class="text-muted" href="/datenschutz.php">Datenschutz</a>
+
+      <?php if (in_array(basename($_SERVER['PHP_SELF']), ['admin_dashboard.php', 'admin_zusammenfassung.php', 'admin_food_orders.php'], true)): ?>
+        <a class="text-muted" href="/admin/admin_zusammenfassung.php">System-Info</a>
+      <?php endif; ?>
     </nav>
 
   </div>

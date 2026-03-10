@@ -241,12 +241,7 @@ Internes Schulprojekt - Alle Rechte vorbehalten
 
 Bei Fragen oder Problemen: moris.kehl@gmail.com
 
-## Quellen
-
-- Readme - Claude Opus 4.6
-- Coding - Claude Opus 4.6 / Gemini 3.1 Pro / Moris Kehl
-
 ---
 
-**Letzte Aktualisierung**: 2026  
+**Letzte Aktualisierung**: 2024  
 **Version**: 1.0.0
