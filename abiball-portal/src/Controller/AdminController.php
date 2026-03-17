@@ -180,7 +180,7 @@ final class AdminController
    */
   public static function logout(): void
   {
-    AdminContext::logout('/admin_login.php');
+    AdminContext::logout('/admin/admin_login.php');
   }
 
     /* ================================================
